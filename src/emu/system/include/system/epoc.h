@@ -59,28 +59,11 @@ namespace eka2l1 {
     }
 
     class debugger_base;
-
     class system;
     class system_impl;
 
     using hal_instance = std::unique_ptr<epoc::hal>;
     using system_reset_callback_type = std::function<void(system *)>;
-
-    enum zip_mount_error {
-        zip_mount_error_none,
-        zip_mount_error_not_zip,
-        zip_mount_error_no_system_folder,
-        zip_mount_error_corrupt
-    };
-
-    enum ngage_game_card_install_error {
-        ngage_game_card_install_success = 0,
-        ngage_game_card_no_game_data_folder = 1,
-        ngage_game_card_more_than_one_data_folder = 2,
-        ngage_game_card_no_game_registeration_info = 3,
-        ngage_game_card_registeration_corrupted = 4,
-        ngage_game_card_general_error = 5
-    };
 
     struct system_create_components {
         drivers::graphics_driver *graphics_;
@@ -146,14 +129,8 @@ namespace eka2l1 {
         void set_config(config::state *conf);
 
         void mount(drive_number drv, const drive_media media, std::string path, const std::uint32_t attrib = io_attrib_none);
-        zip_mount_error mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t base_attrib = io_attrib_none,
-            progress_changed_callback progress_cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
-
-        ngage_game_card_install_error install_ngage_game_card(const std::string &folder_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb = nullptr);
-        bool get_ngage_game_info_mounted(apa_app_registry &result);
 
         bool reset();
-
         bool pause();
         bool unpause();
 

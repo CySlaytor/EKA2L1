@@ -1,23 +1,3 @@
-/*
- * Copyright (c) 2018 EKA2L1 Team.
- *
- * This file is part of EKA2L1 project
- * (see bentokun.github.com/EKA2L1).
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <common/configure.h>
 
 #include <common/algorithm.h>
@@ -31,11 +11,9 @@
 #include <common/random.h>
 
 #include <disasm/disasm.h>
-
 #include <system/consts.h>
 #include <system/epoc.h>
 #include <system/hal.h>
-
 #include <utils/panic.h>
 
 #ifdef ENABLE_SCRIPTING
@@ -48,7 +26,6 @@
 #include <fstream>
 #include <string>
 
-#include <disasm/disasm.h>
 #include <drivers/itc.h>
 #include <gdbstub/gdbstub.h>
 
@@ -76,16 +53,7 @@
 #include <system/devices.h>
 #include <system/software.h>
 
-#include <miniz.h>
-
 namespace eka2l1 {
-    static bool std_string_ends_with(std::string const &str, std::string const &suffix) {
-        if (str.length() < suffix.length()) {
-            return false;
-        }
-        return str.compare(str.length() - suffix.length(), suffix.length(), suffix) == 0;
-    }
-
 #define HAL_ENTRY(generic_name, display_name, num, num_old) hal_entry_##generic_name = num,
 
     enum hal_entry {
@@ -157,15 +125,11 @@ namespace eka2l1 {
 #if ENABLE_SCRIPTING
             scripting_.reset();
 #endif
-
             if (dispatcher_)
                 dispatcher_->shutdown(gdriver);
-
             dispatcher_.reset();
-
             if (kern_)
                 kern_->wipeout();
-
             kern_.reset();
             mem_.reset();
             timing_.reset();
@@ -174,24 +138,18 @@ namespace eka2l1 {
         void set_graphics_driver(drivers::graphics_driver *graphics_driver);
         void set_audio_driver(drivers::audio_driver *audio_driver);
         void set_sensor_driver(drivers::sensor_driver *sensor_driver);
-
-        void set_debugger(debugger_base *new_debugger) {
-            debugger_ = new_debugger;
-        }
+        void set_debugger(debugger_base *new_debugger) { debugger_ = new_debugger; }
 
         void setup_outsider() {
             service::init_services(parent_);
-
             set_system_language(static_cast<language>(conf_->language));
             epoc::init_hal(parent_);
 
             dispatcher_ = std::make_unique<dispatch::dispatcher>(kern_.get(), timing_.get());
-            if (gdriver) {
+            if (gdriver)
                 dispatcher_->set_graphics_driver(gdriver);
-            }
 
-            winserv_ = reinterpret_cast<window_server *>(kern_->get_by_name<service::server>(eka2l1::get_winserv_name_by_epocver(
-                kern_->get_epoc_version())));
+            winserv_ = reinterpret_cast<window_server *>(kern_->get_by_name<service::server>(eka2l1::get_winserv_name_by_epocver(kern_->get_epoc_version())));
 
             if (!stub_->is_server_enabled() && conf_->enable_gdbstub) {
                 stub_->init(kern_.get(), io_.get());
@@ -199,84 +157,35 @@ namespace eka2l1 {
             }
 
             if (stub_->is_server_enabled()) {
-                gdb_stub_breakpoint_callback_handle_ = kern_->register_breakpoint_hit_callback([this](arm::core *cpu_core, kernel::thread *target,
-                                                                                                   const std::uint32_t addr) {
+                gdb_stub_breakpoint_callback_handle_ = kern_->register_breakpoint_hit_callback([this](arm::core *cpu_core, kernel::thread *target, const std::uint32_t addr) {
                     if (stub_->is_connected()) {
                         cpu_core->stop();
                         cpu_core->set_pc(addr);
-
                         cpu_core->save_context(target->get_thread_context());
-
                         stub_->break_exec();
                         stub_->send_trap_gdb(target, 5);
                     }
                 });
             }
 
-            ldd_request_load_callback_handle_ = kern_->register_ldd_factory_request_callback(
-                &ldd::get_factory_func);
+            ldd_request_load_callback_handle_ = kern_->register_ldd_factory_request_callback(&ldd::get_factory_func);
         }
 
-        std::uint32_t get_preset_emulate_cpu_hz(const epocver ever) {
-            switch (ever) {
-            case epocver::epoc6:
-            case epocver::epocu6:
-                return preset::SYSTEM_CPU_HZ_S60V1;
-
-            case epocver::epoc7:
-            case epocver::epoc80:
-            case epocver::epoc81a:
-            case epocver::epoc81b:
-                return preset::SYSTEM_CPU_HZ_S60V2;
-
-            case epocver::epoc93fp1:
-            case epocver::epoc93fp2:
-                return preset::SYSTEM_CPU_HZ_S60V3;
-
-            case epocver::epoc94:
-                return preset::SYSTEM_CPU_HZ_S60V5;
-
-            case epocver::epoc95:
-                return preset::SYSTEM_CPU_HZ_S3;
-
-            case epocver::epoc10:
-                return preset::SYSTEM_CPU_HZ_BELLE;
-
-            default:
-                break;
-            }
-
-            return preset::SYSTEM_CPU_HZ_S60V5;
-        }
-
-        bool is_s80_device_active() {
-            device *crr = dvcmngr_->get_current();
-            if (crr && crr->is_s80()) {
-                return true;
-            }
-
-            return false;
-        }
+        bool is_s80_device_active() { return false; } // Hardcoded out for OS 9.3 target
 
         void set_symbian_version_use(const epocver ever) {
             io_->set_epoc_ver(ever);
-
-            mem_ = std::make_unique<memory_system>(exmonitor.get(), conf_, (ever >= epocver::epoc95) ? mem::mem_model_type::flexible : mem::mem_model_type::multiple, is_epocver_eka1(ever) ? true : false);
-
+            mem_ = std::make_unique<memory_system>(exmonitor.get(), conf_, mem::mem_model_type::multiple, false);
             io_->install_memory(mem_.get());
-
             kern_->install_memory(mem_.get());
             kern_->set_epoc_version(ever);
-            kern_->set_capped_cpu_hz(get_preset_emulate_cpu_hz(ever));
+            kern_->set_capped_cpu_hz(preset::SYSTEM_CPU_HZ_S60V3);
         }
 
         void start_access() {
             paused = true;
-
-            if (kern_) {
+            if (kern_)
                 kern_->stop_cores_idling();
-            }
-
             mut.lock();
         }
 
@@ -287,70 +196,49 @@ namespace eka2l1 {
 
         bool set_device(const std::uint8_t idx) {
             start_access();
-
             if (!reset(false, static_cast<std::int32_t>(idx))) {
                 end_access();
                 return false;
             }
-
             end_access();
             return true;
         }
 
         bool rescan_devices(const drive_number romdrv) {
             bool actually_found = false;
-
             {
                 start_access();
-
                 dvcmngr_->clear();
-
                 std::string rom_drive_name = std::string(1, static_cast<char>(drive_to_char16(romdrv)));
-
                 std::string storage_path;
                 common::get_current_directory(storage_path);
                 storage_path = eka2l1::absolute_path(conf_->storage, storage_path);
 
                 std::string root_z_path = add_path(storage_path, "drives/" + rom_drive_name + "/");
                 auto ite = common::make_directory_iterator(root_z_path, "");
-                if (!ite) {
+                if (!ite)
                     return false;
-                }
 
                 ite->detail = true;
-
                 common::dir_entry firm_entry;
 
                 while (ite->next_entry(firm_entry) == 0) {
-                    if ((firm_entry.type == common::file_type::FILE_DIRECTORY) && (firm_entry.name != ".")
-                        && (firm_entry.name != "..")) {
-                        const std::string full_entry_path = eka2l1::add_path(root_z_path,
-                            firm_entry.name);
-
-                        const epocver ver = loader::determine_rpkg_symbian_version(full_entry_path);
-
+                    if ((firm_entry.type == common::file_type::FILE_DIRECTORY) && (firm_entry.name != ".") && (firm_entry.name != "..")) {
+                        const std::string full_entry_path = eka2l1::add_path(root_z_path, firm_entry.name);
+                        const epocver ver = epocver::epoc93fp2; // Hardcode to 9.3
                         std::string manu, firm_name, model;
                         loader::determine_rpkg_product_info(full_entry_path, manu, firm_name, model);
 
                         const std::string rom_directory = eka2l1::add_path(storage_path, eka2l1::add_path("roms", firm_name + "\\"));
                         const std::string rom_file = eka2l1::add_path(rom_directory, "SYM.ROM");
-                        if (!common::exists(rom_file)) {
-                            LOG_ERROR(SYSTEM, "Removing broken device: {} ({})", model, firm_name);
-                            eka2l1::common::delete_folder(rom_directory);
-                            eka2l1::common::delete_folder(full_entry_path);
+                        if (!common::exists(rom_file))
                             continue;
-                        }
 
-                        LOG_INFO(SYSTEM, "Found a device: {} ({})", model, firm_name);
-
-                        if (dvcmngr_->add_new_device(firm_name, model, manu, ver, 0) != add_device_none) {
-                            LOG_ERROR(SYSTEM, "Unable to add this device, silently ignore!");
-                        } else {
+                        if (dvcmngr_->add_new_device(firm_name, model, manu, ver, 0) == add_device_none) {
                             actually_found = true;
                         }
                     }
                 }
-
                 dvcmngr_->save_devices();
                 end_access();
             }
@@ -358,47 +246,24 @@ namespace eka2l1 {
             if (actually_found) {
                 conf_->device = 0;
                 conf_->serialize(false);
-
                 set_device(0);
             }
-
             return true;
         }
 
-        void validate_current_device() {
-            io_->validate_for_host();
-        }
-
-        std::size_t add_system_reset_callback(system_reset_callback_type type) {
-            return reset_callbacks_.add(type);
-        }
-
-        bool remove_system_reset_callback(const std::size_t h) {
-            return reset_callbacks_.remove(h);
-        }
-
+        void validate_current_device() { io_->validate_for_host(); }
+        std::size_t add_system_reset_callback(system_reset_callback_type type) { return reset_callbacks_.add(type); }
+        bool remove_system_reset_callback(const std::size_t h) { return reset_callbacks_.remove(h); }
         void invoke_system_reset_callbacks() {
-            for (auto cb : reset_callbacks_) {
+            for (auto cb : reset_callbacks_)
                 cb(parent_);
-            }
         }
 
-        void set_cpu_executor_type(const arm_emulator_type type) {
-            cpu_type = type;
-        }
+        void set_cpu_executor_type(const arm_emulator_type type) { cpu_type = type; }
+        const arm_emulator_type get_cpu_executor_type() const { return cpu_type; }
 
-        const arm_emulator_type get_cpu_executor_type() const {
-            return cpu_type;
-        }
-
-        config::state *get_config() {
-            return conf_;
-        }
-
-        device_manager *get_device_manager() {
-            return dvcmngr_.get();
-        }
-
+        config::state *get_config() { return conf_; }
+        device_manager *get_device_manager() { return dvcmngr_.get(); }
         manager::scripts *get_scripts() {
 #if ENABLE_SCRIPTING
             return scripting_.get();
@@ -406,128 +271,59 @@ namespace eka2l1 {
             return nullptr;
 #endif
         }
-
-        void set_config(config::state *confs) {
-            conf_ = confs;
-        }
-
-        loader::rom *get_rom_info() {
-            return &romf_;
-        }
-
-        epocver get_symbian_version_use() const {
-            return kern_->get_epoc_version();
-        }
-
-        void prepare_reschedule() {
-            cpu->stop();
-        }
-
-        const language get_system_language() const {
-            return kern_->get_current_language();
-        }
-
-        void set_system_language(const language new_lang) {
-            kern_->set_current_language(new_lang);
-        }
+        void set_config(config::state *confs) { conf_ = confs; }
+        loader::rom *get_rom_info() { return &romf_; }
+        epocver get_symbian_version_use() const { return kern_->get_epoc_version(); }
+        void prepare_reschedule() { cpu->stop(); }
+        const language get_system_language() const { return kern_->get_current_language(); }
+        void set_system_language(const language new_lang) { kern_->set_current_language(new_lang); }
 
         void startup();
         bool load(const std::u16string &path, const std::u16string &cmd_arg);
         int loop();
-
         bool pause();
         bool unpause();
 
-        memory_system *get_memory_system() {
-            return mem_.get();
-        }
-
-        kernel_system *get_kernel_system() {
-            return kern_.get();
-        }
-
-        hle::lib_manager *get_lib_manager() {
-            return kern_->get_lib_manager();
-        }
-
-        io_system *get_io_system() {
-            return io_.get();
-        }
-
-        ntimer *get_ntimer() {
-            return timing_.get();
-        }
-
-        disasm *get_disasm() {
-            return disassembler_.get();
-        }
-
-        gdbstub *get_gdb_stub() {
-            return stub_.get();
-        }
-
-        drivers::graphics_driver *get_graphic_driver() {
-            return gdriver;
-        }
-
-        drivers::audio_driver *get_audio_driver() {
-            return adriver;
-        }
-
-        drivers::sensor_driver *get_sensor_driver() {
-            return ssdriver;
-        }
-
-        arm::core *get_cpu() {
-            return cpu.get();
-        }
-
-        dispatch::dispatcher *get_dispatcher() {
-            return dispatcher_.get();
-        }
+        memory_system *get_memory_system() { return mem_.get(); }
+        kernel_system *get_kernel_system() { return kern_.get(); }
+        hle::lib_manager *get_lib_manager() { return kern_->get_lib_manager(); }
+        io_system *get_io_system() { return io_.get(); }
+        ntimer *get_ntimer() { return timing_.get(); }
+        disasm *get_disasm() { return disassembler_.get(); }
+        gdbstub *get_gdb_stub() { return stub_.get(); }
+        drivers::graphics_driver *get_graphic_driver() { return gdriver; }
+        drivers::audio_driver *get_audio_driver() { return adriver; }
+        drivers::sensor_driver *get_sensor_driver() { return ssdriver; }
+        arm::core *get_cpu() { return cpu.get(); }
+        dispatch::dispatcher *get_dispatcher() { return dispatcher_.get(); }
 
         void mount(drive_number drv, const drive_media media, std::string path, const std::uint32_t attrib = io_attrib_none);
-        zip_mount_error mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t attrib = io_attrib_none, progress_changed_callback progress_cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
-        ngage_game_card_install_error install_ngage_game_card(const std::string &folder_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb = nullptr);
-        ngage_game_card_install_error find_singular_ngage_game(const std::string &system_apps_folder_path, apa_app_registry &result, std::string *app_folder_name_1 = nullptr, std::string *app_folder_name_2 = nullptr);
-        bool get_ngage_game_info_mounted(apa_app_registry &result);
 
         bool reset(const bool lock_sys, const std::int32_t new_index = -1);
         void do_state(common::chunkyseri &seri);
-
         bool load_rom(const std::string &path);
-
         void request_exit();
-        bool should_exit() const {
-            return exit;
-        }
+        bool should_exit() const { return exit; }
 
         void add_new_hal(uint32_t hal_category, hal_instance &hal_com);
         epoc::hal *get_hal(uint32_t category);
-
         void initialize_user_parties();
     };
 
-    void system_impl::do_state(common::chunkyseri &seri) {
-    }
-
-    static constexpr std::uint32_t DEFAULT_CPU_HZ = 484000000;
+    void system_impl::do_state(common::chunkyseri &seri) {}
 
     void system_impl::startup() {
         exit = false;
-
-        timing_ = std::make_unique<ntimer>(DEFAULT_CPU_HZ);
+        timing_ = std::make_unique<ntimer>(preset::SYSTEM_CPU_HZ_S60V3);
         timing_->set_realtime_level(get_realtime_level_from_string(conf_->rtos_level.c_str()));
 
-        file_system_inst physical_fs = create_physical_filesystem(epocver::epoc94, "");
+        file_system_inst physical_fs = create_physical_filesystem(epocver::epoc93fp2, "");
         physical_fs_id_ = io_->add_filesystem(physical_fs);
 
         exmonitor = arm::create_exclusive_monitor(cpu_type, 1);
         cpu = arm::create_core(exmonitor.get(), cpu_type);
 
-        kern_ = std::make_unique<kernel_system>(parent_, timing_.get(), io_.get(), conf_, app_settings_, &romf_, cpu.get(),
-            disassembler_.get());
-
+        kern_ = std::make_unique<kernel_system>(parent_, timing_.get(), io_.get(), conf_, app_settings_, &romf_, cpu.get(), disassembler_.get());
         epoc::init_panic_descriptions();
     }
 
@@ -539,13 +335,8 @@ namespace eka2l1 {
         , conf_(param.conf_)
         , app_settings_(param.settings_)
         , exit(false) {
-#if EKA2L1_ARCH(ARM)
-        cpu_type = arm_emulator_type::r12l1;
-#else
-        cpu_type = arm_emulator_type::dynarmic;
-#endif
+        cpu_type = arm_emulator_type::dynarmic; // Forced dynarmic for performance
         dvcmngr_ = std::make_unique<device_manager>(conf_);
-
         disassembler_ = std::make_unique<disasm>();
         io_ = std::make_unique<io_system>();
         stub_ = std::make_unique<gdbstub>();
@@ -554,68 +345,47 @@ namespace eka2l1 {
     void system_impl::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
         start_access();
         gdriver = graphics_driver;
-
-        if (dispatcher_) {
+        if (dispatcher_)
             dispatcher_->set_graphics_driver(gdriver);
-        }
-
         end_access();
     }
 
-    void system_impl::set_audio_driver(drivers::audio_driver *aud_driver) {
-        adriver = aud_driver;
-    }
-
-    void system_impl::set_sensor_driver(drivers::sensor_driver *sensor_driver) {
-        ssdriver = sensor_driver;
-    }
+    void system_impl::set_audio_driver(drivers::audio_driver *aud_driver) { adriver = aud_driver; }
+    void system_impl::set_sensor_driver(drivers::sensor_driver *sensor_driver) { ssdriver = sensor_driver; }
 
     bool system_impl::load(const std::u16string &path, const std::u16string &cmd_arg) {
         process_ptr pr = kern_->spawn_new_process(path, cmd_arg);
-
-        if (!pr) {
+        if (!pr)
             return false;
-        }
-
         pr->run();
         return true;
     }
 
     bool system_impl::pause() {
         paused = true;
-
         if (kern_)
             kern_->stop_cores_idling();
-
         const std::lock_guard<std::mutex> guard(mut);
-
         if (timing_)
             timing_->set_paused(true);
-
         return true;
     }
 
     bool system_impl::unpause() {
         paused = false;
-
         const std::lock_guard<std::mutex> guard(mut);
-
         if (timing_)
             timing_->set_paused(false);
-
         return true;
     }
 
     int system_impl::loop() {
         const std::lock_guard<std::mutex> guard(mut);
-
-        if (paused) {
+        if (paused)
             return 1;
-        }
 
         bool should_step = false;
         bool script_hits_the_feels = false;
-
         kernel::thread *to_run = kern_->crr_thread();
 
 #ifdef ENABLE_SCRIPTING
@@ -624,13 +394,11 @@ namespace eka2l1 {
 
         if (stub_->is_server_enabled()) {
             stub_->handle_packet();
-
             if (stub_->get_cpu_halt_flag()) {
-                if (stub_->get_cpu_step_flag()) {
+                if (stub_->get_cpu_step_flag())
                     should_step = true;
-                } else {
+                else
                     return 1;
-                }
             }
         } else {
 #ifdef ENABLE_SCRIPTING
@@ -639,10 +407,8 @@ namespace eka2l1 {
                 should_step = true;
             }
 #endif
-
-            if (conf_->stepping && !should_step) {
+            if (conf_->stepping && !should_step)
                 should_step = true;
-            }
         }
 
         if (to_run != nullptr) {
@@ -650,13 +416,11 @@ namespace eka2l1 {
                 cpu->run(to_run->get_remaining_screenticks());
             } else {
                 cpu->step();
-
 #ifdef ENABLE_SCRIPTING
                 if (script_hits_the_feels)
                     scripter->reset_breakpoint_hit(cpu.get(), to_run);
 #endif
             }
-
             to_run->add_ticks(cpu->get_num_instruction_executed());
         }
 
@@ -666,355 +430,46 @@ namespace eka2l1 {
             exit = true;
             return 0;
         }
-
         return 1;
     }
 
     bool system_impl::load_rom(const std::string &path) {
         symfile f = eka2l1::physical_file_proxy(path, READ_MODE | BIN_MODE);
-
         if (!f || !f->valid()) {
             LOG_ERROR(SYSTEM, "ROM file not present: {}", path);
             return false;
         }
 
         eka2l1::ro_file_stream rom_fstream(f.get());
-        std::optional<loader::rom> romf_res = loader::load_rom(reinterpret_cast<common::ro_stream *>(
-            &rom_fstream));
-
-        if (!romf_res) {
+        std::optional<loader::rom> romf_res = loader::load_rom(reinterpret_cast<common::ro_stream *>(&rom_fstream));
+        if (!romf_res)
             return false;
-        }
 
         rom_fstream.seek(0, common::seek_where::beg);
-
         romf_ = std::move(*romf_res);
 
         if (!rom_fs_id_.has_value()) {
             auto current_device = dvcmngr_->get_current();
-
-            if (!current_device) {
+            if (!current_device)
                 return false;
-            }
-
-            file_system_inst rom_fs = create_rom_filesystem(&romf_, mem_.get(),
-                get_symbian_version_use(), current_device->firmware_code);
-
+            file_system_inst rom_fs = create_rom_filesystem(&romf_, mem_.get(), get_symbian_version_use(), current_device->firmware_code);
             rom_fs_id_ = io_->add_filesystem(rom_fs);
         }
 
-        bool res1 = kern_->map_rom(romf_.header.rom_base, path);
-
-        if (!res1) {
-            return false;
-        }
-
-        return true;
+        return kern_->map_rom(romf_.header.rom_base, path);
     }
 
-    void system_impl::mount(drive_number drv, const drive_media media, std::string path,
-        const std::uint32_t attrib) {
+    void system_impl::mount(drive_number drv, const drive_media media, std::string path, const std::uint32_t attrib) {
         io_->mount_physical_path(drv, media, attrib, common::utf8_to_ucs2(path));
-    }
-
-    zip_mount_error system_impl::mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t base_attrib, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
-        std::unique_ptr<mz_zip_archive> archive = std::make_unique<mz_zip_archive>();
-        if (!mz_zip_reader_init_file(archive.get(), zip_path.c_str(), 0)) {
-            return zip_mount_error_not_zip;
-        }
-
-        const std::uint32_t num_files = mz_zip_reader_get_num_files(archive.get());
-        bool system_found = false;
-
-        std::vector<std::string> list_files;
-
-        struct extract_zip_callback_data {
-            progress_changed_callback progress_cb_;
-            cancel_requested_callback cancel_cb_;
-            std::size_t total_uncomp_size_;
-            std::size_t size_uncomped_so_far_;
-            std::unique_ptr<std::ofstream> file_stream_;
-            bool was_canceled_;
-        } callback_data;
-
-        callback_data.progress_cb_ = progress_cb;
-        callback_data.cancel_cb_ = cancel_cb;
-        callback_data.total_uncomp_size_ = 0;
-        callback_data.size_uncomped_so_far_ = 0;
-        callback_data.was_canceled_ = false;
-
-        for (std::uint32_t i = 0; i < num_files; i++) {
-            mz_zip_archive_file_stat file_stat;
-            if (mz_zip_reader_file_stat(archive.get(), i, &file_stat)) {
-                std::string root_folder(file_stat.m_filename, file_stat.m_filename + 6);
-                if (common::compare_ignore_case(root_folder.c_str(), "system") == 0) {
-                    system_found = true;
-                }
-
-                list_files.push_back(file_stat.m_filename);
-                callback_data.total_uncomp_size_ += file_stat.m_uncomp_size;
-            } else {
-                mz_zip_reader_end(archive.get());
-                return zip_mount_error_corrupt;
-            }
-        }
-
-        if (!system_found) {
-            mz_zip_reader_end(archive.get());
-            return zip_mount_error_no_system_folder;
-        }
-
-        std::string current_dir;
-        common::get_current_directory(current_dir);
-
-        const std::string temp_folder = eka2l1::absolute_path("cache/temp/", current_dir);
-
-        eka2l1::common::delete_folder(temp_folder);
-        eka2l1::common::create_directories(temp_folder);
-
-        for (std::size_t extracted = 0; extracted < list_files.size(); extracted++) {
-            const std::string path_to_file = eka2l1::add_path(temp_folder, list_files[extracted]);
-            common::create_directories(eka2l1::file_directory(path_to_file));
-            callback_data.file_stream_ = std::make_unique<std::ofstream>(path_to_file, std::ios::binary);
-
-            if (!mz_zip_reader_extract_to_callback(
-                    archive.get(), static_cast<mz_uint>(extracted), [](void *userdata, mz_uint64 offset, const void *buf, std::size_t n) -> std::size_t {
-                        extract_zip_callback_data *data_ptr = reinterpret_cast<extract_zip_callback_data *>(userdata);
-
-                        if (data_ptr->cancel_cb_ && data_ptr->cancel_cb_()) {
-                            data_ptr->was_canceled_ = true;
-                            return 0;
-                        }
-
-                        std::size_t written = data_ptr->file_stream_->tellp();
-                        data_ptr->file_stream_->write(reinterpret_cast<const char *>(buf), n);
-
-                        std::size_t current_pos = data_ptr->file_stream_->tellp();
-                        written = current_pos - written;
-
-                        if (written == n) {
-                            data_ptr->size_uncomped_so_far_ += written;
-
-                            if (data_ptr->progress_cb_) {
-                                data_ptr->progress_cb_(data_ptr->size_uncomped_so_far_, data_ptr->total_uncomp_size_);
-                            }
-                        }
-
-                        return static_cast<std::size_t>(written);
-                    },
-                    &callback_data, 0)) {
-                callback_data.file_stream_.reset();
-                eka2l1::common::delete_folder(temp_folder);
-
-                mz_zip_reader_end(archive.get());
-                return zip_mount_error_corrupt;
-            }
-        }
-
-        mz_zip_reader_end(archive.get());
-        mount(drv, media, temp_folder, base_attrib | io_attrib_removeable);
-
-        return zip_mount_error_none;
-    }
-
-    ngage_game_card_install_error system_impl::find_singular_ngage_game(const std::string &system_apps_folder_path, apa_app_registry &result, std::string *folder_1, std::string *folder_2) {
-        std::unique_ptr<common::dir_iterator> apps_folder_ite = common::make_directory_iterator(system_apps_folder_path, "");
-        apps_folder_ite->detail = true;
-
-        std::string specific_app;
-        std::string specific_app_2;
-
-        if (apps_folder_ite->is_valid()) {
-            common::dir_entry app_folder_entry;
-            while (apps_folder_ite->next_entry(app_folder_entry) == 0) {
-                if (app_folder_entry.type == common::FILE_DIRECTORY) {
-                    if ((app_folder_entry.name == ".") || (app_folder_entry.name == "..") || (common::compare_ignore_case(app_folder_entry.name.c_str(), "Browser") == 0)) {
-                        continue;
-                    }
-                    if (!specific_app.empty()) {
-                        if (specific_app_2.empty()) {
-                            specific_app_2 = app_folder_entry.name;
-                        } else {
-                            return ngage_game_card_more_than_one_data_folder;
-                        }
-                    } else {
-                        specific_app = app_folder_entry.name;
-                    }
-                }
-            }
-
-            if (specific_app.empty()) {
-                return ngage_game_card_no_game_data_folder;
-            }
-        } else {
-            return ngage_game_card_no_game_data_folder;
-        }
-
-        if (!specific_app_2.empty()) {
-            const bool app1_ends_with1 = std_string_ends_with(specific_app, "_1");
-            const bool app2_ends_with1 = std_string_ends_with(specific_app_2, "_1");
-            if (!app1_ends_with1 && !app2_ends_with1) {
-                return ngage_game_card_more_than_one_data_folder;
-            }
-
-            if (app1_ends_with1) {
-                if (app2_ends_with1) {
-                    return ngage_game_card_more_than_one_data_folder;
-                }
-                std::swap(specific_app, specific_app_2);
-            }
-        }
-
-        const std::string aif_file = eka2l1::add_path(system_apps_folder_path, eka2l1::add_path(specific_app, specific_app + ".aif"));
-        if (!common::exists(aif_file)) {
-            return ngage_game_card_no_game_registeration_info;
-        }
-
-        common::ro_std_file_stream aif_file_stream(aif_file, true);
-
-        if (!eka2l1::read_registeration_info_aif(reinterpret_cast<common::ro_stream *>(&aif_file_stream), result,
-                drive_e, get_system_language())) {
-            return ngage_game_card_registeration_corrupted;
-        }
-
-        if (folder_1) {
-            *folder_1 = specific_app;
-        }
-
-        if (folder_2) {
-            *folder_2 = specific_app_2;
-        }
-
-        return ngage_game_card_install_success;
-    }
-
-    bool system_impl::get_ngage_game_info_mounted(apa_app_registry &result) {
-        std::optional<std::u16string> path_apps = io_->get_raw_path(u"E:\\system\\apps\\");
-        if (!path_apps.has_value()) {
-            return false;
-        }
-
-        std::string folder_1, folder_2;
-        if (find_singular_ngage_game(common::ucs2_to_utf8(path_apps.value()), result, &folder_1, &folder_2) != ngage_game_card_install_success) {
-            return false;
-        }
-
-        if (!folder_2.empty()) {
-            folder_1 = folder_2;
-        }
-
-        result.mandatory_info.app_path = eka2l1::add_path(u"E:\\system\\apps\\", common::utf8_to_ucs2(eka2l1::add_path(folder_1, folder_1 + ".app")));
-        return true;
-    }
-
-    ngage_game_card_install_error system_impl::install_ngage_game_card(const std::string &folder_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb) {
-        std::string system_folder_path = eka2l1::add_path(folder_path, "\\system\\");
-        if (!common::exists(system_folder_path)) {
-            if (common::is_platform_case_sensitive()) {
-                std::string system_real_name = common::find_case_sensitive_file_name(folder_path + "\\", "system", common::FILE_DIRECTORY);
-                if (system_real_name.empty()) {
-                    return ngage_game_card_no_game_data_folder;
-                }
-                system_folder_path = eka2l1::add_path(folder_path, system_real_name + "\\");
-            } else {
-                return ngage_game_card_no_game_data_folder;
-            }
-        }
-        std::string system_apps_folder_path = eka2l1::add_path(system_folder_path, "\\apps\\");
-        if (!common::exists(system_apps_folder_path)) {
-            if (common::is_platform_case_sensitive()) {
-                std::string apps_real_name = common::find_case_sensitive_file_name(system_folder_path + "\\", "apps", common::FILE_DIRECTORY);
-                if (apps_real_name.empty()) {
-                    return ngage_game_card_no_game_data_folder;
-                }
-                system_apps_folder_path = eka2l1::add_path(system_folder_path, apps_real_name + "\\");
-            } else {
-                return ngage_game_card_no_game_data_folder;
-            }
-            return ngage_game_card_no_game_data_folder;
-        }
-
-        std::string specific_app, specific_app_2;
-
-        apa_app_registry app_reg_temp;
-        ngage_game_card_install_error err_find = find_singular_ngage_game(system_apps_folder_path, app_reg_temp, &specific_app, &specific_app_2);
-        if (err_find != ngage_game_card_install_success) {
-            return err_find;
-        }
-
-        if (game_name_found_cb) {
-            game_name_found_cb(common::ucs2_to_utf8(app_reg_temp.mandatory_info.long_caption.to_std_string(nullptr)));
-        }
-
-        std::string drive_e_path;
-        if (auto drive_entry = io_->get_drive_entry(drive_e)) {
-            drive_e_path = drive_entry->real_path;
-        } else {
-            return ngage_game_card_general_error;
-        }
-
-        std::string current_dir;
-        common::get_current_directory(current_dir);
-
-        std::string drive_e_path_root = eka2l1::absolute_path(drive_e_path, current_dir);
-        drive_e_path = eka2l1::add_path(drive_e_path_root, "system\\");
-
-        if (!common::exists(drive_e_path)) {
-            common::create_directories(drive_e_path);
-        }
-
-        auto apps_folder_ite = common::make_directory_iterator(system_folder_path, "");
-        apps_folder_ite->detail = true;
-
-        std::uint32_t count = 0;
-        std::uint32_t target_index = 0xFFFFFFFF;
-
-        if (apps_folder_ite->is_valid()) {
-            common::dir_entry app_entry;
-            while (apps_folder_ite->next_entry(app_entry) >= 0) {
-                if (app_entry.type == common::file_type::FILE_DIRECTORY) {
-                    if ((app_entry.name != ".") && (app_entry.name != "..")) {
-                        if (eka2l1::common::compare_ignore_case(app_entry.name.c_str(), "libs") == 0) {
-                            target_index = count;
-                        }
-                        count++;
-                    }
-                }
-            }
-        }
-
-        std::string libs_folder_path;
-        if (target_index != 0xFFFFFFFF) {
-            libs_folder_path = eka2l1::add_path(system_folder_path, "libs");
-        }
-
-        common::copy_folder(system_folder_path, drive_e_path, common::is_platform_case_sensitive() ? common::FOLDER_COPY_FLAG_LOWERCASE_NAME : 0,
-            [&](const std::size_t copied, const std::size_t total) {
-                if (progress_cb)
-                    progress_cb(copied * 100 / total, 100);
-            });
-
-        if (!specific_app_2.empty()) {
-            const std::string real_aif_remove = eka2l1::add_path(drive_e_path, eka2l1::add_path("\\apps\\", eka2l1::add_path(specific_app, specific_app + ".aif")));
-            common::remove(real_aif_remove);
-        }
-
-        if (progress_cb)
-            progress_cb(100, 100);
-
-        return ngage_game_card_install_success;
     }
 
     void system_impl::initialize_user_parties() {
         get_lib_manager()->load_patch_libraries(PATCH_FOLDER_PATH);
         dispatch::libraries::register_functions(kern_.get(), dispatcher_.get());
-
         service::init_services_post_bootup(parent_);
-
 #ifdef ENABLE_SCRIPTING
         scripting_->import_all_modules();
 #endif
-
         kern_->start_bootload();
     }
 
@@ -1024,44 +479,33 @@ namespace eka2l1 {
     }
 
     bool system_impl::reset(const bool lock_sys, const std::int32_t index) {
-        if (lock_sys) {
+        if (lock_sys)
             start_access();
-        }
 
         if ((index >= 0) && (static_cast<std::size_t>(index) >= dvcmngr_->total())) {
-            if (lock_sys) {
+            if (lock_sys)
                 end_access();
-            }
-
             return false;
         }
 
         exit = false;
 
 #ifdef ENABLE_SCRIPTING
-        if (scripting_) {
+        if (scripting_)
             scripting_.reset();
-        }
 #endif
 
         kern_->unregister_ldd_factory_request_callback(ldd_request_load_callback_handle_);
         kern_->unregister_breakpoint_hit_callback(gdb_stub_breakpoint_callback_handle_);
 
-        if (dispatcher_) {
+        if (dispatcher_)
             dispatcher_->shutdown(gdriver);
-        }
-
-        if (cpu) {
+        if (cpu)
             cpu->clear_instruction_cache();
-        }
-
-        if (kern_) {
+        if (kern_)
             kern_->reset();
-        }
-
-        if (timing_) {
+        if (timing_)
             timing_->reset();
-        }
 
         hals_.clear();
 
@@ -1069,7 +513,6 @@ namespace eka2l1 {
             if (!dvcmngr_->set_current(static_cast<std::uint8_t>(index))) {
                 if (lock_sys)
                     end_access();
-
                 return false;
             }
         }
@@ -1077,260 +520,87 @@ namespace eka2l1 {
         device *dvc = dvcmngr_->get_current();
 
         const bool lang_not_found_in_device = (std::find(dvc->languages.begin(), dvc->languages.end(), conf_->language) == dvc->languages.end());
-        const bool lang_undetermined = (conf_->language == -1);
-
-        if (lang_undetermined || lang_not_found_in_device) {
+        if ((conf_->language == -1) || lang_not_found_in_device) {
             conf_->language = dvc->default_language_code;
             conf_->serialize(false);
         }
 
         io_->set_product_code(dvc->firmware_code);
-        set_symbian_version_use(dvc->ver);
+        set_symbian_version_use(epocver::epoc93fp2); // Hardcoded OS 9.3 target
 
         cpu->clear_instruction_cache();
 
         const std::string rom_path = add_path(conf_->storage, add_path(preset::ROM_FOLDER_PATH, add_path(common::lowercase_string(dvc->firmware_code), preset::ROM_FILENAME)));
-
-        if (!load_rom(rom_path)) {
-            if (lock_sys) {
-                end_access();
-            }
-
-            return false;
-        }
+        load_rom(rom_path);
 
 #ifdef ENABLE_SCRIPTING
         scripting_ = std::make_unique<manager::scripts>(parent_);
 #endif
 
-        if (gdriver) {
+        if (gdriver)
             gdriver->set_upscale_shader("");
-        }
 
         setup_outsider();
         invoke_system_reset_callbacks();
 
-        if (lock_sys) {
+        if (lock_sys)
             end_access();
-        }
 
         return true;
     }
 
-    void system_impl::add_new_hal(uint32_t hal_category, hal_instance &hal_com) {
-        hals_.emplace(hal_category, std::move(hal_com));
-    }
+    void system_impl::add_new_hal(uint32_t hal_category, hal_instance &hal_com) { hals_.emplace(hal_category, std::move(hal_com)); }
+    epoc::hal *system_impl::get_hal(uint32_t category) { return hals_[category].get(); }
 
-    epoc::hal *system_impl::get_hal(uint32_t category) {
-        return hals_[category].get();
-    }
-
+    // System delegates
     system::system(system_create_components &comp)
-        : impl(new system_impl(this, comp)) {
-    }
-
-    system::~system() {
-        delete impl;
-    }
-
-    config::state *system::get_config() {
-        return impl->get_config();
-    }
-
-    device_manager *system::get_device_manager() {
-        return impl->get_device_manager();
-    }
-
-    manager::scripts *system::get_scripts() {
-        return impl->get_scripts();
-    }
-
-    void system::set_config(config::state *conf) {
-        impl->set_config(conf);
-    }
-
-    void system::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
-        return impl->set_graphics_driver(graphics_driver);
-    }
-
-    void system::set_audio_driver(drivers::audio_driver *adriver) {
-        return impl->set_audio_driver(adriver);
-    }
-
-    void system::set_sensor_driver(drivers::sensor_driver *ssdriver) {
-        return impl->set_sensor_driver(ssdriver);
-    }
-
-    void system::set_debugger(debugger_base *new_debugger) {
-        return impl->set_debugger(new_debugger);
-    }
-
-    bool system::set_device(const std::uint8_t idx) {
-        return impl->set_device(idx);
-    }
-
-    void system::set_symbian_version_use(const epocver ever) {
-        return impl->set_symbian_version_use(ever);
-    }
-
-    void system::set_cpu_executor_type(const arm_emulator_type type) {
-        return impl->set_cpu_executor_type(type);
-    }
-
-    const arm_emulator_type system::get_cpu_executor_type() const {
-        return impl->get_cpu_executor_type();
-    }
-
-    loader::rom *system::get_rom_info() {
-        return impl->get_rom_info();
-    }
-
-    epocver system::get_symbian_version_use() const {
-        return impl->get_symbian_version_use();
-    }
-
-    void system::prepare_reschedule() {
-        return impl->prepare_reschedule();
-    }
-
-    void system::startup() {
-        return impl->startup();
-    }
-
-    bool system::load(const std::u16string &path, const std::u16string &cmd_arg) {
-        return impl->load(path, cmd_arg);
-    }
-
-    int system::loop() {
-        return impl->loop();
-    }
-
-    bool system::pause() {
-        return impl->pause();
-    }
-
-    bool system::unpause() {
-        return impl->unpause();
-    }
-
-    memory_system *system::get_memory_system() {
-        return impl->get_memory_system();
-    }
-
-    kernel_system *system::get_kernel_system() {
-        return impl->get_kernel_system();
-    }
-
-    hle::lib_manager *system::get_lib_manager() {
-        return impl->get_lib_manager();
-    }
-
-    io_system *system::get_io_system() {
-        return impl->get_io_system();
-    }
-
-    ntimer *system::get_ntimer() {
-        return impl->get_ntimer();
-    }
-
-    disasm *system::get_disasm() {
-        return impl->get_disasm();
-    }
-
-    gdbstub *system::get_gdb_stub() {
-        return impl->get_gdb_stub();
-    }
-
-    drivers::graphics_driver *system::get_graphics_driver() {
-        return impl->get_graphic_driver();
-    }
-
-    drivers::audio_driver *system::get_audio_driver() {
-        return impl->get_audio_driver();
-    }
-
-    drivers::sensor_driver *system::get_sensor_driver() {
-        return impl->get_sensor_driver();
-    }
-
-    arm::core *system::get_cpu() {
-        return impl->get_cpu();
-    }
-
-    dispatch::dispatcher *system::get_dispatcher() {
-        return impl->get_dispatcher();
-    }
-
-    void system::mount(drive_number drv, const drive_media media, std::string path,
-        const std::uint32_t attrib) {
-        return impl->mount(drv, media, path, attrib);
-    }
-
-    zip_mount_error system::mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t base_attrib, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
-        return impl->mount_game_zip(drv, media, zip_path, base_attrib, progress_cb, cancel_cb);
-    }
-
-    ngage_game_card_install_error system::install_ngage_game_card(const std::string &folder_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb) {
-        return impl->install_ngage_game_card(folder_path, game_name_found_cb, progress_cb);
-    }
-
-    bool system::reset() {
-        return impl->reset(true);
-    }
-
-    void system::request_exit() {
-        return impl->request_exit();
-    }
-
-    bool system::should_exit() const {
-        return impl->should_exit();
-    }
-
-    void system::add_new_hal(uint32_t hal_category, hal_instance &hal_com) {
-        return impl->add_new_hal(hal_category, hal_com);
-    }
-
-    epoc::hal *system::get_hal(uint32_t category) {
-        return impl->get_hal(category);
-    }
-
-    void system::do_state(common::chunkyseri &seri) {
-        return impl->do_state(seri);
-    }
-
-    const language system::get_system_language() const {
-        return impl->get_system_language();
-    }
-
-    void system::set_system_language(const language new_lang) {
-        impl->set_system_language(new_lang);
-    }
-
-    void system::validate_current_device() {
-        impl->validate_current_device();
-    }
-
-    std::size_t system::add_system_reset_callback(system_reset_callback_type cb) {
-        return impl->add_system_reset_callback(cb);
-    }
-
-    bool system::remove_system_reset_callback(const std::size_t h) {
-        return impl->remove_system_reset_callback(h);
-    }
-
-    bool system::rescan_devices(const drive_number romdrv) {
-        return impl->rescan_devices(romdrv);
-    }
-
-    void system::initialize_user_parties() {
-        impl->initialize_user_parties();
-    }
-
-    bool system::get_ngage_game_info_mounted(apa_app_registry &result) {
-        return impl->get_ngage_game_info_mounted(result);
-    }
-
-    bool system::is_s80_device_active() {
-        return impl->is_s80_device_active();
-    }
+        : impl(new system_impl(this, comp)) {}
+    system::~system() { delete impl; }
+    config::state *system::get_config() { return impl->get_config(); }
+    device_manager *system::get_device_manager() { return impl->get_device_manager(); }
+    manager::scripts *system::get_scripts() { return impl->get_scripts(); }
+    void system::set_config(config::state *conf) { impl->set_config(conf); }
+    void system::set_graphics_driver(drivers::graphics_driver *driver) { impl->set_graphics_driver(driver); }
+    void system::set_audio_driver(drivers::audio_driver *driver) { impl->set_audio_driver(driver); }
+    void system::set_sensor_driver(drivers::sensor_driver *driver) { impl->set_sensor_driver(driver); }
+    void system::set_debugger(debugger_base *dbgr) { impl->set_debugger(dbgr); }
+    bool system::set_device(const std::uint8_t idx) { return impl->set_device(idx); }
+    void system::set_symbian_version_use(const epocver ever) { impl->set_symbian_version_use(ever); }
+    void system::set_cpu_executor_type(const arm_emulator_type type) { impl->set_cpu_executor_type(type); }
+    const arm_emulator_type system::get_cpu_executor_type() const { return impl->get_cpu_executor_type(); }
+    loader::rom *system::get_rom_info() { return impl->get_rom_info(); }
+    epocver system::get_symbian_version_use() const { return impl->get_symbian_version_use(); }
+    void system::prepare_reschedule() { impl->prepare_reschedule(); }
+    void system::startup() { impl->startup(); }
+    bool system::load(const std::u16string &path, const std::u16string &cmd_arg) { return impl->load(path, cmd_arg); }
+    int system::loop() { return impl->loop(); }
+    bool system::pause() { return impl->pause(); }
+    bool system::unpause() { return impl->unpause(); }
+    memory_system *system::get_memory_system() { return impl->get_memory_system(); }
+    kernel_system *system::get_kernel_system() { return impl->get_kernel_system(); }
+    hle::lib_manager *system::get_lib_manager() { return impl->get_lib_manager(); }
+    io_system *system::get_io_system() { return impl->get_io_system(); }
+    ntimer *system::get_ntimer() { return impl->get_ntimer(); }
+    disasm *system::get_disasm() { return impl->get_disasm(); }
+    gdbstub *system::get_gdb_stub() { return impl->get_gdb_stub(); }
+    drivers::graphics_driver *system::get_graphics_driver() { return impl->get_graphic_driver(); }
+    drivers::audio_driver *system::get_audio_driver() { return impl->get_audio_driver(); }
+    drivers::sensor_driver *system::get_sensor_driver() { return impl->get_sensor_driver(); }
+    arm::core *system::get_cpu() { return impl->get_cpu(); }
+    dispatch::dispatcher *system::get_dispatcher() { return impl->get_dispatcher(); }
+    void system::mount(drive_number drv, const drive_media media, std::string path, const std::uint32_t attrib) { impl->mount(drv, media, path, attrib); }
+    bool system::reset() { return impl->reset(true); }
+    void system::request_exit() { impl->request_exit(); }
+    bool system::should_exit() const { return impl->should_exit(); }
+    void system::add_new_hal(uint32_t hal_category, hal_instance &hal_com) { impl->add_new_hal(hal_category, hal_com); }
+    epoc::hal *system::get_hal(uint32_t category) { return impl->get_hal(category); }
+    void system::do_state(common::chunkyseri &seri) { impl->do_state(seri); }
+    const language system::get_system_language() const { return impl->get_system_language(); }
+    void system::set_system_language(const language new_lang) { impl->set_system_language(new_lang); }
+    void system::validate_current_device() { impl->validate_current_device(); }
+    std::size_t system::add_system_reset_callback(system_reset_callback_type cb) { return impl->add_system_reset_callback(cb); }
+    bool system::remove_system_reset_callback(const std::size_t h) { return impl->remove_system_reset_callback(h); }
+    bool system::rescan_devices(const drive_number romdrv) { return impl->rescan_devices(romdrv); }
+    void system::initialize_user_parties() { impl->initialize_user_parties(); }
+    bool system::is_s80_device_active() { return impl->is_s80_device_active(); }
 }
