@@ -1,19 +1,19 @@
 /*
  * Copyright (c) 2018 EKA2L1 Team.
- * 
- * This file is part of EKA2L1 project 
+ *
+ * This file is part of EKA2L1 project
  * (see bentokun.github.com/EKA2L1).
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -56,14 +56,12 @@
 #include <mem/mem.h>
 #include <mem/ptr.h>
 
-#include <dispatch/libraries/register.h>
 #include <dispatch/dispatcher.h>
-#include <j2me/applist.h>
+#include <dispatch/libraries/register.h>
 #include <kernel/libmanager.h>
 #include <kernel/timing.h>
 #include <ldd/collection.h>
 #include <loader/rom.h>
-#include <package/manager.h>
 #include <services/init.h>
 #include <vfs/vfs.h>
 
@@ -81,8 +79,6 @@
 #include <miniz.h>
 
 namespace eka2l1 {
-    // https://www.techiedelight.com/check-if-a-string-ends-with-another-string-in-cpp/
-    // This should be in C++ 20. So put a temporary for now here.
     static bool std_string_ends_with(std::string const &str, std::string const &suffix) {
         if (str.length() < suffix.length()) {
             return false;
@@ -95,7 +91,7 @@ namespace eka2l1 {
     enum hal_entry {
 #include <kernel/hal.def>
     };
-    
+
     static const char *PATCH_FOLDER_PATH = ".//patch//";
 
     system_create_components::system_create_components()
@@ -125,8 +121,6 @@ namespace eka2l1 {
         std::unique_ptr<disasm> disassembler_;
         std::unique_ptr<gdbstub> stub_;
         std::unique_ptr<dispatch::dispatcher> dispatcher_;
-        std::unique_ptr<manager::packages> packages_;
-        std::unique_ptr<j2me::app_list> j2me_applist_;
 
 #if ENABLE_SCRIPTING
         std::unique_ptr<manager::scripts> scripting_;
@@ -164,14 +158,11 @@ namespace eka2l1 {
             scripting_.reset();
 #endif
 
-            // Reset dispatchers...
             if (dispatcher_)
                 dispatcher_->shutdown(gdriver);
 
             dispatcher_.reset();
 
-            // We need to clear kernel content second, since some object do references to it,
-            // and if we let it go in destructor it would be messy! :D
             if (kern_)
                 kern_->wipeout();
 
@@ -191,11 +182,9 @@ namespace eka2l1 {
         void setup_outsider() {
             service::init_services(parent_);
 
-            // Try to set system language
             set_system_language(static_cast<language>(conf_->language));
             epoc::init_hal(parent_);
 
-            // Initialize HLE finally
             dispatcher_ = std::make_unique<dispatch::dispatcher>(kern_.get(), timing_.get());
             if (gdriver) {
                 dispatcher_->set_graphics_driver(gdriver);
@@ -203,56 +192,6 @@ namespace eka2l1 {
 
             winserv_ = reinterpret_cast<window_server *>(kern_->get_by_name<service::server>(eka2l1::get_winserv_name_by_epocver(
                 kern_->get_epoc_version())));
-            packages_->var_resolver = [&](const int int_val) -> int {
-                switch (int_val) {
-                // HAL Display X
-                case hal_entry_display_screen_x_pixels:
-                    return winserv_->get_screen(0)->size().x;
-
-                case hal_entry_display_screen_y_pixels:
-                    return winserv_->get_screen(0)->size().y;
-
-                case hal_entry_machine_uid: {
-                    device *dvc = get_device_manager()->get_current();
-                    return dvc ? dvc->machine_uid : 0;
-                }
-
-                case hal_entry_manufacturer:
-                    return preset::MANUFACTURER_NOKIA_UID;
-
-                default:
-                    break;
-                }
-
-                return 0;
-            };
-
-            packages_->choose_lang = [&](const int *langs, const int count) {
-                device *dvc = get_device_manager()->get_current();
-                if (!dvc) {
-                    LOG_WARN(SYSTEM, "No device is currently available, language choosen for package is: {}", num_to_lang(langs[0]));
-                    return langs[0];
-                }
-
-                const int current_lang = get_config()->language;
-
-                // First up, pick the device's current language
-                auto lang_ite = std::find(langs, langs + count, current_lang);
-                if (lang_ite != langs + count) {
-                    LOG_INFO(SYSTEM, "Picked language for package: {}", num_to_lang(current_lang));
-                    return current_lang;
-                }
-
-                // Pick the device's default language code
-                lang_ite = std::find(langs, langs + count, dvc->default_language_code);
-                if (lang_ite != langs + count) {
-                    LOG_INFO(SYSTEM, "Picked language for package: {}", num_to_lang(dvc->default_language_code));
-                    return dvc->default_language_code;
-                }
-
-                LOG_INFO(SYSTEM, "Picked language for package: {}", num_to_lang(langs[0]));
-                return langs[0];
-            };
 
             if (!stub_->is_server_enabled() && conf_->enable_gdbstub) {
                 stub_->init(kern_.get(), io_.get());
@@ -276,8 +215,6 @@ namespace eka2l1 {
 
             ldd_request_load_callback_handle_ = kern_->register_ldd_factory_request_callback(
                 &ldd::get_factory_func);
-
-            j2me_applist_ = std::make_unique<j2me::app_list>(*conf_);
         }
 
         std::uint32_t get_preset_emulate_cpu_hz(const epocver ever) {
@@ -311,7 +248,7 @@ namespace eka2l1 {
 
             return preset::SYSTEM_CPU_HZ_S60V5;
         }
-        
+
         bool is_s80_device_active() {
             device *crr = dvcmngr_->get_current();
             if (crr && crr->is_s80()) {
@@ -324,12 +261,10 @@ namespace eka2l1 {
         void set_symbian_version_use(const epocver ever) {
             io_->set_epoc_ver(ever);
 
-            // Use flexible model on 9.5 and onwards.
             mem_ = std::make_unique<memory_system>(exmonitor.get(), conf_, (ever >= epocver::epoc95) ? mem::mem_model_type::flexible : mem::mem_model_type::multiple, is_epocver_eka1(ever) ? true : false);
 
             io_->install_memory(mem_.get());
 
-            // Install memory to the kernel, then set epoc version
             kern_->install_memory(mem_.get());
             kern_->set_epoc_version(ever);
             kern_->set_capped_cpu_hz(get_preset_emulate_cpu_hz(ever));
@@ -464,10 +399,6 @@ namespace eka2l1 {
             return dvcmngr_.get();
         }
 
-        manager::packages *get_packages() {
-            return packages_.get();
-        }
-
         manager::scripts *get_scripts() {
 #if ENABLE_SCRIPTING
             return scripting_.get();
@@ -555,10 +486,6 @@ namespace eka2l1 {
             return dispatcher_.get();
         }
 
-        j2me::app_list *get_j2me_applist() {
-            return j2me_applist_.get();
-        }
-
         void mount(drive_number drv, const drive_media media, std::string path, const std::uint32_t attrib = io_attrib_none);
         zip_mount_error mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t attrib = io_attrib_none, progress_changed_callback progress_cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
         ngage_game_card_install_error install_ngage_game_card(const std::string &folder_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb = nullptr);
@@ -568,7 +495,6 @@ namespace eka2l1 {
         bool reset(const bool lock_sys, const std::int32_t new_index = -1);
         void do_state(common::chunkyseri &seri);
 
-        package::installation_result install_package(std::u16string path, drive_number drv);
         bool load_rom(const std::string &path);
 
         void request_exit();
@@ -590,7 +516,6 @@ namespace eka2l1 {
     void system_impl::startup() {
         exit = false;
 
-        // Initialize all the system that doesn't depend on others first
         timing_ = std::make_unique<ntimer>(DEFAULT_CPU_HZ);
         timing_->set_realtime_level(get_realtime_level_from_string(conf_->rtos_level.c_str()));
 
@@ -617,14 +542,13 @@ namespace eka2l1 {
 #if EKA2L1_ARCH(ARM)
         cpu_type = arm_emulator_type::r12l1;
 #else
-        cpu_type = /*arm::string_to_arm_emulator_type(conf_->cpu_backend);*/ arm_emulator_type::dynarmic;
+        cpu_type = arm_emulator_type::dynarmic;
 #endif
         dvcmngr_ = std::make_unique<device_manager>(conf_);
 
         disassembler_ = std::make_unique<disasm>();
         io_ = std::make_unique<io_system>();
         stub_ = std::make_unique<gdbstub>();
-        packages_ = std::make_unique<manager::packages>(io_.get(), conf_);
     }
 
     void system_impl::set_graphics_driver(drivers::graphics_driver *graphics_driver) {
@@ -711,7 +635,6 @@ namespace eka2l1 {
         } else {
 #ifdef ENABLE_SCRIPTING
             if (scripter->last_breakpoint_hit(to_run)) {
-                // About to run this thread, so reset the hit
                 script_hits_the_feels = true;
                 should_step = true;
             }
@@ -745,10 +668,6 @@ namespace eka2l1 {
         }
 
         return 1;
-    }
-
-    package::installation_result system_impl::install_package(std::u16string path, drive_number drv) {
-        return packages_->install_package(path, drv);
     }
 
     bool system_impl::load_rom(const std::string &path) {
@@ -804,7 +723,6 @@ namespace eka2l1 {
             return zip_mount_error_not_zip;
         }
 
-        // Locate the system folder, if does not exist, is not a valid game card dump
         const std::uint32_t num_files = mz_zip_reader_get_num_files(archive.get());
         bool system_found = false;
 
@@ -828,7 +746,6 @@ namespace eka2l1 {
         for (std::uint32_t i = 0; i < num_files; i++) {
             mz_zip_archive_file_stat file_stat;
             if (mz_zip_reader_file_stat(archive.get(), i, &file_stat)) {
-                // Length of system
                 std::string root_folder(file_stat.m_filename, file_stat.m_filename + 6);
                 if (common::compare_ignore_case(root_folder.c_str(), "system") == 0) {
                     system_found = true;
@@ -854,8 +771,6 @@ namespace eka2l1 {
 
         eka2l1::common::delete_folder(temp_folder);
         eka2l1::common::create_directories(temp_folder);
-
-        std::uint32_t extracted = 0;
 
         for (std::size_t extracted = 0; extracted < list_files.size(); extracted++) {
             const std::string path_to_file = eka2l1::add_path(temp_folder, list_files[extracted]);
@@ -913,9 +828,7 @@ namespace eka2l1 {
             common::dir_entry app_folder_entry;
             while (apps_folder_ite->next_entry(app_folder_entry) == 0) {
                 if (app_folder_entry.type == common::FILE_DIRECTORY) {
-                    if ((app_folder_entry.name == ".") || (app_folder_entry.name == "..") ||
-                        // Blacklist
-                        (common::compare_ignore_case(app_folder_entry.name.c_str(), "Browser") == 0)) {
+                    if ((app_folder_entry.name == ".") || (app_folder_entry.name == "..") || (common::compare_ignore_case(app_folder_entry.name.c_str(), "Browser") == 0)) {
                         continue;
                     }
                     if (!specific_app.empty()) {
@@ -937,7 +850,6 @@ namespace eka2l1 {
             return ngage_game_card_no_game_data_folder;
         }
 
-        // Handle game fix folder
         if (!specific_app_2.empty()) {
             const bool app1_ends_with1 = std_string_ends_with(specific_app, "_1");
             const bool app2_ends_with1 = std_string_ends_with(specific_app_2, "_1");
@@ -960,8 +872,8 @@ namespace eka2l1 {
 
         common::ro_std_file_stream aif_file_stream(aif_file, true);
 
-        if (!eka2l1::read_registeration_info_aif(reinterpret_cast<common::ro_stream*>(&aif_file_stream), result,
-                                            drive_e, get_system_language())) {
+        if (!eka2l1::read_registeration_info_aif(reinterpret_cast<common::ro_stream *>(&aif_file_stream), result,
+                drive_e, get_system_language())) {
             return ngage_game_card_registeration_corrupted;
         }
 
@@ -983,7 +895,7 @@ namespace eka2l1 {
         }
 
         std::string folder_1, folder_2;
-        if (!find_singular_ngage_game(common::ucs2_to_utf8(path_apps.value()), result, &folder_1, &folder_2) == ngage_game_card_install_success) {
+        if (find_singular_ngage_game(common::ucs2_to_utf8(path_apps.value()), result, &folder_1, &folder_2) != ngage_game_card_install_success) {
             return false;
         }
 
@@ -1051,86 +963,44 @@ namespace eka2l1 {
             common::create_directories(drive_e_path);
         }
 
-        // Copy system folder (override lib folder copy). We don't copy other file or folder
         auto apps_folder_ite = common::make_directory_iterator(system_folder_path, "");
         apps_folder_ite->detail = true;
 
-        common::dir_entry system_subitem_entry;
+        std::uint32_t count = 0;
+        std::uint32_t target_index = 0xFFFFFFFF;
 
-        std::string explicit_lib_copy;
-        std::string explicit_program_copy;
-
-        std::uint32_t total_percentage = 100;
-
-        while (apps_folder_ite->next_entry(system_subitem_entry) == 0) {
-            if ((system_subitem_entry.name == ".") || (system_subitem_entry.name == "..")) {
-                continue;
-            }
-            if (system_subitem_entry.type == common::FILE_DIRECTORY) {
-                if (common::compare_ignore_case(system_subitem_entry.name.c_str(), "libs") == 0) {
-                    explicit_lib_copy = system_subitem_entry.name;
-                    total_percentage = 200;
-                } else if (common::compare_ignore_case(system_subitem_entry.name.c_str(), "programs") == 0) {
-                    explicit_program_copy = system_subitem_entry.name;
-                    total_percentage = 200;
+        if (apps_folder_ite->is_valid()) {
+            common::dir_entry app_entry;
+            while (apps_folder_ite->next_entry(app_entry) >= 0) {
+                if (app_entry.type == common::file_type::FILE_DIRECTORY) {
+                    if ((app_entry.name != ".") && (app_entry.name != "..")) {
+                        if (eka2l1::common::compare_ignore_case(app_entry.name.c_str(), "libs") == 0) {
+                            target_index = count;
+                        }
+                        count++;
+                    }
                 }
-            }
-
-            if (!explicit_lib_copy.empty() && !explicit_program_copy.empty()) {
-                break;
             }
         }
 
-        std::uint32_t copied_count = 0;
+        std::string libs_folder_path;
+        if (target_index != 0xFFFFFFFF) {
+            libs_folder_path = eka2l1::add_path(system_folder_path, "libs");
+        }
 
-        common::copy_folder(folder_path, drive_e_path_root, common::is_platform_case_sensitive() ? common::FOLDER_COPY_FLAG_LOWERCASE_NAME : 0, 
+        common::copy_folder(system_folder_path, drive_e_path, common::is_platform_case_sensitive() ? common::FOLDER_COPY_FLAG_LOWERCASE_NAME : 0,
             [&](const std::size_t copied, const std::size_t total) {
                 if (progress_cb)
-                    progress_cb(copied * 100 / total, total_percentage);
+                    progress_cb(copied * 100 / total, 100);
             });
 
-        // Remove the app registeration file of the original
         if (!specific_app_2.empty()) {
-            const std::string real_aif_remove = eka2l1::add_path(drive_e_path, eka2l1::add_path(
-                    "\\apps\\", eka2l1::add_path(specific_app, specific_app + ".aif")));
+            const std::string real_aif_remove = eka2l1::add_path(drive_e_path, eka2l1::add_path("\\apps\\", eka2l1::add_path(specific_app, specific_app + ".aif")));
             common::remove(real_aif_remove);
         }
 
         if (progress_cb)
-            progress_cb(100, total_percentage);
-
-        if (!explicit_lib_copy.empty() || !explicit_program_copy.empty()) {
-            std::uint32_t percentage_per_explicit_copy = (!explicit_lib_copy.empty() && !explicit_program_copy.empty()) ? 50 : 100;
-            std::uint32_t flags_copy = 0;
-
-            common::is_platform_case_sensitive() ? (flags_copy |= common::FOLDER_COPY_FLAG_LOWERCASE_NAME) : 0;
-            std::uint32_t current_perct = 100;
-
-            const std::string app_folder_dest = eka2l1::add_path(eka2l1::add_path(drive_e_path, "apps\\"), specific_app + "\\");
-
-            if (!explicit_lib_copy.empty()) {
-                common::copy_folder(eka2l1::add_path(system_folder_path, explicit_lib_copy + "\\"), app_folder_dest,
-                                    flags_copy, [&](const std::size_t copied, const std::size_t total) {
-                    if (progress_cb)
-                        progress_cb(current_perct + (copied * percentage_per_explicit_copy / total), total_percentage);
-                });
-
-                current_perct += percentage_per_explicit_copy;
-            }
-
-            if (!explicit_program_copy.empty()) {
-                common::copy_folder(eka2l1::add_path(system_folder_path, explicit_program_copy + "\\"), app_folder_dest,
-                                    flags_copy, [&](const std::size_t copied, const std::size_t total) {
-                    if (progress_cb)
-                        progress_cb(current_perct + (copied * percentage_per_explicit_copy / total), total_percentage);
-                });
-
-                current_perct += percentage_per_explicit_copy;
-            }
-        }
-
-        if (progress_cb)
-            progress_cb(total_percentage, total_percentage);
+            progress_cb(100, 100);
 
         return ngage_game_card_install_success;
     }
@@ -1145,7 +1015,6 @@ namespace eka2l1 {
         scripting_->import_all_modules();
 #endif
 
-        // Start the bootload
         kern_->start_bootload();
     }
 
@@ -1175,7 +1044,6 @@ namespace eka2l1 {
         }
 #endif
 
-        // Unregister HLE stuffs
         kern_->unregister_ldd_factory_request_callback(ldd_request_load_callback_handle_);
         kern_->unregister_breakpoint_hit_callback(gdb_stub_breakpoint_callback_handle_);
 
@@ -1221,7 +1089,6 @@ namespace eka2l1 {
 
         cpu->clear_instruction_cache();
 
-        // Load ROM
         const std::string rom_path = add_path(conf_->storage, add_path(preset::ROM_FOLDER_PATH, add_path(common::lowercase_string(dvc->firmware_code), preset::ROM_FILENAME)));
 
         if (!load_rom(rom_path)) {
@@ -1240,7 +1107,6 @@ namespace eka2l1 {
             gdriver->set_upscale_shader("");
         }
 
-        // Setup outsiders
         setup_outsider();
         invoke_system_reset_callbacks();
 
@@ -1273,10 +1139,6 @@ namespace eka2l1 {
 
     device_manager *system::get_device_manager() {
         return impl->get_device_manager();
-    }
-
-    manager::packages *system::get_packages() {
-        return impl->get_packages();
     }
 
     manager::scripts *system::get_scripts() {
@@ -1399,10 +1261,6 @@ namespace eka2l1 {
         return impl->get_dispatcher();
     }
 
-    j2me::app_list *system::get_j2me_applist() {
-        return impl->get_j2me_applist();
-    }
-
     void system::mount(drive_number drv, const drive_media media, std::string path,
         const std::uint32_t attrib) {
         return impl->mount(drv, media, path, attrib);
@@ -1418,10 +1276,6 @@ namespace eka2l1 {
 
     bool system::reset() {
         return impl->reset(true);
-    }
-
-    int system::install_package(std::u16string path, drive_number drv) {
-        return static_cast<int>(impl->install_package(path, drv));
     }
 
     void system::request_exit() {

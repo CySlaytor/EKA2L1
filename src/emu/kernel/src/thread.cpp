@@ -1,19 +1,19 @@
 /*
  * Copyright (c) 2018 EKA2L1 Team / Citra Team
- * 
+ *
  * This file is part of EKA2L1 project / Citra Emulator Project
  * (see bentokun.github.com/EKA2L1).
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -25,11 +25,11 @@
 #include <config/config.h>
 
 #include <kernel/common.h>
+#include <kernel/condvar.h>
 #include <kernel/ipc.h>
 #include <kernel/kernel.h>
 #include <kernel/mutex.h>
 #include <kernel/sema.h>
-#include <kernel/condvar.h>
 #include <kernel/thread.h>
 #include <mem/mem.h>
 #include <mem/ptr.h>
@@ -152,27 +152,10 @@ namespace eka2l1 {
             std::fill(ctx.cpu_registers.begin(), ctx.cpu_registers.end(), 0);
             std::fill(ctx.fpu_registers.begin(), ctx.fpu_registers.end(), 0);
 
-            /* Userland process and thread are all initialized with _E32Startup, which is the first
-               entry point of an process. _E32Startup required:
-               - r1: thread creation info register.
-               - r4: Startup reason. Thread startup is 1, process startup is 0.
-            */
-            if (kern->is_eka1()) {
-                // We made _E32Startup ourself, since EKA1 does not have it
-                hle::lib_manager *mngr = kern->get_lib_manager();
-                ctx.set_pc(mngr->get_thread_entry_routine_address());
+            ctx.set_pc(entry_point);
 
-                if (ctx.get_pc() == 0) {
-                    // Create the EKA1 thread bootstrap
-                    mngr->build_eka1_thread_bootstrap_code();
-                    ctx.set_pc(mngr->get_thread_entry_routine_address());
-                }
-            } else {
-                ctx.set_pc(entry_point);
-
-                if (owner && !initial) {
-                    ctx.set_pc(owning_process()->get_entry_point_address());
-                }
+            if (owner && !initial) {
+                ctx.set_pc(owning_process()->get_entry_point_address());
             }
 
             ctx.set_sp(stack_top);
@@ -182,7 +165,6 @@ namespace eka2l1 {
             ctx.cpu_registers[1] = stack_top;
 
             if (!initial) {
-                // Thread initialization, not process
                 ctx.cpu_registers[4] = 1;
             }
 
@@ -196,8 +178,6 @@ namespace eka2l1 {
             info.func_ptr = epa;
             info.ptr = usrdata.ptr_address();
 
-            // The handle to RThread. HLE function ignore this, however when a RThread HLE call is executed, this
-            // will point to that RThread Handle
             info.handle = 0;
             info.heap_min = min_heap_size;
             info.heap_max = max_heap_size;
@@ -287,9 +267,8 @@ namespace eka2l1 {
             time = timeslice;
 
             obj_type = object_type::thread;
-            state = thread_state::create; // Suspended.
+            state = thread_state::create;
 
-            // Stack size is rounded to page unit in actual kernel
             stack_size = static_cast<int>(common::align(static_cast<std::size_t>(stack_size), mem->get_page_size()));
 
             stack_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, static_cast<std::uint32_t>(common::align(stack_size, mem->get_page_size())), common::align(stack_size, mem->get_page_size()), prot_read_write,
@@ -306,10 +285,6 @@ namespace eka2l1 {
             std::u16string name_16(name.begin(), name.end());
             memcpy(name_chunk->host_base(), name_16.data(), name.length() * 2);
 
-            // I noticed that all EXEs I have encoutered so far on EKA1 does not have InitProcess
-            // or thread setup. Looks like the kernel already do it for us, but that's not good design.
-            // Kernel vs userspace should be tied together, but yeah they removed it in EKA2
-            // A setup code is prepared for EKA1 for this situation, which uses this struct.
             const size_t metadata_size = sizeof(epoc9_std_epoc_thread_create_info);
 
             std::uint8_t *stack_beg_meta_ptr = reinterpret_cast<std::uint8_t *>(stack_chunk->host_base());
@@ -317,7 +292,6 @@ namespace eka2l1 {
 
             const address stack_top = stack_chunk->base(owner).ptr_address() + static_cast<address>(stack_size - metadata_size);
 
-            // Fill the stack with garbage
             std::fill(stack_beg_meta_ptr, stack_top_ptr, 0xcc);
 
             create_stack_metadata(stack_top_ptr, stack_top, allocator, static_cast<std::uint32_t>(name.length()),
@@ -325,14 +299,9 @@ namespace eka2l1 {
 
             metadata = reinterpret_cast<epoc9_std_epoc_thread_create_info *>(stack_top_ptr);
 
-            // Create local data chunk
-            // Alloc extra the size of thread local data to avoid dealing with binary compatibility (size changed etc...)
             local_data_chunk = kern->create<kernel::chunk>(kern->get_memory_system(), owning_process(), "", 0, 0x1000, 0x1000,
                 prot_read_write, chunk_type::normal, chunk_access::local, chunk_attrib::none, false);
 
-            // The thread local storage that are freely access through CP15 call
-            // The local data is different, it contains critical variable in relation to Symbian.
-            // For CP15 local storage, you can do whatever you want. Of course Symbian still uses some space!
             address thread_free_modify_local_storage_vptr = 0;
 
             if (local_data_chunk) {
@@ -343,16 +312,12 @@ namespace eka2l1 {
 
                 static constexpr std::uint32_t TLS_MSR_DATA_SIZE = 0x400;
 
-                // Initialize space
                 std::uint8_t *thread_free_modify_local_storage_ptr = data + sizeof(thread_local_data);
                 std::memset(thread_free_modify_local_storage_ptr, 0, TLS_MSR_DATA_SIZE);
                 std::memcpy(thread_free_modify_local_storage_ptr, ldata, NATIVE_THREAD_LOCAL_DATA_COPY_SIZE);
 
                 if (kern->get_epoc_version() < epocver::epoc10) {
-                    // Anna and above add thread ID to the local storage at offset 12
-                    // While the TLS heap is expected on at least OS version S60v3 to be at offset 12 instead
-                    // So nullify the thread ID
-                    reinterpret_cast<thread_local_data*>(thread_free_modify_local_storage_ptr)->thread_id = 0;
+                    reinterpret_cast<thread_local_data *>(thread_free_modify_local_storage_ptr)->thread_id = 0;
                 }
 
                 thread_free_modify_local_storage_vptr = local_data_chunk->base(owner).ptr_address() + sizeof(thread_local_data);
@@ -367,12 +332,10 @@ namespace eka2l1 {
                 wait_object_timeout_callback_type = timing->register_event("ThreadWaitObjectTimeoutCallbackType", wait_object_timeout_callback);
             }
 
-            // Add thread to process's thread list
             owner->get_thread_list().push(&process_thread_link);
         }
 
         int thread::destroy() {
-            // Unlink from proces's thread list
             process_thread_link.deque();
 
             kern->destroy(stack_chunk);
@@ -397,7 +360,6 @@ namespace eka2l1 {
         }
 
         void thread::do_cleanup() {
-            // Close all thread handles
             if (!kern->wipeout_in_progress())
                 thread_handles.reset();
 
@@ -502,9 +464,7 @@ namespace eka2l1 {
         bool thread::take_on_panic(const std::u16string &category, const std::int32_t code) {
             const std::u16string CBASE_EUSER_CAT = u"E32USER-CBase";
             if (category == CBASE_EUSER_CAT) {
-                // Active scheduler panic
                 if ((code == 41) || (code == 42) || (code == 43) || (code == 46)) {
-                    // Dump the scheduler
                     kernel::process *papa_pr = owning_process();
                     utils::active_scheduler *sched = ldata->scheduler.cast<utils::active_scheduler>().get(papa_pr);
 
@@ -533,7 +493,6 @@ namespace eka2l1 {
                 LOG_TRACE(KERNEL, "Thread {} panicked with category: {} and exit code: {} {}", obj_name, exit_category_u8, reason,
                     exit_description ? (std::string("(") + *exit_description + ")") : "");
 
-                // Decide HLE actions to take on this thread.
                 if (!take_on_panic(category, reason)) {
                     LOG_INFO(KERNEL, "Panic for the thread is blocked");
                     return true;
@@ -586,7 +545,6 @@ namespace eka2l1 {
             bool should_reschedule_back = false;
 
             if (scheduler_link.next != nullptr && scheduler_link.previous != nullptr) {
-                // It's in the queue!!! Move it!
                 scheduler->dequeue_thread_from_ready(this);
                 should_reschedule_back = true;
             }
@@ -594,11 +552,9 @@ namespace eka2l1 {
             real_priority = calculate_thread_priority(owning_process(), priority);
 
             if (should_reschedule_back) {
-                // It's in the queue!!! Move it!
                 scheduler->queue_thread_ready(this);
             }
 
-            // EKA1 syncs object relies on FIFO order to decide what thread to release first, so priority is irrelevant.
             if (wait_obj && !kern->is_eka1()) {
                 switch (wait_obj->get_object_type()) {
                 case object_type::mutex: {
@@ -666,43 +622,25 @@ namespace eka2l1 {
             res = false;
             state = thread_state::wait;
 
-            // Call wait object to handle suspend event
             if (wait_obj) {
-                if (kern->is_eka1()) {
-                    switch (wait_obj->get_object_type()) {
-                    case object_type::mutex: {
-                        res = reinterpret_cast<legacy::mutex *>(wait_obj)->suspend_waiting_thread(this);
-                        break;
-                    }
+                switch (wait_obj->get_object_type()) {
+                case object_type::mutex: {
+                    res = reinterpret_cast<mutex *>(wait_obj)->suspend_thread(this);
+                    break;
+                }
 
-                    case object_type::sema: {
-                        res = reinterpret_cast<legacy::semaphore *>(wait_obj)->suspend_waiting_thread(this);
-                        break;
-                    }
+                case object_type::sema: {
+                    res = reinterpret_cast<semaphore *>(wait_obj)->suspend_waiting_thread(this);
+                    break;
+                }
 
-                    default:
-                        break;
-                    }
-                } else {
-                    switch (wait_obj->get_object_type()) {
-                    case object_type::mutex: {
-                        res = reinterpret_cast<mutex *>(wait_obj)->suspend_thread(this);
-                        break;
-                    }
+                case object_type::condvar: {
+                    res = reinterpret_cast<condvar *>(wait_obj)->suspend_thread(this);
+                    break;
+                }
 
-                    case object_type::sema: {
-                        res = reinterpret_cast<semaphore *>(wait_obj)->suspend_waiting_thread(this);
-                        break;
-                    }
-
-                    case object_type::condvar: {
-                        res = reinterpret_cast<condvar *>(wait_obj)->suspend_thread(this);
-                        break;
-                    }
-
-                    default:
-                        break;
-                    }
+                default:
+                    break;
                 }
             }
 
@@ -723,43 +661,25 @@ namespace eka2l1 {
             res = false;
             state = thread_state::ready;
 
-            // Call wait object to handle suspend event
             if (wait_obj) {
-                if (kern->is_eka1()) {
-                    switch (wait_obj->get_object_type()) {
-                    case object_type::mutex: {
-                        res = reinterpret_cast<legacy::mutex *>(wait_obj)->unsuspend_waiting_thread(this);
-                        break;
-                    }
+                switch (wait_obj->get_object_type()) {
+                case object_type::mutex: {
+                    res = reinterpret_cast<mutex *>(wait_obj)->unsuspend_thread(this);
+                    break;
+                }
 
-                    case object_type::sema: {
-                        res = reinterpret_cast<legacy::semaphore *>(wait_obj)->unsuspend_waiting_thread(this);
-                        break;
-                    }
+                case object_type::sema: {
+                    res = reinterpret_cast<semaphore *>(wait_obj)->unsuspend_waiting_thread(this);
+                    break;
+                }
 
-                    default:
-                        break;
-                    }
-                } else {
-                    switch (wait_obj->get_object_type()) {
-                    case object_type::mutex: {
-                        res = reinterpret_cast<mutex *>(wait_obj)->unsuspend_thread(this);
-                        break;
-                    }
+                case object_type::condvar: {
+                    res = reinterpret_cast<condvar *>(wait_obj)->unsuspend_thread(this);
+                    break;
+                }
 
-                    case object_type::sema: {
-                        res = reinterpret_cast<semaphore *>(wait_obj)->unsuspend_waiting_thread(this);
-                        break;
-                    }
-
-                    case object_type::condvar: {
-                        res = reinterpret_cast<condvar *>(wait_obj)->unsuspend_thread(this);
-                        break;
-                    }
-
-                    default:
-                        break;
-                    }
+                default:
+                    break;
                 }
             }
 
@@ -889,7 +809,6 @@ namespace eka2l1 {
         void thread::call_exception_handler(const std::int32_t exec_type) {
             address crr_sp = ctx.get_sp();
 
-            // Once in century, hope something slow like this is ok...
             auto push_to_stack = [&](std::uint16_t reg_list) -> bool {
                 for (std::int16_t i = 15; i >= 0; i--) {
                     if (reg_list & (1 << i)) {
@@ -989,7 +908,7 @@ namespace eka2l1 {
                 cached_detach = true;
             }
 
-            *count = common::min<std::int32_t>(*count, static_cast<std::int32_t>(cached_detach_eps.size()));
+            *count = common::min<std::int32_t>(static_cast<std::int32_t>(cached_detach_eps.size()), *count);
             if (*count) {
                 std::memcpy(addrs, cached_detach_eps.data(), *count * sizeof(address));
                 cached_detach_eps.erase(cached_detach_eps.begin(), cached_detach_eps.begin() + *count);
@@ -1015,14 +934,14 @@ namespace eka2l1 {
         void thread::real_time_active_end() {
             total_real_run_time += (timing->microseconds() - last_run_time);
         }
-        
+
         void thread::start_timeout(const std::uint32_t us) {
             if (!is_in_timeout) {
                 timing->schedule_event(us, wait_object_timeout_callback_type, reinterpret_cast<std::uint64_t>(this));
                 is_in_timeout = true;
             }
         }
-        
+
         void thread::end_timeout_early() {
             if (is_in_timeout) {
                 timing->unschedule_event(wait_object_timeout_callback_type, reinterpret_cast<std::uint64_t>(this));
@@ -1031,7 +950,6 @@ namespace eka2l1 {
         }
 
         void thread::handle_wait_object_timeout() {
-            // The wait object's native signal may got the upper hands
             if (!is_in_timeout) {
                 return;
             }
@@ -1044,14 +962,13 @@ namespace eka2l1 {
             if (!kern->is_eka1()) {
                 switch (wait_obj->get_object_type()) {
                 case kernel::object_type::sema:
-                    reinterpret_cast<kernel::semaphore*>(wait_obj)->timeouted(this);
+                    reinterpret_cast<kernel::semaphore *>(wait_obj)->timeouted(this);
                     break;
 
                 default:
                     break;
                 }
 
-                // Set the return value of the previous wait function to timed out
                 get_thread_context().cpu_registers[0] = epoc::error_timed_out;
             }
 
@@ -1083,7 +1000,7 @@ namespace eka2l1 {
             sts = 0;
             requester->signal_request();
         }
-        
+
         void notify_info::pending() {
             if (sts.ptr_address() == 0) {
                 return;
@@ -1104,7 +1021,6 @@ namespace eka2l1 {
             seri.absorb(thread_uid);
 
             if (seri.get_seri_mode() == common::SERI_MODE_READ) {
-                // TODO: Get the thread
             }
         }
     }

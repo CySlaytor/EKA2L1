@@ -23,7 +23,6 @@
 #include <mem/control.h>
 #include <mem/mmu.h>
 
-#include <mem/model/flexible/mmu.h>
 #include <mem/model/multiple/mmu.h>
 
 namespace eka2l1::mem {

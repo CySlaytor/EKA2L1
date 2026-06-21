@@ -22,7 +22,6 @@
 #include <mem/control.h>
 #include <mem/mmu.h>
 
-#include <mem/model/flexible/control.h>
 #include <mem/model/multiple/control.h>
 
 namespace eka2l1::mem {
@@ -110,15 +109,11 @@ namespace eka2l1::mem {
             return std::make_unique<control_multiple>(monitor, alloc, conf, psize_bits, mem_map_old);
         }
 
-        case mem_model_type::flexible: {
-            return std::make_unique<flexible::control_flexible>(monitor, alloc, conf, psize_bits, mem_map_old);
-        }
-
+        case mem_model_type::flexible:
         default:
             break;
         }
 
-        return nullptr;
+       return nullptr;
     }
-
 }

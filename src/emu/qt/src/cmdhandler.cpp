@@ -1,22 +1,3 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team.
- * 
- * This file is part of EKA2L1 project
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <common/arghandler.h>
 #include <common/cvt.h>
 #include <common/path.h>
@@ -25,8 +6,6 @@
 #include <qt/mainwindow.h>
 #include <qt/state.h>
 #include <system/devices.h>
-
-#include <package/manager.h>
 
 #if ENABLE_SCRIPTING
 #include <scripting/manager.h>
@@ -39,64 +18,22 @@
 #include <kernel/kernel.h>
 #include <services/applist/applist.h>
 
+#include <qt/utils.h>
 #include <utils/apacmd.h>
 #include <vfs/vfs.h>
-#include <qt/utils.h>
 
 #include <iostream>
 
 using namespace eka2l1;
 
 bool app_install_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
-    const char *path = parser->next_token();
-
-    if (!path) {
-        *err = "Request to install a SIS, but path not given";
-        return false;
-    }
-
-    desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
-
-    // Since it's inconvenient for user to specify the drive (they are all the same on computer),
-    // and it's better to install in C since there is many apps required
-    // to be in it and hardcoded the drive, just hardcode drive E here.
-    bool result = emu->symsys->install_package(common::utf8_to_ucs2(path), drive_e);
-
-    if (!result) {
-        *err = "Installation of SIS failed";
-        return false;
-    }
-
-    return true;
+    *err = "SIS/SISX Package installation is not supported in this build.";
+    return false;
 }
 
 bool package_remove_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
-    const char *uid = parser->next_token();
-
-    if (!uid) {
-        *err = "Request to remove a package, but UID not given";
-        return false;
-    }
-
-    desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
-    manager::packages *pkgmngr = emu->symsys->get_packages();
-    std::uint32_t vuid = common::pystr(uid).as_int<std::uint32_t>();
-
-    package::object *oobj = pkgmngr->package(vuid);
-    bool result = true;
-
-    if (oobj) {
-        result = pkgmngr->uninstall_package(*oobj);
-    } else {
-        result = false;
-    }
-
-    if (!result) {
-        *err = "Failed to remove package.";
-        return false;
-    }
-
-    return true;
+    *err = "Package removal is not supported in this build.";
+    return false;
 }
 
 bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
@@ -125,7 +62,6 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
 
     desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
 
-    // Get app list server
     kernel_system *kern = emu->symsys->get_kernel_system();
     eka2l1::applist_server *svr = nullptr;
 
@@ -139,13 +75,11 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
         return false;
     }
 
-    // It's an UID if it's starting with 0x
     if (tokstr.length() > 2 && tokstr.substr(0, 2) == "0x") {
         const std::uint32_t uid = common::pystr(tokstr).as_int<std::uint32_t>();
         eka2l1::apa_app_registry *registry = svr->get_registration(uid);
 
         if (registry) {
-            // Load the app
             epoc::apa::command_line cmdline;
             cmdline.launch_cmd_ = epoc::apa::command_create;
 
@@ -159,7 +93,6 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
             return true;
         }
 
-        // Load
         *err = "App with UID: ";
         *err += tokstr;
         *err += " doesn't exist";
@@ -183,13 +116,11 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
             return true;
         }
 
-        // Load with name
         std::vector<apa_app_registry> &regs = svr->get_registerations();
 
         for (auto &reg : regs) {
             if (common::ucs2_to_utf8(reg.mandatory_info.long_caption.to_std_string(nullptr))
                 == tokstr) {
-                // Load the app
                 epoc::apa::command_line cmdline;
                 cmdline.launch_cmd_ = epoc::apa::command_create;
 
@@ -222,7 +153,6 @@ bool list_app_option_handler(eka2l1::common::arg_parser *parser, void *userdata,
     desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
     kernel_system *kern = emu->symsys->get_kernel_system();
 
-    // Get app list server
     eka2l1::applist_server *svr = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>(
         get_app_list_server_name_by_epocver(kern->get_epoc_version())));
 
@@ -393,7 +323,6 @@ bool keybind_profile_option_handler(eka2l1::common::arg_parser *parser, void *us
         return true;
     }
 
-    // Check if profile exists
     const std::string profile_path = fmt::format("bindings//{}.yml", profile);
     if (!eka2l1::common::exists(profile_path)) {
         *err = "No profile with name {} exists";
@@ -444,9 +373,9 @@ bool run_ngage_game_option_handler(eka2l1::common::arg_parser *parser, void *use
     epoc::apa::command_line cmdline;
     cmdline.launch_cmd_ = epoc::apa::command_create;
 
-    if (!svr->launch_app(registry, cmdline, nullptr, [](kernel::process*) {
-        exit(0);
-    })) {
+    if (!svr->launch_app(registry, cmdline, nullptr, [](kernel::process *) {
+            exit(0);
+        })) {
         *err = "Launch app failed!";
         return false;
     }

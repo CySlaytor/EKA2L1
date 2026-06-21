@@ -25,7 +25,9 @@
 #include <cstring>
 
 #include <common/log.h>
+#if EKA2L1_PLATFORM(ANDROID)
 #include <common/android/contenturi.h>
+#endif
 
 namespace eka2l1 {
     char get_separator(bool symbian_use) {

@@ -1,29 +1,10 @@
-/*
- * Copyright (c) 2021 EKA2L1 Team.
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <drivers/input/common.h>
 #include <drivers/graphics/context.h>
-#include <drivers/ui/input_dialog.h>
+#include <drivers/input/common.h>
 #include <drivers/itc.h>
+#include <drivers/ui/input_dialog.h>
 
 #include <QActionGroup>
 #include <QListWidgetItem>
@@ -31,8 +12,8 @@
 #include <QPointer>
 #include <QProgressDialog>
 #include <QSystemTrayIcon>
-#include <memory>
 #include <map>
+#include <memory>
 
 #include <qt/discord_rpc.h>
 
@@ -123,7 +104,7 @@ private:
     eka2l1::drivers::handle background_image_texture_;
     eka2l1::vec2 previous_background_image_size_;
     std::string previous_background_image_path_;
-    
+
     std::u16string question_dialog_text_;
     std::u16string question_dialog_button1_text_;
     std::u16string question_dialog_button2_text_;
@@ -142,7 +123,6 @@ private:
     void refresh_current_device_label();
     void refresh_mount_availbility();
     void mount_game_card_dump(QString path);
-    void spawn_package_install_camper(QString package_install_path);
     void make_default_binding_profile();
     void on_screen_current_group_change_callback();
     void switch_to_game_display_mode();
@@ -160,11 +140,9 @@ private slots:
     void on_about_triggered();
     void on_settings_triggered();
     void on_package_manager_triggered();
-    void on_package_install_clicked();
     void on_device_install_clicked();
     void on_install_ngage_card_game_clicked();
     void on_progress_dialog_change(const std::size_t now, const std::size_t total);
-    bool on_package_install_text_ask(const char *text, const bool one_button);
     void on_new_device_added();
     void on_mount_card_clicked();
     void on_mount_zip_clicked();
@@ -181,8 +159,6 @@ private slots:
     void on_pause_toggled(bool checked);
     void on_package_uninstalled();
     void on_refresh_app_list_requested();
-
-    int on_package_install_language_choose(const int *languages, const int language_count);
 
     void on_app_clicked(applist_widget_item *item);
     void on_relaunch_request();
@@ -202,7 +178,6 @@ private slots:
     void on_action_touch_mapping_editor_triggered();
     void on_action_check_for_update_triggered();
     void on_action_launch_process_triggered();
-    void on_action_jar_triggered();
     void on_install_ngage_game_name_available(QString name);
     void on_exit_for_update_requested();
     void on_launch_process_requested();
@@ -215,8 +190,6 @@ private slots:
 signals:
     void progress_dialog_change(const std::size_t now, const std::size_t total);
     void status_bar_update(const std::uint64_t fps);
-    bool package_install_text_ask(const char *text, const bool one_button);
-    int package_install_language_choose(const int *languages, const int language_count);
     void app_launching();
     void restart_requested();
     void controller_button_press(eka2l1::drivers::input_event event);

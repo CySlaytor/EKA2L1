@@ -20,7 +20,6 @@
 #include <mem/chunk.h>
 #include <mem/control.h>
 #include <mem/mmu.h>
-#include <mem/model/flexible/chunk.h>
 #include <mem/model/multiple/chunk.h>
 
 #include <common/algorithm.h>
@@ -136,7 +135,7 @@ namespace eka2l1::mem {
         }
 
         case mem_model_type::flexible:
-            return std::make_unique<flexible::flexible_mem_model_chunk>(control, addr_space_id);
+            return nullptr;
 
         default:
             break;

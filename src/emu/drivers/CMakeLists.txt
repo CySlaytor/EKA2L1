@@ -82,6 +82,7 @@ add_library(drivers
         src/sensor/sensor.cpp
         src/video/backend/ffmpeg/video_player_ffmpeg.cpp
         src/video/video.cpp
+        src/ui/dialog_driver.cpp
         ${DRIVERS_VULKAN_SRC})
 if (NOT ANDROID)
     target_sources(drivers PRIVATE

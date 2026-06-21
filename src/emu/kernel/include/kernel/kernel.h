@@ -28,8 +28,6 @@
 #include <kernel/condvar.h>
 #include <kernel/kernel_obj.h>
 #include <kernel/ldd.h>
-#include <kernel/legacy/mutex.h>
-#include <kernel/legacy/sema.h>
 #include <kernel/libmanager.h>
 #include <kernel/library.h>
 #include <kernel/msgqueue.h>
@@ -101,8 +99,6 @@ namespace eka2l1 {
     using library_ptr = kernel::library *;
     using codeseg_ptr = kernel::codeseg *;
     using property_ref_ptr = service::property_reference *;
-    using mutex_legacy_ptr = kernel::legacy::mutex *;
-    using sema_legacy_ptr = kernel::legacy::semaphore *;
     using undertaker_ptr = kernel::undertaker *;
 
     using kernel_obj_unq_ptr = std::unique_ptr<kernel::kernel_obj>;
@@ -120,9 +116,9 @@ namespace eka2l1 {
             return kernel::object_type::chunk;
         } else if constexpr (std::is_base_of_v<kernel::library, T>) {
             return kernel::object_type::library;
-        } else if constexpr ((std::is_base_of_v<kernel::mutex, T>) || (std::is_base_of_v<kernel::legacy::mutex, T>)) {
+        } else if constexpr (std::is_base_of_v<kernel::mutex, T>) {
             return kernel::object_type::mutex;
-        } else if constexpr ((std::is_base_of_v<kernel::semaphore, T>) || (std::is_base_of_v<kernel::legacy::semaphore, T>)) {
+        } else if constexpr (std::is_base_of_v<kernel::semaphore, T>) {
             return kernel::object_type::sema;
         } else if constexpr (std::is_base_of_v<kernel::timer, T>) {
             return kernel::object_type::timer;

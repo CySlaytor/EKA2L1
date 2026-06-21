@@ -25,6 +25,5 @@ target_link_libraries(epocldd
         epoc
         epocmem
         epockern
-        epocpkg
         epocservs
         )

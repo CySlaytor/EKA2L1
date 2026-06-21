@@ -1,22 +1,3 @@
-/*
- * Copyright (c) 2018 EKA2L1 Team.
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <common/algorithm.h>
 #include <common/configure.h>
 #include <common/log.h>
@@ -120,14 +101,6 @@ namespace eka2l1::arm {
             return cp15.get();
         }
 
-        /**
-         * @brief Raise access violation and get feedback on whether we should reaccess the address again.
-         * 
-         * @param addr          Address where the violation happens.
-         * @param is_read       True if the raised exception is from an invalid read. Otherwise, it's from an invalid write.
-         * 
-         * @returns True if the handler fixed the violation and a re-read/re-write should be reissued.
-         */
         bool raise_invalid_access_and_get_feedback(const Dynarmic::A32::VAddr addr, const bool is_read) {
             return parent.exception_handler(is_read ? exception_type_access_violation_read : exception_type_access_violation_write, addr);
         }
@@ -236,34 +209,8 @@ namespace eka2l1::arm {
         }
 
         void InterpreterFallback(Dynarmic::A32::VAddr addr, size_t num_insts) override {
-            if (!parent.interpreter_callback_inited) {
-                parent.interpreter.read_code = parent.read_code;
-                parent.interpreter.read_8bit = parent.read_8bit;
-                parent.interpreter.read_16bit = parent.read_16bit;
-                parent.interpreter.read_32bit = parent.read_32bit;
-                parent.interpreter.read_64bit = parent.read_64bit;
-
-                parent.interpreter.write_8bit = parent.write_8bit;
-                parent.interpreter.write_16bit = parent.write_16bit;
-                parent.interpreter.write_32bit = parent.write_32bit;
-                parent.interpreter.write_64bit = parent.write_64bit;
-
-                parent.interpreter.exception_handler = parent.exception_handler;
-                parent.interpreter.exclusive_write_8bit = parent.exclusive_write_8bit;
-                parent.interpreter.exclusive_write_16bit = parent.exclusive_write_16bit;
-                parent.interpreter.exclusive_write_32bit = parent.exclusive_write_32bit;
-                parent.interpreter.exclusive_write_64bit = parent.exclusive_write_64bit;
-                parent.interpreter_callback_inited = true;
-            }
-
-            parent.save_context(temp_context);
-            parent.interpreter.load_context(temp_context);
-
-            parent.interpreter.run(num_insts);
-            parent.interpreter.save_context(temp_context);
-            parent.load_context(temp_context);
-
-            interpreted += num_insts;
+            LOG_ERROR(CPU, "Interpreter fallback requested at 0x{:08X} for {} instructions, but interpreter is disabled.", addr, num_insts);
+            parent.exception_handler(exception_type_unimplemented_behaviour, addr);
         }
 
         void ExceptionRaised(uint32_t pc, Dynarmic::A32::Exception exception) override {
@@ -320,9 +267,7 @@ namespace eka2l1::arm {
     }
 
     dynarmic_core::dynarmic_core(arm::exclusive_monitor *monitor)
-        : tlb_obj(12)
-        , interpreter(monitor, 12)
-        , interpreter_callback_inited(false) {
+        : tlb_obj(12) {
         std::shared_ptr<dynarmic_core_cp15> cp15 = std::make_shared<dynarmic_core_cp15>();
         cb = std::make_unique<dynarmic_core_callback>(*this, cp15);
 
@@ -491,7 +436,6 @@ namespace eka2l1::arm {
 
     std::uint8_t dynarmic_exclusive_monitor::exclusive_read8(core *cc, address vaddr) {
         return monitor_.ReadAndMark<std::uint8_t>(cc->core_number(), vaddr, [&]() -> std::uint8_t {
-            // TODO: Access violation if there is
             std::uint8_t val = 0;
             read_8bit(cc, vaddr, &val);
 
@@ -501,7 +445,6 @@ namespace eka2l1::arm {
 
     std::uint16_t dynarmic_exclusive_monitor::exclusive_read16(core *cc, address vaddr) {
         return monitor_.ReadAndMark<std::uint16_t>(cc->core_number(), vaddr, [&]() -> std::uint16_t {
-            // TODO: Access violation if there is
             std::uint16_t val = 0;
             read_16bit(cc, vaddr, &val);
 
@@ -511,7 +454,6 @@ namespace eka2l1::arm {
 
     std::uint32_t dynarmic_exclusive_monitor::exclusive_read32(core *cc, address vaddr) {
         return monitor_.ReadAndMark<std::uint32_t>(cc->core_number(), vaddr, [&]() -> std::uint32_t {
-            // TODO: Access violation if there is
             std::uint32_t val = 0;
             read_32bit(cc, vaddr, &val);
 
@@ -521,7 +463,6 @@ namespace eka2l1::arm {
 
     std::uint64_t dynarmic_exclusive_monitor::exclusive_read64(core *cc, address vaddr) {
         return monitor_.ReadAndMark<std::uint64_t>(cc->core_number(), vaddr, [&]() -> std::uint64_t {
-            // TODO: Access violation if there is
             std::uint64_t val = 0;
             read_64bit(cc, vaddr, &val);
 
@@ -537,7 +478,6 @@ namespace eka2l1::arm {
         return monitor_.DoExclusiveOperation<std::uint8_t>(cc->core_number(), vaddr, [&](std::uint8_t expected) -> bool {
             const std::int32_t res = write_8bit(cc, vaddr, value, expected);
 
-            // TODO: Parse access violation errors
             return res > 0;
         });
     }
@@ -546,7 +486,6 @@ namespace eka2l1::arm {
         return monitor_.DoExclusiveOperation<std::uint16_t>(cc->core_number(), vaddr, [&](std::uint16_t expected) -> bool {
             const std::int32_t res = write_16bit(cc, vaddr, value, expected);
 
-            // TODO: Parse access violation errors
             return res > 0;
         });
     }
@@ -555,7 +494,6 @@ namespace eka2l1::arm {
         return monitor_.DoExclusiveOperation<std::uint32_t>(cc->core_number(), vaddr, [&](std::uint32_t expected) -> bool {
             const std::int32_t res = write_32bit(cc, vaddr, value, expected);
 
-            // TODO: Parse access violation errors
             return res > 0;
         });
     }
@@ -564,7 +502,6 @@ namespace eka2l1::arm {
         return monitor_.DoExclusiveOperation<std::uint64_t>(cc->core_number(), vaddr, [&](std::uint64_t expected) -> bool {
             const std::int32_t res = write_64bit(cc, vaddr, value, expected);
 
-            // TODO: Parse access violation errors
             return res > 0;
         });
     }

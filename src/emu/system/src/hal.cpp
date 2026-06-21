@@ -1,16 +1,19 @@
 /*
  * Copyright (c) 2018 EKA2L1 Team.
- * 
+ *
+ * This file is part of EKA2L1 project
+ * (see bentokun.github.com/EKA2L1).
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -62,19 +65,7 @@ namespace eka2l1::epoc {
         return func_pair->second(a1, a2, device_num);
     }
 
-    /**
-     * \brief Kernel HAL cagetory. 
-     * 
-     * Contains HAL of drivers, memory, etc...
-     */
     struct kern_hal : public eka2l1::epoc::hal {
-        /**
-         * \brief Get the size of a page. 
-         *
-         * \param a1 The pointer to the integer destination, supposed to
-         *           contains the page size.
-         * \param a2 Unused.
-         */
         int page_size(int *a1, int *a2, const std::uint16_t device_num) {
             *a1 = static_cast<int>(sys->get_memory_system()->get_page_size());
             return epoc::error_none;
@@ -84,18 +75,8 @@ namespace eka2l1::epoc {
             des8 *buf = reinterpret_cast<des8 *>(a1);
             epoc::memory_info_v1 mem_info;
 
-            epocver system_version = sys->get_symbian_version_use();
-            int system_ram_size = 0;
-
-            if (system_version >= epocver::epoc10) {
-                system_ram_size = static_cast<int>(common::MB(256));
-            } else if (system_version >= epocver::epoc93fp1) {
-                system_ram_size = static_cast<int>(common::MB(128));
-            } else if (system_version >= epocver::epoc80) {
-                system_ram_size = static_cast<int>(common::MB(64));
-            } else {
-                system_ram_size = static_cast<int>(common::MB(32));
-            }
+            // Force 128 MB RAM (standard layout for OS 9.3 hardware like the N95 / 5320d-1)
+            int system_ram_size = static_cast<int>(common::MB(128));
 
             mem_info.total_ram_in_bytes_ = system_ram_size;
             mem_info.rom_is_reprogrammable_ = false;
@@ -103,7 +84,6 @@ namespace eka2l1::epoc {
             mem_info.free_ram_in_bytes_ = system_ram_size;
             mem_info.total_rom_in_bytes_ = sys->get_rom_info()->header.rom_size;
 
-            // This value is appr. the same as rom.
             mem_info.internal_disk_ram_in_bytes_ = mem_info.total_rom_in_bytes_;
 
             buf->assign(sys->get_kernel_system()->crr_process(), reinterpret_cast<std::uint8_t *>(&mem_info), sizeof(mem_info));
@@ -119,7 +99,6 @@ namespace eka2l1::epoc {
         }
 
         int hardware_floating_point(int *a1, int *a2, const std::uint16_t device_num) {
-            // Can handle NEON also
             *a1 = floating_point_type_vfpv3;
             return epoc::error_none;
         }
@@ -178,11 +157,9 @@ namespace eka2l1::epoc {
             info.bits_per_pixel_ = get_bpp_from_display_mode(mode);
             info.is_pixel_order_rgb_ = (mode >= epoc::display_mode::color4k);
 
-            // TODO: Verify
             info.is_pixel_order_landspace_ = (info.size_in_pixels_.x > info.size_in_pixels_.y);
             info.is_palettelized_ = !info.is_mono_ && (mode < epoc::display_mode::color4k);
 
-            // Intentional
             info.video_address_ = scr->screen_buffer_chunk->base(nullptr).ptr_address();
             info.offset_to_first_pixel_ = sizeof(std::uint16_t) * epoc::WORD_PALETTE_ENTRIES_COUNT;
             info.offset_between_lines_ = ((info.bits_per_pixel_ + 31) / 32) * 4 * info.size_in_pixels_.x;
@@ -289,7 +266,6 @@ namespace eka2l1::epoc {
     };
 
     struct digitiser_hal : public hal {
-        // Max supported pointer count by CONE
         static constexpr std::uint32_t MAX_POINTER_SUPPORTED = 8;
 
         window_server *winserv_;
@@ -329,7 +305,6 @@ namespace eka2l1::epoc {
                 return epoc::error_not_found;
             }
 
-
             epoc::des8 *package = reinterpret_cast<epoc::des8 *>(a1);
             kernel::process *crr = sys->get_kernel_system()->crr_process();
 
@@ -367,8 +342,6 @@ namespace eka2l1::epoc {
 
             LOG_TRACE(SYSTEM, "GetKeyboardInfo stubbed with keypad");
 
-            // Middle, left right softkeys, 4 arrow keys, one call button and end call button
-            // 9 number keys. That should be 18
             static constexpr const std::uint32_t MAX_KEYPAD_APP_KEY_NUM = 4;
             static constexpr const std::uint32_t MAX_KEYPAD_KEY_NUM = 18;
 
@@ -429,7 +402,7 @@ namespace eka2l1::epoc {
         info.input_type_ = xy_input_type_pointer;
         info.keyboard_id_ = 0;
         info.keyboard_present_ = 1;
-        info.machine_unique_id_ = 0; // TODO: Machine Unique ID here
+        info.machine_unique_id_ = 0;
         info.maximum_display_color_ = get_num_colors_from_display_mode(crr_screen->disp_mode);
         info.offset_to_display_in_pixels_ = eka2l1::point(0, 0);
         info.speed_factor_ = 1;
@@ -484,7 +457,7 @@ namespace eka2l1::epoc {
             *reinterpret_cast<std::uint32_t *>(data) = HAL_CONTRAST_MAX;
             break;
 
-        case kernel::hal_data_eka1_display_memory_address: {    
+        case kernel::hal_data_eka1_display_memory_address: {
             window_server *winserv = reinterpret_cast<window_server *>(sys->get_kernel_system()->get_by_name<service::server>(
                 eka2l1::get_winserv_name_by_epocver(sys->get_symbian_version_use())));
 

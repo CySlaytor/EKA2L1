@@ -12,7 +12,6 @@ add_library(epocloader
         include/loader/rsc.h
         include/loader/sis_common.h
         include/loader/sis_fields.h
-        include/loader/sis_old.h
         include/loader/sis.h
         include/loader/spi.h
         include/loader/svgb.h
@@ -27,7 +26,6 @@ add_library(epocloader
         src/romimage.cpp
         src/rsc.cpp
         src/sis_fields.cpp
-        src/sis_old.cpp
         src/sis.cpp
         src/spi.cpp
         src/svgb.cpp

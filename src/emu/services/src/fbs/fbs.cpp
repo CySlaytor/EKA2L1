@@ -1,22 +1,22 @@
 /*
  * Copyright (c) 2019 EKA2L1 Team
- * 
+ *
  * This file is part of EKA2L1 project
  * (see bentokun.github.com/EKA2L1).
- * 
+ *
  * Initial contributor: pent0
  * Contributors:
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -58,7 +58,7 @@ namespace eka2l1 {
 
         void query_fbs_feature_support(fbs_server *fbss, bool &support_current_display_mode, bool &support_dirty_bitmap) {
             support_dirty_bitmap = true;
-            
+
             if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
                 if (fbss->legacy_level() == FBS_LEGACY_LEVEL_KERNEL_TRANSITION)
                     support_current_display_mode = true;
@@ -74,14 +74,11 @@ namespace eka2l1 {
     }
 
     fbscli::~fbscli() {
-        // Remove notification if there is
         if (server<fbs_server>()->compressor && !dirty_nof_.empty()) {
             server<fbs_server>()->compressor->cancel(dirty_nof_);
         }
 
-        // Try to remove the session cache if it exists
         if (epoc::does_client_use_pointer_instead_of_offset(this)) {
-            // Free in the linked list
             server<fbs_server>()->session_cache_link->remove(this);
         } else {
             server<fbs_server>()->session_cache_list->erase_cache(this);
@@ -101,7 +98,6 @@ namespace eka2l1 {
 
     void fbscli::fetch(service::ipc_context *ctx) {
         if (ctx->sys->get_symbian_version_use() < epocver::eka2) {
-            // Move get nearest font to be after set pixel size in twips
             switch (ctx->msg->function) {
             case fbs_set_pixel_size_in_twips + 1:
                 ctx->msg->function = fbs_nearest_font_design_height_in_twips;
@@ -121,7 +117,6 @@ namespace eka2l1 {
             }
 
             if (ctx->msg->function == fbs_bitmap_load) {
-                // On EKA1 load = fast
                 ctx->msg->function = fbs_bitmap_load_fast;
             }
         }
@@ -233,8 +228,6 @@ namespace eka2l1 {
         }
 
         case fbs_bitmap_bg_compress: {
-            //LOG_WARN(SERVICE_FBS, "BitmapBgCompress stubbed with 0");
-            //ctx->complete(epoc::error_none);
             background_compress_bitmap(ctx);
             break;
         }
@@ -334,7 +327,6 @@ namespace eka2l1 {
     }
 
     void fbs_server::initialize_server() {
-        // Initialize those chunks
         shared_chunk = kern->create_and_add<kernel::chunk>(
                                kernel::owner_type::kernel,
                                kern->get_memory_system(),
@@ -342,7 +334,7 @@ namespace eka2l1 {
                                "FbsSharedChunk",
                                0,
                                0x10000,
-                               (kern->is_eka1() ? 0x600000 : 0x200000),
+                               0x200000,
                                prot_read_write,
                                kernel::chunk_type::normal,
                                kernel::chunk_access::global,
@@ -368,13 +360,8 @@ namespace eka2l1 {
             return;
         }
 
-        if (kern->is_eka1()) {
-            large_bitmap_access_mutex = reinterpret_cast<mutex_ptr>(kern->create<kernel::legacy::mutex>(
-                "FbsLargeBitmapAccess", kernel::access_type::global_access));
-        } else {
-            large_bitmap_access_mutex = kern->create<kernel::mutex>(kern->get_ntimer(),
-                nullptr, "FbsLargeBitmapAccess", false, kernel::access_type::global_access);
-        }
+        large_bitmap_access_mutex = kern->create<kernel::mutex>(kern->get_ntimer(),
+            nullptr, "FbsLargeBitmapAccess", false, kernel::access_type::global_access);
 
         if (!large_bitmap_access_mutex) {
             LOG_WARN(SERVICE_FBS, "Large bitmap access mutex fail to create!");
@@ -390,52 +377,25 @@ namespace eka2l1 {
         large_chunk_allocator = std::make_unique<epoc::chunk_allocator>(large_chunk);
 
         if (fntstr_seg = sys->get_lib_manager()->load(u"fntstr.dll")) {
-            // _ZTV11CBitmapFont @ 97 NONAME ; #<VT>#
-            // Skip the filler (vtable start address) and the typeinfo
-            if (kern->is_eka1()) {
-                std::uint8_t *addr = nullptr;
-                fntstr_seg->get_code_run_addr(nullptr, &addr);
-
-                utils::cpp_gcc98_abi_analyser analyser(addr, fntstr_seg->get_text_size());
-
-                // We got two clues. TypeUid__C11CBitmapFont @ 52 NONAME ; Which is a virtual method (not sure why it's exported)
-                // Also this         TextWidthInPixels__C11CBitmapFontRC7TDesC16 @ 51 NONAME    ;
-                std::vector<address> clues;
-                clues.push_back(fntstr_seg->lookup_no_relocate(51));
-                clues.push_back(fntstr_seg->lookup_no_relocate(52));
-
-                bmp_font_vtab = static_cast<std::uint32_t>(analyser.search_vtable(clues));
-            } else {
-                bmp_font_vtab = fntstr_seg->lookup_no_relocate(97) + 2 * 4;
-            }
+            bmp_font_vtab = fntstr_seg->lookup_no_relocate(97) + 2 * 4;
 
             if (bmp_font_vtab == 0) {
                 LOG_ERROR(SERVICE_FBS, "Unable to find vtable address of CBitmapFont!");
             }
-
-            if (kern->is_eka1()) {
-                // For relocate later
-                bmp_font_vtab += fntstr_seg->get_code_base();
-            }
         }
 
-        // Probably also indicates that font aren't loaded yet
         load_fonts(sys->get_io_system());
 
         fs_server = kern->get_by_name<service::server>(epoc::fs::get_server_name_through_epocver(
             kern->get_epoc_version()));
 
-        // Create session cache list
         session_cache_list = allocate_general_data<epoc::open_font_session_cache_list>();
         session_cache_link = allocate_general_data<epoc::open_font_session_cache_link>();
         session_cache_list->init();
 
-        // Alloc 4 bytes of padding, so the offset 0 never exist. 0 is always a check if data
-        // is available.
         large_chunk_allocator->allocate(4);
         shared_chunk_allocator->allocate(4);
 
-        // Create compressor thread
         if (sys->get_config()->fbs_enable_compression_queue) {
             compressor = std::make_unique<compress_queue>(this);
             compressor_thread = std::make_unique<std::thread>(compressor_thread_func, compressor.get());
@@ -447,7 +407,6 @@ namespace eka2l1 {
             initialize_server();
         }
 
-        // Create new server client
         create_session<fbscli>(&context);
         context.complete(epoc::error_none);
     }
@@ -507,7 +466,6 @@ namespace eka2l1 {
             session_cache_list->~open_font_session_cache_list();
         }
 
-        // Destroy chunks.
         if (shared_chunk)
             kern->destroy(shared_chunk);
 
@@ -524,10 +482,6 @@ namespace eka2l1 {
             return false;
         }
 
-        if (kern->is_eka1()) {
-            return reinterpret_cast<kernel::legacy::mutex*>(large_bitmap_access_mutex)->count() <= 0;
-        }
-
         return large_bitmap_access_mutex->count() <= 0;
     }
 
@@ -538,13 +492,8 @@ namespace eka2l1 {
 
         std::uint32_t current = 0;
         while (current < max_times) {
-            if (kern->is_eka1()) {
-                if (reinterpret_cast<kernel::legacy::mutex*>(large_bitmap_access_mutex)->count() > 0)
-                    break;
-            } else {
-                if (large_bitmap_access_mutex->count() >= 0)
-                    break;
-            }
+            if (large_bitmap_access_mutex->count() >= 0)
+                break;
 
             current++;
         }

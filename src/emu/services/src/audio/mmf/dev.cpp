@@ -1,18 +1,19 @@
 /*
- * Copyright (c) 2020 EKA2L1 Team.
- * 
- * This file is part of EKA2L1 project.
- * 
+ * Copyright (c) 2018 EKA2L1 Team.
+ *
+ * This file is part of EKA2L1 project
+ * (see bentokun.github.com/EKA2L1).
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -189,14 +190,14 @@ namespace eka2l1 {
         conf_.channels_ = 1;
         conf_.rate_ = epoc::mmf_sample_rate_8000hz;
         conf_.buffer_size_ = MMF_BUFFER_SIZE_DEFAULT;
-        conf_.encoding_ = epoc::mmf_encoding_16bit_pcm; 
+        conf_.encoding_ = epoc::mmf_encoding_16bit_pcm;
     }
 
     mmf_dev_server_session::~mmf_dev_server_session() {
         mmf_dev_server *serv = server<mmf_dev_server>();
         kernel_system *kern = serv->get_kernel_object_owner();
         ntimer *timing = kern->get_ntimer();
-        
+
         if (stream_)
             stream_->stop();
 
@@ -228,7 +229,6 @@ namespace eka2l1 {
     void mmf_dev_server_session::init_stream_through_state() {
         drivers::audio_driver *drv = server<mmf_dev_server>()->get_system()->get_audio_driver();
 
-        // TODO: Add callback to report underflow (data completed playing, but no new data supplied)
         switch (desired_state_) {
         case epoc::mmf_state_playing:
         case epoc::mmf_state_tone_playing:
@@ -237,13 +237,11 @@ namespace eka2l1 {
 
             reinterpret_cast<drivers::dsp_output_stream *>(stream_.get())->volume(volume_ * 10);
 
-            // Register complete callback
             stream_->register_callback(
                 drivers::dsp_stream_notification_more_buffer, [this](void *userdata) {
                     kernel_system *kern = server<mmf_dev_server>()->get_kernel_object_owner();
                     kern->lock();
 
-                    // Lock the access to this variable
                     const std::lock_guard<std::mutex> guard(dev_access_lock_);
 
                     if (last_buffer_) {
@@ -262,13 +260,11 @@ namespace eka2l1 {
             stream_ = drivers::new_dsp_in_stream(drv, drivers::dsp_stream_backend::dsp_stream_backend_ffmpeg);
             stream_->set_properties(8000, 2);
 
-            // Register complete callback
             stream_->register_callback(
                 drivers::dsp_stream_notification_more_buffer, [this](void *userdata) {
                     kernel_system *kern = server<mmf_dev_server>()->get_kernel_object_owner();
                     kern->lock();
 
-                    // Lock the access to this variable
                     const std::lock_guard<std::mutex> guard(dev_access_lock_);
 
                     if (last_buffer_) {
@@ -434,7 +430,6 @@ namespace eka2l1 {
             return;
         }
 
-        // TODO: Mixing audio with this arguments in stream
         left_balance_ = settings->left_percentage_;
         right_balance_ = settings->right_percentage_;
 
@@ -529,14 +524,9 @@ namespace eka2l1 {
     epoc::mmf_capabilities mmf_dev_server_session::get_caps() {
         epoc::mmf_capabilities caps;
 
-        // Fill our preferred settings
         caps.channels_ = 2;
         caps.encoding_ = epoc::mmf_encoding_16bit_pcm;
-        caps.rate_ = epoc::mmf_sample_rate_8000hz | epoc::mmf_sample_rate_11025hz | 
-            epoc::mmf_sample_rate_12000hz | epoc::mmf_sample_rate_16000hz | epoc::mmf_sample_rate_22050hz |
-            epoc::mmf_sample_rate_24000hz | epoc::mmf_sample_rate_32000hz | epoc::mmf_sample_rate_44100hz |
-            epoc::mmf_sample_rate_48000hz | epoc::mmf_sample_rate_64000hz | epoc::mmf_sample_rate_88200hz |
-            epoc::mmf_sample_rate_96000hz;
+        caps.rate_ = epoc::mmf_sample_rate_8000hz | epoc::mmf_sample_rate_11025hz | epoc::mmf_sample_rate_12000hz | epoc::mmf_sample_rate_16000hz | epoc::mmf_sample_rate_22050hz | epoc::mmf_sample_rate_24000hz | epoc::mmf_sample_rate_32000hz | epoc::mmf_sample_rate_44100hz | epoc::mmf_sample_rate_48000hz | epoc::mmf_sample_rate_64000hz | epoc::mmf_sample_rate_88200hz | epoc::mmf_sample_rate_96000hz;
 
         caps.buffer_size_ = MMF_BUFFER_SIZE_DEFAULT;
 
@@ -642,11 +632,10 @@ namespace eka2l1 {
         if (serv->report_inactive_underflow()) {
             kernel_system *kern = serv->get_kernel_object_owner();
             ntimer *timing = kern->get_ntimer();
-            
+
             timing->unschedule_event(underflow_event_, reinterpret_cast<std::uint64_t>(this));
         }
 
-        // Done waiting for all notifications to be completed/ignored, it's time to do deref buffer chunk
         deref_audio_buffer_chunk();
     }
 
@@ -656,7 +645,6 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::close(service::ipc_context *ctx) {
-        // Same for now
         stop(ctx);
     }
 
@@ -673,7 +661,6 @@ namespace eka2l1 {
 
         stream_state_ = desired_state_;
 
-        // Launch the first buffer ready to be filled
         do_report_buffer_to_be_filled();
         stream_->start();
 
@@ -693,7 +680,6 @@ namespace eka2l1 {
 
         stream_state_ = desired_state_;
 
-        // Queue buffer to receive the recorded data
         do_submit_buffer_data_receive();
         stream_->start();
 
@@ -736,7 +722,6 @@ namespace eka2l1 {
                 kern->destroy(buffer_chunk_);
             }
 
-            // Don't care about it, not our problem anymore
             buffer_chunk_ = nullptr;
         }
     }
@@ -756,7 +741,6 @@ namespace eka2l1 {
                 return;
             }
 
-            // Info already filled, it's just passing it as complete now!
             buffer_info_.complete(last_buffer_handle_);
         }
     }
@@ -783,7 +767,7 @@ namespace eka2l1 {
             ntimer *timing = kern->get_ntimer();
             if (!underflow_event_) {
                 underflow_event_ = timing->register_event("MMFUnderflowEvent", [](std::uint64_t userdata, const int late) {
-                    mmf_dev_server_session *session = reinterpret_cast<mmf_dev_server_session*>(userdata);
+                    mmf_dev_server_session *session = reinterpret_cast<mmf_dev_server_session *>(userdata);
                     session->complete_play(epoc::error_underflow);
                 });
             }
@@ -799,8 +783,6 @@ namespace eka2l1 {
         if (!buffer_chunk_ || (buffer_chunk_->max_size() < conf_.buffer_size_)) {
             deref_audio_buffer_chunk();
 
-            // Recreate a new chunk that satisify the configuration
-            // overwrite the buffer, the client side will close and destroy it laterz
             buffer_chunk_ = kern->create<kernel::chunk>(kern->get_memory_system(), nullptr,
                 fmt::format("MMFBufferDevChunk{}", client_ss_uid_), 0, conf_.buffer_size_,
                 conf_.buffer_size_, prot_read_write, kernel::chunk_type::normal,
@@ -878,15 +860,13 @@ namespace eka2l1 {
             return;
         }
 
-        // Stored in the last buffer handle value
         do_set_buffer_buf_and_get_return_value();
-        recording_stream()->read(reinterpret_cast<std::uint8_t*>(buffer_chunk_->host_base()),
+        recording_stream()->read(reinterpret_cast<std::uint8_t *>(buffer_chunk_->host_base()),
             common::align(conf_.buffer_size_, MMF_BUFFER_SIZE_ALIGN, 1));
     }
 
     void mmf_dev_server_session::get_buffer(service::ipc_context *ctx) {
         if (!buffer_info_.empty()) {
-            // A pending CompleteError is here.
             ctx->complete(epoc::error_bad_handle);
             return;
         }
@@ -905,7 +885,6 @@ namespace eka2l1 {
         kernel_system *kern = serv->get_kernel_object_owner();
 
         if (kern->get_epoc_version() >= epocver::epoc95) {
-            // This must be called after a BTBF is reported
             if (!is_recording_stream()) {
                 do_set_buffer_to_be_filled();
             }
@@ -925,7 +904,6 @@ namespace eka2l1 {
 
         const std::lock_guard<std::mutex> guard(dev_access_lock_);
 
-        // Unlike play data, just record with your own pace! :D
         do_submit_buffer_data_receive();
         ctx->complete(epoc::error_none);
     }
@@ -972,9 +950,6 @@ namespace eka2l1 {
         drivers::dsp_output_stream *out_stream = reinterpret_cast<drivers::dsp_output_stream *>(stream_.get());
         out_stream->write(reinterpret_cast<std::uint8_t *>(buffer_chunk_->host_base()), supplied_size);
 
-        // Work around for Space Impact N-Gage 2.0
-        // TODO: Why it is submitting 16 times smaller bytes
-        // Maybe on real phone it just requests more each time it nears drain
         if (((supplied_size * 16) == conf_.buffer_size_) && (out_stream->format() == drivers::PCM16_FOUR_CC_CODE)) {
             conf_.buffer_size_ = common::clamp<std::int32_t>(MMF_BUFFER_SIZE_MIN, MMF_BUFFER_SIZE_MAX,
                 conf_.buffer_size_ * 16);
@@ -984,190 +959,123 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::fetch(service::ipc_context *ctx) {
-        const epocver ver = server<mmf_dev_server>()->get_kernel_object_owner()->get_epoc_version();
+        switch (ctx->msg->function) {
+        case epoc::mmf_dev_init0:
+            init0(ctx);
+            break;
 
-        if ((ver == epocver::epoc93fp1) || (ver == epocver::epoc93fp2) || (ver == epocver::epoc94)) {
-            switch (ctx->msg->function) {
-            case epoc::mmf_dev_init0:
-                init0(ctx);
-                break;
+        case epoc::mmf_dev_init3:
+            init3(ctx);
+            break;
 
-            case epoc::mmf_dev_init3:
-                init3(ctx);
-                break;
+        case epoc::mmf_dev_config:
+            get_config(ctx);
+            break;
 
-            case epoc::mmf_dev_config:
-                get_config(ctx);
-                break;
+        case epoc::mmf_dev_set_config:
+            set_config(ctx);
+            break;
 
-            case epoc::mmf_dev_set_config:
-                set_config(ctx);
-                break;
+        case epoc::mmf_dev_capabilities:
+            capabilities(ctx);
+            break;
 
-            case epoc::mmf_dev_capabilities:
-                capabilities(ctx);
-                break;
+        case epoc::mmf_dev_volume:
+            volume(ctx);
+            break;
 
-            case epoc::mmf_dev_volume:
-                volume(ctx);
-                break;
+        case epoc::mmf_dev_max_volume:
+            max_volume(ctx);
+            break;
 
-            case epoc::mmf_dev_max_volume:
-                max_volume(ctx);
-                break;
+        case epoc::mmf_dev_set_volume:
+            set_volume(ctx);
+            break;
 
-            case epoc::mmf_dev_set_volume:
-                set_volume(ctx);
-                break;
+        case epoc::mmf_dev_get_buffer:
+            get_buffer(ctx);
+            break;
 
-            case epoc::mmf_dev_get_buffer:
-                get_buffer(ctx);
-                break;
+        case epoc::mmf_dev_complete_notify:
+            complete_error(ctx);
+            break;
 
-            case epoc::mmf_dev_complete_notify:
-                complete_error(ctx);
-                break;
+        case epoc::mmf_dev_play_init:
+            play_init(ctx);
+            break;
 
-            case epoc::mmf_dev_play_init:
-                play_init(ctx);
-                break;
+        case epoc::mmf_dev_play_data:
+            play_data(ctx);
+            break;
 
-            case epoc::mmf_dev_play_data:
-                play_data(ctx);
-                break;
+        case epoc::mmf_dev_set_priority_settings:
+            set_priority_settings(ctx);
+            break;
 
-            case epoc::mmf_dev_set_priority_settings:
-                set_priority_settings(ctx);
-                break;
+        case epoc::mmf_dev_stop:
+            stop(ctx);
+            break;
 
-            case epoc::mmf_dev_stop:
-                stop(ctx);
-                break;
+        case epoc::mmf_dev_cancel_complete_notify:
+            cancel_complete_error(ctx);
+            break;
 
-            case epoc::mmf_dev_cancel_complete_notify:
-                cancel_complete_error(ctx);
-                break;
+        case epoc::mmf_dev_cancel_get_buffer:
+            cancel_get_buffer(ctx);
+            break;
 
-            case epoc::mmf_dev_cancel_get_buffer:
-                cancel_get_buffer(ctx);
-                break;
+        case epoc::mmf_dev_play_balance:
+            play_balance(ctx);
+            break;
 
-            case epoc::mmf_dev_play_balance:
-                play_balance(ctx);
-                break;
+        case epoc::mmf_dev_set_play_balance:
+            set_play_balance(ctx);
+            break;
 
-            case epoc::mmf_dev_set_play_balance:
-                set_play_balance(ctx);
-                break;
+        case epoc::mmf_dev_samples_played:
+            samples_played(ctx);
+            break;
 
-            case epoc::mmf_dev_samples_played:
-                samples_played(ctx);
-                break;
+        case epoc::mmf_dev_get_supported_input_data_types:
+            get_supported_input_data_types(ctx);
+            break;
 
-            case epoc::mmf_dev_get_supported_input_data_types:
-                get_supported_input_data_types(ctx);
-                break;
+        case epoc::mmf_dev_copy_fourcc_array:
+            copy_fourcc_array(ctx);
+            break;
 
-            case epoc::mmf_dev_copy_fourcc_array:
-                copy_fourcc_array(ctx);
-                break;
+        case epoc::mmf_dev_set_volume_ramp:
+            set_volume_ramp(ctx);
+            break;
 
-            case epoc::mmf_dev_set_volume_ramp:
-                set_volume_ramp(ctx);
-                break;
+        case epoc::mmf_dev_gain:
+            gain(ctx);
+            break;
 
-            case epoc::mmf_dev_gain:
-                gain(ctx);
-                break;
+        case epoc::mmf_dev_set_gain:
+            set_gain(ctx);
+            break;
 
-            case epoc::mmf_dev_set_gain:
-                set_gain(ctx);
-                break;
+        case epoc::mmf_dev_max_gain:
+            max_gain(ctx);
+            break;
 
-            case epoc::mmf_dev_max_gain:
-                max_gain(ctx);
-                break;
+        case epoc::mmf_dev_record_init:
+            record_init(ctx);
+            break;
 
-            case epoc::mmf_dev_record_init:
-                record_init(ctx);
-                break;
+        case epoc::mmf_dev_record_data:
+            record_data(ctx);
+            break;
 
-            case epoc::mmf_dev_record_data:
-                record_data(ctx);
-                break;
+        case 52:
+            ctx->complete(epoc::error_none);
+            break;
 
-            case 52:
-                ctx->complete(epoc::error_none);
-                break;
-
-            default:
-                LOG_ERROR(SERVICE_MMFAUD, "Unimplemented MMF dev server session opcode {}", ctx->msg->function);
-                
-                break;
-            }
-        } else {
-            switch (ctx->msg->function) {
-            case epoc::mmf_dev_newarch_post_open:
-                // Nothing todo... :D
-                ctx->complete(epoc::error_none);
-                break;
-
-            case epoc::mmf_dev_newarch_init0:
-                init0(ctx);
-                break;
-
-            case epoc::mmf_dev_newarch_init3:
-                init3(ctx);
-                break;
-
-            case epoc::mmf_dev_newarch_config:
-                get_config(ctx);
-                break;
-
-            case epoc::mmf_dev_newarch_set_config:
-                set_config(ctx);
-                break;
-
-            case epoc::mmf_dev_newarch_capabilities:
-                capabilities(ctx);
-                break;
-
-            case epoc::mmf_dev_newarch_volume:
-                volume(ctx);
-                break;
-
-            case epoc::mmf_dev_newarch_max_volume:
-                max_volume(ctx);
-                break;
-
-            case epoc::mmf_dev_newarch_set_volume:
-                set_volume(ctx);
-                break;
-
-            case epoc::mmf_dev_newarch_play_init:
-                play_init(ctx);
-                break;
-
-            case epoc::mmf_dev_newarch_play_data:
-                play_data(ctx);
-                break;
-
-            case epoc::mmf_dev_newarch_btbf_data:
-                get_buffer(ctx);
-                break;
-
-            case epoc::mmf_dev_newarch_samples_played:
-                samples_played(ctx);
-                break;
-
-            case epoc::mmf_dev_newarch_close:
-                close(ctx);
-                break;
-
-            default:
-                LOG_ERROR(SERVICE_MMFAUD, "Unimplemented MMF dev server session opcode {}", ctx->msg->function);
-                break;
-            }
+        default:
+            LOG_ERROR(SERVICE_MMFAUD, "Unimplemented MMF dev server session opcode {}", ctx->msg->function);
+            ctx->complete(epoc::error_not_supported);
+            break;
         }
     }
 }

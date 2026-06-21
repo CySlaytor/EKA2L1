@@ -30,7 +30,6 @@ target_link_libraries(scripting PRIVATE common
         epockern
         epocio
         epocmem
-        epocpkg
         epocutils
         epocservs)
 

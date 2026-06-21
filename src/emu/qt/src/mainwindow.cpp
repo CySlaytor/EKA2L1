@@ -1,43 +1,24 @@
-/*
- * Copyright (c) 2021 EKA2L1 Team.
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
-#include "./ui_mainwindow.h"
 #include "./links.h"
+#include "./ui_mainwindow.h"
 
 #include <qt/aboutdialog.h>
 #include <qt/applistwidget.h>
-#include <qt/btnetplay_friends_dialog.h>
 #include <qt/btnet_dialog.h>
-#include <qt/device_install_dialog.h>
-#include <qt/displaywidget.h>
-#include <qt/mainwindow.h>
-#include <qt/symbian_input_dialog.h>
-#include <qt/package_manager_dialog.h>
-#include <qt/settings_dialog.h>
-#include <qt/update_dialog.h>
-#include <qt/update_notice_dialog.h>
-#include <qt/launch_process_dialog.h>
-#include <qt/state.h>
-#include <qt/utils.h>
+#include <qt/btnetplay_friends_dialog.h>
 #include <qt/btnmap/editor_widget.h>
 #include <qt/btnmap/executor.h>
 #include <qt/custom_question_dialog.h>
+#include <qt/device_install_dialog.h>
+#include <qt/displaywidget.h>
+#include <qt/launch_process_dialog.h>
+#include <qt/mainwindow.h>
+#include <qt/package_manager_dialog.h>
+#include <qt/settings_dialog.h>
+#include <qt/state.h>
+#include <qt/symbian_input_dialog.h>
+#include <qt/update_dialog.h>
+#include <qt/update_notice_dialog.h>
+#include <qt/utils.h>
 
 #include <kernel/kernel.h>
 #include <system/devices.h>
@@ -52,7 +33,6 @@
 
 #include <config/app_settings.h>
 
-#include <package/manager.h>
 #include <services/applist/applist.h>
 #include <services/bluetooth/btman.h>
 #include <services/fbs/fbs.h>
@@ -61,19 +41,16 @@
 #include <services/window/screen.h>
 #include <services/window/window.h>
 
-#include <j2me/interface.h>
-#include <j2me/applist.h>
-
 #include <QCheckBox>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QFileDialog>
 #include <QFuture>
 #include <QInputDialog>
+#include <QLineEdit>
 #include <QMessageBox>
 #include <QProgressDialog>
-#include <QSettings>
-#include <QLineEdit>
+#include <QSystemTrayIcon>
 #include <QtConcurrent/QtConcurrent>
 
 #include <stb_image.h>
@@ -85,7 +62,6 @@ static constexpr const char *LAST_EMULATED_DISPLAY_GEOMETRY_SETTING = "lastEmula
 static constexpr const char *LAST_EMULATED_DISPLAY_STATE = "lastEmulatedDisplayState";
 static constexpr const char *LAST_EMULATED_DISPLAY_MAXIMIZED = "lastEmulatedDisplayMaximized";
 static constexpr const char *LAST_PACKAGE_FOLDER_SETTING = "lastPackageFolder";
-static constexpr const char *LAST_JAR_FOLDER_SETTING = "lastJarFolder";
 static constexpr const char *LAST_MOUNT_FOLDER_SETTING = "lastMountFolder";
 static constexpr const char *LAST_INSTALL_NGAGE_GAME_CARD_FOLDER_SETTING = "lastNGageGameCardFolder";
 static constexpr const char *NO_DEVICE_INSTALL_DISABLE_NOF_SETTING = "disableNoDeviceInstallNotify";
@@ -119,7 +95,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     if (!state_ptr || !state_ptr->graphics_driver) {
         return;
     }
-    
+
     if (need_wait)
         state_ptr->graphics_driver->wait_for(&state_ptr->present_status);
 
@@ -142,8 +118,6 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
 
     eka2l1::vec4 color_clear = eka2l1::common::rgba_to_vec(state.conf.display_background_color.load());
 
-    // The format that is stored is same as how it's present in HTML ARGB (from lowest to highest bytes)
-    // The normal one that emulator assumes is ABGR (from lowest to highest bytes too)
     builder.set_feature(eka2l1::drivers::graphics_feature::cull, false);
     builder.set_feature(eka2l1::drivers::graphics_feature::depth_test, false);
     builder.set_feature(eka2l1::drivers::graphics_feature::blend, false);
@@ -221,13 +195,11 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
 
     state_ptr->present_status = -100;
 
-    // Submit, present, and wait for the presenting
     builder.present(&state_ptr->present_status);
 
     eka2l1::drivers::command_list retrieved = builder.retrieve_command_list();
     state.graphics_driver->submit_command_list(retrieved);
 }
-
 
 main_window::main_window(QApplication &application, QWidget *parent, eka2l1::desktop::emulator &emulator_state)
     : QMainWindow(parent)
@@ -254,11 +226,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     ui_->setupUi(this);
     ui_->label_al_not_available->setVisible(false);
 
-    eka2l1::kernel_system *kernel = emulator_state_.symsys->get_kernel_system();
-
-    if (!emulator_state_.app_launch_from_command_line)
-        setup_app_list();
-
+    setup_app_list();
     setup_package_installer_ui_hooks();
 
     if (!applist_) {
@@ -339,8 +307,6 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
 
     diag->check_for_update(false);
 
-    //update_notice_dialog::spawn(this);
-
     restore_ui_layouts();
     on_theme_change_requested(QString("%1").arg(settings.value(THEME_SETTING_NAME, 0).toInt()));
 
@@ -363,7 +329,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     }
 
     reprepare_touch_mappings();
-    
+
     QColor default_color = settings.value(BACKGROUND_COLOR_DISPLAY_SETTING_NAME, QColor(0xD0, 0xD0, 0xD0)).value<QColor>();
     emulator_state_.conf.display_background_color = default_color.rgba();
 
@@ -372,7 +338,6 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
 
     connect(ui_->action_about, &QAction::triggered, this, &main_window::on_about_triggered);
     connect(ui_->action_settings, &QAction::triggered, this, &main_window::on_settings_triggered);
-    connect(ui_->action_package, &QAction::triggered, this, &main_window::on_package_install_clicked);
     connect(ui_->action_device, &QAction::triggered, this, &main_window::on_device_install_clicked);
     connect(ui_->action_ngage_card_game, &QAction::triggered, this, &main_window::on_install_ngage_card_game_clicked);
     connect(ui_->action_mount_game_card_folder, &QAction::triggered, this, &main_window::on_mount_card_clicked);
@@ -390,8 +355,6 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(this, &main_window::progress_dialog_change, this, &main_window::on_progress_dialog_change, Qt::QueuedConnection);
     connect(this, &main_window::status_bar_update, this, &main_window::on_status_bar_update, Qt::QueuedConnection);
     connect(this, &main_window::install_ngage_game_name_available, this, &main_window::on_install_ngage_game_name_available, Qt::QueuedConnection);
-    connect(this, &main_window::package_install_text_ask, this, &main_window::on_package_install_text_ask, Qt::BlockingQueuedConnection);
-    connect(this, &main_window::package_install_language_choose, this, &main_window::on_package_install_language_choose, Qt::BlockingQueuedConnection);
     connect(this, &main_window::screen_focus_group_changed, this, &main_window::on_screen_current_group_change_callback, Qt::QueuedConnection);
 
     connect(this, &main_window::input_dialog_delay_launch_asked, this, &main_window::on_input_dialog_delay_launch_asked);
@@ -418,7 +381,7 @@ void main_window::setup_app_list(const bool load_now) {
         eka2l1::fbs_server *fbs_serv = reinterpret_cast<eka2l1::fbs_server *>(kernel->get_by_name<eka2l1::service::server>(fbs_server_name));
 
         if (al_serv && fbs_serv) {
-            applist_ = new applist_widget(this, al_serv, fbs_serv, system->get_io_system(), system->get_j2me_applist(), emulator_state_.conf, emulator_state_.conf.hide_system_apps, true);
+            applist_ = new applist_widget(this, al_serv, fbs_serv, system->get_io_system(), emulator_state_.conf, emulator_state_.conf.hide_system_apps, true);
             ui_->layout_main->addWidget(applist_);
 
             connect(applist_, &applist_widget::app_launch, this, &main_window::on_app_clicked);
@@ -456,17 +419,7 @@ void main_window::setup_app_list(const bool load_now) {
 }
 
 void main_window::setup_package_installer_ui_hooks() {
-    eka2l1::system *system = emulator_state_.symsys.get();
-    eka2l1::manager::packages *pkgmngr = system->get_packages();
-
-    pkgmngr->show_text = [this](const char *text, const bool one_button) -> bool {
-        // We only have one receiver, so it's ok ;)
-        return emit package_install_text_ask(text, one_button);
-    };
-
-    pkgmngr->choose_lang = [this](const int *languages, const int language_count) -> int {
-        return emit package_install_language_choose(languages, language_count);
-    };
+    // Stubbed out - Package installer module removed.
 }
 
 void main_window::reprepare_touch_mappings() {
@@ -555,22 +508,15 @@ void main_window::on_settings_triggered() {
 }
 
 void main_window::force_refresh_applist() {
-    // Try to refersh app lists
     if (applist_ && applist_->lister_->rescan_registries(applist_->io_)) {
-        applist_->request_reload(false);
+        applist_->request_reload();
     }
 }
 
 void main_window::on_package_manager_triggered() {
-    if (emulator_state_.symsys) {
-        eka2l1::manager::packages *pkgmngr = emulator_state_.symsys->get_packages();
-        if (pkgmngr) {
-            package_manager_dialog *mgdiag = new package_manager_dialog(this, pkgmngr);
-            connect(mgdiag, &package_manager_dialog::package_uninstalled, this, &main_window::on_package_uninstalled);
-
-            mgdiag->exec();
-        }
-    }
+    package_manager_dialog *mgdiag = new package_manager_dialog(this);
+    connect(mgdiag, &package_manager_dialog::package_uninstalled, this, &main_window::on_package_uninstalled);
+    mgdiag->exec();
 }
 
 void main_window::on_package_uninstalled() {
@@ -685,7 +631,6 @@ void main_window::on_new_device_added() {
         emulator_state_.symsys->mount(drive_d, drive_media::physical, eka2l1::add_path(emulator_state_.conf.storage, "/drives/d/"), io_attrib_internal);
         emulator_state_.symsys->mount(drive_e, drive_media::physical, eka2l1::add_path(emulator_state_.conf.storage, "/drives/e/"), io_attrib_removeable);
 
-        // Set and wait for reinitialization
         emulator_state_.init_event.set();
         emulator_state_.init_event.wait();
 
@@ -737,11 +682,7 @@ void main_window::on_install_ngage_card_game_clicked() {
         current_progress_dialog_->show();
 
         QFuture<eka2l1::ngage_game_card_install_error> install_future = QtConcurrent::run([this, install_folder]() -> eka2l1::ngage_game_card_install_error {
-            return emulator_state_.symsys->install_ngage_game_card(install_folder.toStdString(), [this](const std::string &game_name) {
-                emit install_ngage_game_name_available(QString::fromStdString(game_name));
-            }, [this](const std::size_t done, const std::size_t total) {
-                emit progress_dialog_change(done, total);
-            });
+            return emulator_state_.symsys->install_ngage_game_card(install_folder.toStdString(), [this](const std::string &game_name) { emit install_ngage_game_name_available(QString::fromStdString(game_name)); }, [this](const std::size_t done, const std::size_t total) { emit progress_dialog_change(done, total); });
         });
 
         while (!install_future.isFinished()) {
@@ -842,7 +783,6 @@ void main_window::refresh_recent_mounts() {
 
 void main_window::mount_game_card_dump(QString mount_path) {
     if (eka2l1::is_separator(static_cast<char16_t>(mount_path.back().unicode()))) {
-        // We don't care much about the last separator. This is for system folder check ;)
         mount_path.remove(mount_path.length() - 2, 2);
     }
 
@@ -948,7 +888,7 @@ void main_window::mount_game_card_dump(QString mount_path) {
     refresh_recent_mounts();
 
     if (applist_) {
-        applist_->request_reload(false);
+        applist_->request_reload();
     }
 }
 
@@ -956,7 +896,6 @@ void main_window::on_recent_mount_clear_clicked() {
     QSettings settings;
     QStringList empty_list;
 
-    // I'm utterly failure, can't write more. Pure lazy
     settings.setValue(RECENT_MOUNT_SETTINGS_NAME, empty_list);
     settings.sync();
 
@@ -1099,10 +1038,10 @@ std::function<void(eka2l1::kernel::process *)> main_window::get_process_exit_cal
 
 void main_window::set_discord_presence_current_playing(const std::string &name) {
 #if ENABLE_DISCORD_RICH_PRESENCE
-        std::string state = tr("Playing %1").arg(QString::fromStdString(name)).toStdString();
-        std::string detail = tr("In game").toStdString();
+    std::string state = tr("Playing %1").arg(QString::fromStdString(name)).toStdString();
+    std::string detail = tr("In game").toStdString();
 
-        rpc_.update(state, detail, true);
+    rpc_.update(state, detail, true);
 #endif
 }
 
@@ -1111,12 +1050,7 @@ void main_window::on_app_clicked(applist_widget_item *item) {
         setup_screen_draw();
     }
 
-    bool launch_ok = false;
-    if (item->is_j2me_) {
-        launch_ok = eka2l1::j2me::launch(emulator_state_.symsys.get(), static_cast<std::uint32_t>(item->registry_index_), get_process_exit_callback());
-    } else  {
-        launch_ok = applist_->launch_from_widget_item(item, get_process_exit_callback());
-    }
+    bool launch_ok = applist_->launch_from_widget_item(item, get_process_exit_callback());
 
     if (launch_ok) {
         set_discord_presence_current_playing(applist_->get_app_name_from_widget_item(item));
@@ -1139,126 +1073,9 @@ void main_window::on_progress_dialog_change(const std::size_t now, const std::si
     current_progress_dialog_->setValue(static_cast<int>(now * 100 / total));
 }
 
-bool main_window::on_package_install_text_ask(const char *text, const bool one_button) {
-    const QMessageBox::StandardButton result = QMessageBox::question(this, tr("Document"), QString::fromUtf8(text),
-        one_button ? QMessageBox::StandardButton::Ok : (QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No));
-
-    if (one_button) {
-        return true;
-    }
-
-    return (result == QMessageBox::StandardButton::Yes);
-}
-
-int main_window::on_package_install_language_choose(const int *languages, const int language_count) {
-    QStringList language_string_list;
-    for (int i = 0; i < language_count; i++) {
-        const std::string lang_name_in_std = eka2l1::common::get_language_name_by_code(languages[i]);
-        language_string_list.push_back(QString::fromUtf8(lang_name_in_std.c_str()));
-    }
-
-    bool go_fine = false;
-    QString result = QInputDialog::getItem(this, tr("Choose a language for the package"), QString(), language_string_list, 0, false, &go_fine);
-    if (result.isEmpty() || !go_fine) {
-        return -1;
-    }
-
-    const int index = language_string_list.indexOf(result);
-    if (index >= language_count) {
-        LOG_ERROR(eka2l1::FRONTEND_UI, "The index of the choosen language is out of provided range! (index={})", index);
-        return -1;
-    }
-
-    return languages[index];
-}
-
-void main_window::spawn_package_install_camper(QString package_file_path) {
-    if (!package_file_path.isEmpty()) {
-        eka2l1::manager::packages *pkgmngr = emulator_state_.symsys->get_packages();
-        if (pkgmngr) {
-            current_progress_dialog_ = new QProgressDialog(QString{}, tr("Cancel"), 0, 100, this);
-
-            current_progress_dialog_->setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint & ~Qt::WindowMaximizeButtonHint & ~Qt::WindowCloseButtonHint);
-            current_progress_dialog_->setWindowTitle(tr("Installing package progress"));
-            current_progress_dialog_->setAttribute(Qt::WA_DeleteOnClose, true);
-            current_progress_dialog_->show();
-
-            drive_number install_drive = drive_e;
-            if (emulator_state_.symsys->is_s80_device_active()) {
-                install_drive = drive_d;
-            }
-
-            QFuture<eka2l1::package::installation_result> install_future = QtConcurrent::run([this, pkgmngr, package_file_path, install_drive]() {
-                return pkgmngr->install_package(
-                    package_file_path.toStdU16String(),
-                    install_drive,
-                    [this](const std::size_t done, const std::size_t total) { emit progress_dialog_change(done, total); }, [this] { return current_progress_dialog_->wasCanceled(); });
-            });
-
-            while (!install_future.isFinished()) {
-                QCoreApplication::processEvents();
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            }
-
-            bool no_more_info = false;
-
-            if (current_progress_dialog_->wasCanceled()) {
-                no_more_info = true;
-            }
-
-            current_progress_dialog_->close();
-
-            if (!no_more_info) {
-                switch (install_future.result()) {
-                case eka2l1::package::installation_result_aborted: {
-                    QMessageBox::information(this, tr("Installation aborted"), tr("The installation has been canceled"));
-                    break;
-                }
-
-                case eka2l1::package::installation_result_invalid: {
-                    QMessageBox::critical(this, tr("Installation failed"), tr("Fail to install package at path: %1. "
-                                                                              "Ensure the path points to a valid SIS/SISX file.")
-                                                                               .arg(package_file_path));
-                    break;
-                }
-
-                case eka2l1::package::installation_result_success: {
-                    QMessageBox::information(this, tr("Installation success"), tr("Package has been successfully installed"));
-                    break;
-                }
-
-                default:
-                    break;
-                }
-            }
-
-            if (install_future.result() == eka2l1::package::installation_result_success) {
-                force_refresh_applist();
-            }
-        }
-    }
-}
-
-void main_window::on_package_install_clicked() {
-    QSettings settings;
-    QString last_install_dir;
-
-    QVariant last_install_dir_variant = settings.value(LAST_PACKAGE_FOLDER_SETTING);
-    if (last_install_dir_variant.isValid()) {
-        last_install_dir = last_install_dir_variant.toString();
-    }
-
-    QString package_file_path = QFileDialog::getOpenFileName(this, tr("Choose the file to install"), last_install_dir, tr("SIS file (*.sis *.sisx)"));
-    if (!package_file_path.isEmpty()) {
-        settings.setValue(LAST_PACKAGE_FOLDER_SETTING, QFileInfo(package_file_path).absoluteDir().path());
-    }
-    spawn_package_install_camper(package_file_path);
-}
-
 void main_window::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
 
-    // Only care to redraw if displayer is active
     if (!displayer_->isVisible()) {
         return;
     }
@@ -1276,25 +1093,11 @@ void main_window::resizeEvent(QResizeEvent *event) {
 }
 
 void main_window::dragEnterEvent(QDragEnterEvent *event) {
-    if (event->mimeData()->hasUrls()) {
-        QList<QUrl> list_url = event->mimeData()->urls();
-        if (list_url.size() == 1) {
-            QString local_path = list_url[0].toLocalFile();
-            if (local_path.endsWith(".sis") || local_path.endsWith(".sisx")) {
-                event->acceptProposedAction();
-            }
-        }
-    }
+    // Drag and drop for SIS installation disabled.
 }
 
 void main_window::dropEvent(QDropEvent *event) {
-    QList<QUrl> list_url = event->mimeData()->urls();
-    if (list_url.size() == 1) {
-        QString local_path = list_url[0].toLocalFile();
-        if (local_path.endsWith(".sis") || local_path.endsWith(".sisx")) {
-            spawn_package_install_camper(local_path);
-        }
-    }
+    // Drag and drop for SIS installation disabled.
 }
 
 void main_window::closeEvent(QCloseEvent *event) {
@@ -1309,16 +1112,15 @@ bool main_window::controller_event_handler(eka2l1::drivers::input_event &event) 
         }
         if (event.button_.state_ == eka2l1::drivers::button_state::joy) {
             return !map_executor_->execute((static_cast<std::uint64_t>(eka2l1::qt::btnmap::MAP_TYPE_GAMEPAD) << 32) | event.button_.button_,
-                                          event.button_.axis_[0], event.button_.axis_[1]);
+                event.button_.axis_[0], event.button_.axis_[1]);
         }
         return !map_executor_->execute((static_cast<std::uint64_t>(eka2l1::qt::btnmap::MAP_TYPE_GAMEPAD) << 32) | event.button_.button_,
-                                      event.button_.state_ == eka2l1::drivers::button_state::pressed);
+            event.button_.state_ == eka2l1::drivers::button_state::pressed);
     }
     return false;
 }
 
 void main_window::make_default_binding_profile() {
-    // Create default profile if there is none
     auto ite = eka2l1::common::make_directory_iterator("bindings\\", "");
     if (!ite) {
         return;
@@ -1373,7 +1175,6 @@ void main_window::refresh_mount_availbility() {
     ui_->action_mount_recent_dumps->setEnabled(false);
     ui_->menu_mount_game_card_dump->setEnabled(false);
     ui_->action_ngage_card_game->setEnabled(false);
-    ui_->action_jar->setEnabled(false);
 
     eka2l1::system *system = emulator_state_.symsys.get();
     if (system) {
@@ -1384,8 +1185,6 @@ void main_window::refresh_mount_availbility() {
                 ui_->action_mount_recent_dumps->setEnabled(true);
                 ui_->action_ngage_card_game->setEnabled(true);
             }
-
-            ui_->action_jar->setEnabled(true);
         }
     }
 }
@@ -1437,7 +1236,6 @@ void main_window::on_theme_change_requested(const QString &text) {
             QCoreApplication *app = QApplication::instance();
             if (app) {
                 if (num == 0) {
-                    // Light mode, reset to default
                     application_.setStyleSheet("");
                 } else {
                     QFile f(":assets/themes/dark/style.qss");
@@ -1539,7 +1337,6 @@ void main_window::input_dialog_close() {
 }
 
 void main_window::on_input_dialog_delay_launch_asked() {
-    // Give it a bit of time so that the Select (Middle/5) button release can be submitted
     QTimer::singleShot(200, this, &main_window::on_input_dialog_open_request);
 }
 
@@ -1590,8 +1387,9 @@ void main_window::on_hide_system_apps_changed() {
 void main_window::spawn_btnet_friends_dialog(bool is_from_configure) {
     if (!bt_netplay_dialog_) {
         QMessageBox::StandardButton result = QMessageBox::warning(this, tr("Continue to modify friends' IP addresses"),
-                                                                  tr("This dialog will show all stored IP addresses, which has the potential of revealing others' personal information.<br>"
-                                                                     "Do you wish to continue?"), QMessageBox::Yes | QMessageBox::No);
+            tr("This dialog will show all stored IP addresses, which has the potential of revealing others' personal information.<br>"
+               "Do you wish to continue?"),
+            QMessageBox::Yes | QMessageBox::No);
 
         if (result == QMessageBox::Yes) {
             eka2l1::btman_server *btman_serv = nullptr;
@@ -1601,8 +1399,7 @@ void main_window::spawn_btnet_friends_dialog(bool is_from_configure) {
                 btman_serv = kernel->get_by_name<eka2l1::btman_server>(btman_server_name);
             }
             if (btman_serv) {
-                // TODO: Check for other type of midman (real bluetooth for example!)
-                bt_netplay_dialog_ = new btnetplay_friends_dialog(is_from_configure ? static_cast<QWidget*>(btnet_dialog_) : static_cast<QWidget*>(this), reinterpret_cast<eka2l1::epoc::bt::midman_inet*>(btman_serv->get_midman()), emulator_state_.conf);
+                bt_netplay_dialog_ = new btnetplay_friends_dialog(is_from_configure ? static_cast<QWidget *>(btnet_dialog_) : static_cast<QWidget *>(this), reinterpret_cast<eka2l1::epoc::bt::midman_inet *>(btman_serv->get_midman()), emulator_state_.conf);
                 connect(bt_netplay_dialog_, &QDialog::finished, this, &main_window::on_btnetplay_friends_dialog_finished);
 
                 bt_netplay_dialog_->show();
@@ -1653,7 +1450,6 @@ bool main_window::deliver_overlay_mouse_event(const eka2l1::vec3 &pos, const int
 
     const bool result = editor_widget_->handle_mouse_action(readjusted_pos, button_id, action_id, mouse_id);
     if (result) {
-        // For some reason it can't regain focus when you mess around
         if (!displayer_->hasFocus()) {
             displayer_->setFocus();
         }
@@ -1715,67 +1511,6 @@ void main_window::on_launch_process_requested() {
     }
 }
 
-void main_window::on_action_jar_triggered() {
-    QSettings settings;
-    QString last_install_dir;
-
-    QVariant last_install_dir_variant = settings.value(LAST_JAR_FOLDER_SETTING);
-    if (last_install_dir_variant.isValid()) {
-        last_install_dir = last_install_dir_variant.toString();
-    }
-
-    QString package_file_path = QFileDialog::getOpenFileName(this, tr("Choose the JAR file to install"), last_install_dir, tr("JAR file (*.jar)"));
-    if (!package_file_path.isEmpty()) {
-        settings.setValue(LAST_JAR_FOLDER_SETTING, QFileInfo(package_file_path).absoluteDir().path());
-
-        eka2l1::j2me::app_entry entry_res;
-        const eka2l1::j2me::install_error err = eka2l1::j2me::install(emulator_state_.symsys.get(), package_file_path.toStdString(), entry_res);
-
-        if (err == eka2l1::j2me::INSTALL_ERROR_JAR_SUCCESS) {
-            QString info_str = tr("%1 version %2 (by %3) has been installed!").arg(QString::fromStdString(entry_res.title_),
-                QString::fromStdString(entry_res.version_), QString::fromStdString(entry_res.author_));
-
-            QMessageBox::information(this, tr("Install success"), info_str);
-            
-            eka2l1::j2me::app_list *list = emulator_state_.symsys->get_j2me_applist();
-            list->flush();
-
-            if (applist_) {
-                applist_->request_reload(true);
-            }
-        } else {
-            QString error_str;
-            switch (err) {
-            case eka2l1::j2me::INSTALL_ERROR_JAR_CANT_ADD_TO_DB:
-                error_str = tr("Can not add the JAR to the apps database!");
-                break;
-
-            case eka2l1::j2me::INSTALL_ERROR_JAR_INVALID:
-                error_str = tr("The given file is not a valid JAR file!");
-                break;
-
-            case eka2l1::j2me::INSTALL_ERROR_JAR_NOT_FOUND:
-                error_str = tr("Can not find the JAR file!");
-                break;
-
-            case eka2l1::j2me::INSTALL_ERROR_JAR_ONLY_MIDP1_SUPPORTED:
-                error_str = tr("The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!");
-                break;
-
-            case eka2l1::j2me::INSTALL_ERROR_NOT_SUPPORTED_FOR_PLAT:
-                error_str = tr("The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment");
-                break;
-
-            default:
-                error_str = tr("An unexpected error has happened. Error code: %1").arg(static_cast<int>(err));
-                break;
-            }
-
-            QMessageBox::critical(this, tr("Install failed"), error_str);
-        }
-    }
-}
-
 void main_window::on_btnet_friends_dialog_requested_from_conf() {
     spawn_btnet_friends_dialog(true);
 }
@@ -1790,7 +1525,7 @@ void main_window::on_action_netplay_configure_triggered() {
 int main_window::map_mouse_id_to_touch_index(int mouse_id, const bool on_release) {
     if (!map_executor_->is_active()) {
         if (!mouse_to_touch_index_emu_.empty()) {
-            for (auto ite: mouse_to_touch_index_emu_) {
+            for (auto ite : mouse_to_touch_index_emu_) {
                 map_executor_->free_allocated_pointer(static_cast<std::uint8_t>(ite.second));
             }
             mouse_to_touch_index_emu_.clear();
@@ -1855,7 +1590,7 @@ bool main_window::load_background_image(const std::string &path) {
 
         eka2l1::drivers::graphics_command_builder builder;
         builder.set_texture_filter(background_image_texture_, true, eka2l1::drivers::filter_option::nearest);
-        
+
         auto cmd_list = builder.retrieve_command_list();
         emulator_state_.graphics_driver->submit_command_list(cmd_list);
     } else {
@@ -1866,7 +1601,7 @@ bool main_window::load_background_image(const std::string &path) {
                 x * y * 4, eka2l1::vec3(x, y, 0));
             builder.set_texture_filter(background_image_texture_, true, eka2l1::drivers::filter_option::nearest);
         } else {
-            builder.update_texture(background_image_texture_, reinterpret_cast<const char*>(data), x * y * 4, 0, eka2l1::drivers::texture_format::rgba,
+            builder.update_texture(background_image_texture_, reinterpret_cast<const char *>(data), x * y * 4, 0, eka2l1::drivers::texture_format::rgba,
                 eka2l1::drivers::texture_data_type::ubyte, eka2l1::vec3(0, 0, 0), eka2l1::vec3(x, y, 0));
         }
         auto cmd_list = builder.retrieve_command_list();
@@ -1887,7 +1622,6 @@ eka2l1::drivers::handle main_window::get_background_image() {
     if (!background_image_texture_ || (previous_background_image_path_ != emulator_state_.conf.background_image)) {
         load_background_image(emulator_state_.conf.background_image);
 
-        // Force to prevent multiple reload attempt
         previous_background_image_path_ = emulator_state_.conf.background_image;
     }
 

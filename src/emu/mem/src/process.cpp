@@ -17,7 +17,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mem/model/flexible/process.h>
 #include <mem/model/multiple/process.h>
 #include <mem/process.h>
 
@@ -29,7 +28,7 @@ namespace eka2l1::mem {
         }
 
         case mem_model_type::flexible:
-            return std::make_unique<flexible::flexible_mem_model_process>(ctrl);
+            return nullptr;
 
         default:
             break;

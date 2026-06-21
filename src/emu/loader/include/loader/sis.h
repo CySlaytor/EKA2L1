@@ -23,7 +23,6 @@
 #include <common/types.h>
 
 #include <loader/sis_fields.h>
-#include <loader/sis_old.h>
 
 #include <string>
 #include <vector>
