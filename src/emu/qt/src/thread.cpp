@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team.
- * Copyright 2015 Dolphin Emulator Project.
- * 
- * This file is part of EKA2L1 project.
- * 
- * A portion of the code is borrowed from MainWindow.cpp in DolphinQt
- * source folder.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <common/arghandler.h>
 #include <common/configure.h>
 #include <common/cvt.h>
@@ -29,7 +6,6 @@
 #include <common/thread.h>
 #include <common/time.h>
 #include <common/vecx.h>
-#include <qt/cmdhandler.h>
 #include <qt/displaywidget.h>
 #include <qt/seh_handler.h>
 #include <qt/state.h>
@@ -41,9 +17,8 @@
 #include <drivers/input/common.h>
 #include <drivers/input/emu_controller.h>
 
-#include <services/window/window.h>
-#include <qt/custom_question_dialog.h>
 #include <qt/dialog_driver.h>
+#include <services/window/window.h>
 
 #include <kernel/kernel.h>
 
@@ -52,10 +27,10 @@
 #endif
 
 #include <QApplication>
+#include <QMessageBox>
 #include <QWindow>
-
-#include <qt/mainwindow.h>
 #include <iostream>
+#include <qt/mainwindow.h>
 
 static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const float y, const float z, const int button, const int action,
     const int mouse_id) {
@@ -72,28 +47,15 @@ static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const
     return evt;
 }
 
-/**
- * \brief Callback when a host mouse event is triggered
- * \param mouse_pos    position of mouse pointer          
- * \param button       0: left, 1: right, 2: other, -1: no button     
- * \param action       0: press, 1: repeat(move), 2: release      
- */
 static void on_ui_window_mouse_evt(void *userdata, eka2l1::vec3 mouse_pos, int button, int action, int mouse_id) {
-    float mouse_pos_x = static_cast<float>(mouse_pos.x), mouse_pos_y = static_cast<float>(mouse_pos.y),
-        mouse_pos_z = static_cast<float>(mouse_pos.z);
-
     eka2l1::desktop::emulator *emu = reinterpret_cast<eka2l1::desktop::emulator *>(userdata);
-
     const std::lock_guard<std::mutex> guard(emu->lockdown);
-    if (emu->ui_main && emu->ui_main->deliver_overlay_mouse_event(mouse_pos, button, action, mouse_id)) {
-        return;
-    }
 
     const float scale = emu->symsys->get_config()->ui_scale;
-    auto mouse_evt = make_mouse_event_driver(mouse_pos_x / scale, mouse_pos_y / scale, mouse_pos_z / scale,
-        button, action, emu->ui_main->map_mouse_id_to_touch_index(mouse_id, (action == 2)));
+    auto mouse_evt = make_mouse_event_driver(mouse_pos.x / scale, mouse_pos.y / scale, mouse_pos.z / scale,
+        button, action, mouse_id);
 
-    if ((emu->symsys) && emu->winserv) {
+    if (emu->symsys && emu->winserv) {
         emu->winserv->queue_input_from_driver(mouse_evt);
     }
 }
@@ -158,7 +120,6 @@ namespace eka2l1::desktop {
     static constexpr const char *os_thread_name = "Symbian OS thread";
 
     static int graphics_driver_thread_initialization(emulator &state) {
-        // Halloween decoration breath of the graphics
         eka2l1::common::set_thread_name(graphics_driver_thread_name);
         eka2l1::common::set_thread_priority(eka2l1::common::thread_priority_high);
 
@@ -169,12 +130,9 @@ namespace eka2l1::desktop {
         state.window->init("Emulator display", eka2l1::vec2(800, 600), drivers::emu_window_flag_maximum_size);
         state.window->set_userdata(&state);
 
-        // We got window and context ready (OpenGL, let makes stuff now)
-        // TODO: Configurable
         state.graphics_driver = drivers::create_graphics_driver(drivers::graphic_api::opengl, state.window->get_window_system_info());
         state.graphics_driver->update_surface_size(state.window->window_fb_size());
 
-        // Now we start set the hook
         state.window->resize_hook = [](void *userdata, const eka2l1::vec2 &size) {
             emulator *state = reinterpret_cast<emulator *>(userdata);
             state->graphics_driver->update_surface_size(size);
@@ -190,15 +148,12 @@ namespace eka2l1::desktop {
                 window->swap_buffer();
                 window->poll_events();
             });
-
             break;
         }
-
         default: {
             state.graphics_driver->set_display_hook([window]() {
                 window->poll_events();
             });
-
             break;
         }
         }
@@ -208,7 +163,6 @@ namespace eka2l1::desktop {
             const std::lock_guard<std::mutex> guard(state.lockdown);
             auto evt = make_controller_event_driver(jid, button, pressed);
 
-            // If the handler accepts it
             if (state.ui_main->controller_event_handler(evt) && state.winserv) {
                 state.winserv->queue_input_from_driver(evt);
             }
@@ -220,7 +174,6 @@ namespace eka2l1::desktop {
             state.ui_main->controller_event_handler(evt);
         };
 
-        // Signal that the initialization is done
         state.graphics_event.set();
         return 0;
     }
@@ -231,7 +184,6 @@ namespace eka2l1::desktop {
 
         state.joystick_controller->stop_polling();
         state.graphics_driver.reset();
-
         return 0;
     }
 
@@ -244,13 +196,10 @@ namespace eka2l1::desktop {
         }
 
         state.joystick_controller->start_polling();
-
-        // Keep running. User which want to change the graphics backend will have to restart EKA2L1.
         state.graphics_event.reset();
         state.graphics_driver->run();
 
         result = graphics_driver_thread_deinitialization(state);
-
         if (result != 0) {
             LOG_ERROR(FRONTEND_CMDLINE, "Graphics driver deinitialization failed with code {}", result);
             return;
@@ -290,12 +239,10 @@ namespace eka2l1::desktop {
                 break;
             }
 
-            // Try wait for initialization from other parties to make this success.
             state.init_event.reset();
             state.init_event.wait();
         }
 
-        // Register SEH handler for this thread
 #if EKA2L1_PLATFORM(WIN32) && defined(_MSC_VER) && ENABLE_SEH_HANDLER
         _set_se_translator(seh_handler_translator_func);
 #endif
@@ -308,8 +255,6 @@ namespace eka2l1::desktop {
 #if ENABLE_SEH_HANDLER
             } catch (std::exception &exc) {
                 std::cout << "Main loop exited with exception: " << exc.what() << std::endl;
-                // TODO： Come back and make this display in UI
-                // state.debugger->queue_error(exc.what());
                 state.should_emu_quit = true;
                 break;
             }
@@ -350,60 +295,28 @@ namespace eka2l1::desktop {
     int emulator_entry(QApplication &application, emulator &state, const int argc, const char **argv) {
         state.stage_one();
 
-        // Instantiate UI and High-level interface threads
         std::thread os_thread_obj(os_thread, std::ref(state));
         state.init_event.wait();
 
-        eka2l1::common::arg_parser parser(argc, argv);
+        if (!state.stage_two_inited) {
+            kill_emulator(state);
+            os_thread_obj.join();
+            return -1;
+        }
 
-        parser.add("--help, -h", "Display helps menu", help_option_handler);
-        parser.add("--listapp", "List all installed applications", list_app_option_handler);
-        parser.add("--listdevices", "List all installed devices", list_devices_option_handler);
-        parser.add("--app, -a, --run", "Run an app with given name or UID, or the absolute virtual path to executable.\n"
-                                        "\t\t\t  See list of apps with --listapp.\n"
-                                        "\t\t\t  Extra command line arguments can be passed to the application.\n"
-                                        "\n"
-                                        "\t\t\t  Some example:\n"
-                                        "\t\t\t    eka2l1 --run C:\\sys\\bin\\BitmapTest.exe \"--hi --arg 5\"\n"
-                                        "\t\t\t    eka2l1 --run Bounce\n"
-                                        "\t\t\t    eka2l1 --run 0x200412ED\n",
-            app_specifier_option_handler);
-        parser.add("--device, -dvc", "Set a device to be ran, through the given firmware code. This device will also be saved in the configuration as the current device.\n"
-                               "\t\t\t Example: --device RH-29",
-            device_set_option_handler);
-        parser.add("--install, -i", "Install a SIS.", app_install_option_handler);
-        parser.add("--remove, -r", "Remove an package.", package_remove_option_handler);
-        parser.add("--fullscreen, -f", "Display the emulator in fullscreen.", fullscreen_option_handler);
-        parser.add("--mount, -m", "Load a folder/zip as a Game Card ROM.", mount_card_option_handler);
-        parser.add("--keybindprofile, -kbp", "Set a keybind profile to associate with the emulator launch. Don't include any file extension here.\n"
-                                              "\t Example: eka2l1 --kbp controller_for_octopus",
-            keybind_profile_option_handler);
-        parser.add("--mmcid, --cid, -cid", "Set the MMC-ID for the mounted card", set_mmcid_option_handler);
-        parser.add("--runng, --appng, -rng, -ang", "Run a single N-Gage game inside the E drive", run_ngage_game_option_handler);
+        state.should_emu_quit = false;
+        state.app_launch_from_command_line = true;
 
-#if ENABLE_PYTHON_SCRIPTING
-        parser.add("--gendocs", "Generate Python documentation", python_docgen_option_handler);
-#endif
-
-        if (argc > 1) {
-            std::string err;
-            state.should_emu_quit = !parser.parse(&state, &err);
-
-            if (state.should_emu_quit) {
-                // Notify the OS thread that is still sleeping, waiting for
-                // graphics sema to be freed.
-                state.graphics_event.set();
-                state.kill_event.set();
-
-                std::cout << err << std::endl;
-                os_thread_obj.join();
-
-                return -1;
+        // Default fallback path, but check if the shortcut provided one!
+        state.launched_app_name_ = "C:\\sys\\bin\\ONE.exe";
+        for (int i = 1; i < argc; i++) {
+            if (std::string(argv[i]) == "--run" && i + 1 < argc) {
+                state.launched_app_name_ = argv[i + 1];
+                break;
             }
         }
 
         state.ui_main = new main_window(application, nullptr, state);
-        state.ui_main->setWindowTitle(get_emulator_window_title());
         state.ui_main->load_and_show();
 
         eka2l1::drivers::ui::main_window_instance = state.ui_main;
@@ -411,17 +324,11 @@ namespace eka2l1::desktop {
 
         std::thread graphics_thread_obj(graphics_driver_thread, std::ref(state));
 
-        if (state.app_launch_from_command_line) {
-            if (!state.launched_app_name_.empty()) {
-                state.ui_main->set_discord_presence_current_playing(state.launched_app_name_);
-            }
-            state.ui_main->setup_and_switch_to_game_mode();
-        }
+        state.ui_main->setup_and_switch_to_game_mode();
 
         const int exec_code = application.exec();
         kill_emulator(state);
 
-        // Wait for OS thread to die
         os_thread_obj.join();
         graphics_thread_obj.join();
 

@@ -1,14 +1,11 @@
 #pragma once
 
 #include <atomic>
-#include <condition_variable>
-#include <functional>
 #include <memory>
 #include <mutex>
-#include <queue>
+#include <string>
 #include <thread>
 
-#include <common/queue.h>
 #include <common/sync.h>
 #include <config/app_settings.h>
 #include <config/config.h>
@@ -21,22 +18,12 @@
 #include <drivers/sensor/sensor.h>
 
 namespace eka2l1 {
-    namespace drivers {
-        class graphics_driver;
-        class audio_driver;
-    }
-
-    namespace kernel {
-        class process;
-    }
-
     class window_server;
 }
 
 class main_window;
 
 namespace eka2l1::desktop {
-
     struct emulator {
         std::unique_ptr<system> symsys;
         std::unique_ptr<drivers::graphics_driver> graphics_driver;
@@ -54,7 +41,6 @@ namespace eka2l1::desktop {
         bool first_time;
         bool init_fullscreen;
         bool app_launch_from_command_line;
-        bool inited_graphics;
         bool stretch_to_fill_display;
 
         common::event graphics_event;
