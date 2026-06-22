@@ -23,8 +23,6 @@
 #include <services/msv/operations/change.h>
 #include <services/msv/operations/create.h>
 #include <services/msv/operations/move.h>
-#include <services/sms/mtm/factory.h>
-#include <services/sms/settings.h>
 #include <services/fs/fs.h>
 #include <services/fs/std.h>
 
@@ -105,48 +103,7 @@ namespace eka2l1 {
     static constexpr std::uint32_t SMS_SETTINGS_STORE_UID = 0x1000996E;
 
     void msv_server::init_sms_settings() {
-        epoc::sms::sms_settings settings;
-        epoc::sms::supply_sim_settings(sys, &settings);
-
-        std::vector<epoc::msv::entry*> entries = indexer_->get_entries_by_parent(epoc::msv::MSV_ROOT_ID_VALUE);
-        for (std::size_t i = 0; i < entries.size(); i++) {
-            if (entries[i]->mtm_uid_ == epoc::msv::MSV_MSG_TYPE_UID) {
-                std::optional<std::u16string> path = indexer_->get_entry_data_file(entries[i]);
-                if (path.has_value()) {
-                    io_system *io = sys->get_io_system();
-                    symfile f = io->open_file(path.value(), READ_MODE | BIN_MODE);
-
-                    epoc::msv::store the_store;
-
-                    if (f) {
-                        eka2l1::ro_file_stream rstream(f.get());
-                        the_store.read(rstream);
-                    }
-
-                    epoc::msv::store_buffer &buffer = the_store.buffer_for(SMS_SETTINGS_STORE_UID);
-                    common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
-
-                    settings.absorb(seri);
-
-                    buffer.resize(seri.size());
-                    seri = common::chunkyseri(buffer.data(), buffer.size(), common::SERI_MODE_WRITE);
-                    settings.absorb(seri);
-
-                    if (f) {
-                        f->close();
-                    }
-
-                    f = io->open_file(path.value(), WRITE_MODE | BIN_MODE);
-                    
-                    if (f) {
-                        eka2l1::wo_file_stream wstream(f.get());
-                        the_store.write(wstream);
-
-                        f->close();
-                    }
-                }
-            }
-        }
+        // Stubbed out: SMS module purged
     }
 
     void msv_server::init() {
@@ -171,8 +128,8 @@ namespace eka2l1 {
 
         indexer_ = std::make_unique<epoc::msv::sql_entry_indexer>(io, message_folder_, sys->get_system_language());
 
-        std::unique_ptr<epoc::msv::operation_factory> sms_opftr = std::make_unique<epoc::sms::sms_operation_factory>();
-        install_factory(sms_opftr);
+        // std::unique_ptr<epoc::msv::operation_factory> sms_opftr = std::make_unique<epoc::sms::sms_operation_factory>();
+        // install_factory(sms_opftr);
 
         fserver_ = reinterpret_cast<fs_server*>(kern->get_by_name<service::server>(eka2l1::epoc::fs::get_server_name_through_epocver(
             kern->get_epoc_version())));

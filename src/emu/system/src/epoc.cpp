@@ -37,7 +37,6 @@
 #include <dispatch/libraries/register.h>
 #include <kernel/libmanager.h>
 #include <kernel/timing.h>
-#include <ldd/collection.h>
 #include <loader/rom.h>
 #include <services/init.h>
 #include <vfs/vfs.h>
@@ -114,7 +113,6 @@ namespace eka2l1 {
         system *parent_;
 
         std::size_t gdb_stub_breakpoint_callback_handle_;
-        std::size_t ldd_request_load_callback_handle_;
 
         common::identity_container<system_reset_callback_type> reset_callbacks_;
 
@@ -167,8 +165,6 @@ namespace eka2l1 {
                     }
                 });
             }
-
-            ldd_request_load_callback_handle_ = kern_->register_ldd_factory_request_callback(&ldd::get_factory_func);
         }
 
         bool is_s80_device_active() { return false; } // Hardcoded out for OS 9.3 target
@@ -495,7 +491,6 @@ namespace eka2l1 {
             scripting_.reset();
 #endif
 
-        kern_->unregister_ldd_factory_request_callback(ldd_request_load_callback_handle_);
         kern_->unregister_breakpoint_hit_callback(gdb_stub_breakpoint_callback_handle_);
 
         if (dispatcher_)

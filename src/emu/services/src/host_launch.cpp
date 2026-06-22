@@ -19,7 +19,6 @@
  */
 
 #include <services/applist/applist.h>
-#include <services/internet/browser.h>
 #include <services/host_launch.h>
 
 #include <kernel/kernel.h>
@@ -34,15 +33,8 @@ namespace eka2l1::service {
     static const std::u16string BROWSER_APP_HOST_NAME_MAP = u"browser";
 
     bool handle_launch_browser(kernel::process *pr, const epoc::apa::command_line &cmd_line) {
-        kernel_system *kern = pr->get_kernel_object_owner();
-        
-        if (cmd_line.server_differentiator_ != 0) {
-            kern->create_no_kernel_param_and_add_thread<browser_for_app_server>(kernel::owner_type::process, pr->get_primary_thread(),
-                kern->get_system(), cmd_line.server_differentiator_);
-        }
-  
+        // browser_for_app_server is purged, we only launch directly on the host machine
         if (!cmd_line.document_name_.empty()) {
-            // Launch right away, else it will probably send a command to the server to launch later.
             return common::launch_browser(common::ucs2_to_utf8(cmd_line.document_name_));
         }
 

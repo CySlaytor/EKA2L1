@@ -1,26 +1,25 @@
 /*
  * Copyright (c) 2020 EKA2L1 Team
- * 
+ *
  * This file is part of EKA2L1 project
  * (see bentokun.github.com/EKA2L1).
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <common/cvt.h>
 #include <services/internet/protocols/overall.h>
-#include <services/sms/protocols/overall.h>
 #include <services/socket/agent/genconn.h>
 #include <services/socket/connection.h>
 #include <services/socket/host.h>
@@ -44,7 +43,7 @@ namespace eka2l1 {
         agents_.push_back(std::make_unique<epoc::socket::generic_connect_agent>(this));
 
         epoc::internet::add_internet_stack_protocols(this, kern->is_eka1());
-        epoc::sms::add_sms_stack_protocols(this, kern->is_eka1());
+        // epoc::sms::add_sms_stack_protocols(this, kern->is_eka1()); // <-- REMOVED: SMS protocols are purged
     }
 
     void socket_server::connect(service::ipc_context &context) {
@@ -53,7 +52,7 @@ namespace eka2l1 {
     }
 
     epoc::socket::protocol *socket_server::find_protocol(const std::uint32_t addr_family, const std::uint32_t protocol_id) {
-        for (auto &pr: protocols_) {
+        for (auto &pr : protocols_) {
             std::vector<std::uint32_t> ids = pr->family_ids();
             if (std::find(ids.begin(), ids.end(), addr_family) != ids.end()) {
                 ids = pr->supported_ids();
@@ -264,18 +263,14 @@ namespace eka2l1 {
     }
 
     static void fill_protocol_description(epoc::socket::protocol *pr, protocol_description &des) {
-        // NOTE: On emulator some protocols are merged for feasable implementation
-        // TODO: Make them separable for this fill
         des.addr_fam_ = pr->family_ids()[0];
         des.protocol_ = pr->supported_ids()[0];
         des.ver_ = pr->ver();
         des.bord_ = pr->get_byte_order();
-        //des.sock_type_ = pr->sock_type();
         des.message_size_ = pr->message_size();
 
         des.name_.assign(nullptr, pr->name());
 
-        // TODO: From this
         des.service_info_ = 0;
         des.naming_services_ = 0;
         des.service_sec_ = 0;
@@ -313,7 +308,6 @@ namespace eka2l1 {
             return;
         }
 
-        // Find the protocol that satifies our condition first
         epoc::socket::protocol *target_pr = server<socket_server>()->find_protocol(addr_family.value(), protocol.value());
         if (!target_pr) {
             LOG_ERROR(SERVICE_ESOCK, "Unable to find host resolver with address={}, protocol={}", addr_family.value(), protocol.value());
@@ -335,7 +329,6 @@ namespace eka2l1 {
             conn = reinterpret_cast<epoc::socket::socket_connection_proxy *>(inst->get());
         }
 
-        // Try to instantiate the host resolver
         std::unique_ptr<epoc::socket::host_resolver> resolver_impl = target_pr->make_host_resolver(addr_family.value(), protocol.value());
         if (!resolver_impl) {
             LOG_ERROR(SERVICE_ESOCK, "The protocol {} does not support resolving host!", common::ucs2_to_utf8(target_pr->name()));
@@ -344,14 +337,12 @@ namespace eka2l1 {
             return;
         }
 
-        // Create new session
         socket_subsession_instance hr_inst = std::make_unique<epoc::socket::socket_host_resolver>(
             this, resolver_impl, conn ? conn->get_connection() : nullptr);
 
         const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(hr_inst));
         subsessions_.get(id)->get()->set_id(id);
 
-        // Write the subsession handle
         ctx->write_data_to_descriptor_argument<std::uint32_t>(3, id);
         ctx->complete(epoc::error_none);
     }
@@ -366,7 +357,6 @@ namespace eka2l1 {
             return;
         }
 
-        // Find the protocol that satifies our condition first
         epoc::socket::protocol *target_pr = server<socket_server>()->find_protocol(addr_family.value(), protocol.value());
         if (!target_pr) {
             LOG_ERROR(SERVICE_ESOCK, "Unable to find host resolver with address={}, protocol={}", addr_family.value(), protocol.value());
@@ -384,13 +374,11 @@ namespace eka2l1 {
             return;
         }
 
-        // Create new session
         socket_subsession_instance so_inst = std::make_unique<epoc::socket::socket_socket>(this, sock_impl);
 
         const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(so_inst));
         subsessions_.get(id)->get()->set_id(id);
 
-        // Write the subsession handle
         ctx->write_data_to_descriptor_argument<std::uint32_t>(3, id);
         ctx->complete(epoc::error_none);
     }
@@ -404,7 +392,6 @@ namespace eka2l1 {
             return;
         }
 
-        // Find the protocol that satifies our condition first
         epoc::socket::protocol *target_pr = server<socket_server>()->find_protocol(addr_family.value(), protocol.value());
         if (!target_pr) {
             LOG_ERROR(SERVICE_ESOCK, "Unable to find Net Database protocol with address={}, protocol={}", addr_family.value(), protocol.value());
@@ -413,7 +400,6 @@ namespace eka2l1 {
             return;
         }
 
-        // Try to instantiate the net database
         std::unique_ptr<epoc::socket::net_database> netdb_impl = target_pr->make_net_database(addr_family.value(), protocol.value());
         if (!netdb_impl) {
             LOG_ERROR(SERVICE_ESOCK, "The protocol {} does not support net database!", common::ucs2_to_utf8(target_pr->name()));
@@ -422,14 +408,12 @@ namespace eka2l1 {
             return;
         }
 
-        // Create new session
         socket_subsession_instance hr_inst = std::make_unique<epoc::socket::socket_net_database>(
             this, netdb_impl);
 
         const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(hr_inst));
         subsessions_.get(id)->get()->set_id(id);
 
-        // Write the subsession handle
         ctx->write_data_to_descriptor_argument<std::uint32_t>(3, id);
         ctx->complete(epoc::error_none);
     }
@@ -442,7 +426,6 @@ namespace eka2l1 {
             return;
         }
 
-        // Find the protocol that satifies our condition first
         epoc::socket::protocol *target_pr = server<socket_server>()->find_protocol(open_info->addr_family_, open_info->protocol_);
         if (!target_pr) {
             LOG_ERROR(SERVICE_ESOCK, "Unable to find protocol with address={}, protocol={}", open_info->addr_family_, open_info->protocol_);
@@ -460,48 +443,37 @@ namespace eka2l1 {
             return;
         }
 
-        // Create new session
         socket_subsession_instance so_inst = std::make_unique<epoc::socket::socket_socket>(this, sock_impl);
 
         const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(so_inst));
         subsessions_.get(id)->get()->set_id(id);
 
-        // Write the subsession handle
         ctx->write_data_to_descriptor_argument<std::uint32_t>(3, id);
         ctx->complete(epoc::error_none);
     }
 
     void socket_client_session::so_create_null(service::ipc_context *ctx) {
-        // Null session are used to receive socket returned by accept call. It's nearly the same way
-        // how BSD socket works
         std::unique_ptr<epoc::socket::socket> sock_impl = nullptr;
         socket_subsession_instance so_inst = std::make_unique<epoc::socket::socket_socket>(this, sock_impl);
 
         const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(so_inst));
         subsessions_.get(id)->get()->set_id(id);
 
-        // Write the subsession handle
         ctx->write_data_to_descriptor_argument<std::uint32_t>(3, id);
         ctx->complete(epoc::error_none);
     }
 
     void socket_client_session::cn_open(eka2l1::service::ipc_context *ctx) {
-        // TODO: Implement
         socket_subsession_instance cn_inst = std::make_unique<epoc::socket::socket_connection_proxy>(this, nullptr);
 
         const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(cn_inst));
         subsessions_.get(id)->get()->set_id(id);
 
-        // Write the subsession handle
         ctx->write_data_to_descriptor_argument<std::uint32_t>(3, id);
         ctx->complete(epoc::error_none);
     }
 
     void socket_client_session::ss_request_optimal_dealer(eka2l1::service::ipc_context *ctx) {
-        // Request optimal dealer allows client to connect to a specific server that is only able to only open
-        // specific type of protocols/sockets for specific purpose.
-        // Like the document said, for example, open a session for TCP/UDP sockets server and
-        // not SMS sockets. Too complicated for emulator, lol
         ctx->complete(epoc::error_not_found);
     }
 }

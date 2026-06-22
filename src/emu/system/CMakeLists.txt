@@ -17,7 +17,6 @@ target_link_libraries(epoc PRIVATE
     disasm
     drivers
     epocdispatch
-    epocldd
     epockern
     epocio
     epocloader
