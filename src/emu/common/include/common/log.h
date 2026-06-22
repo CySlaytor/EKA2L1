@@ -78,12 +78,8 @@ namespace eka2l1 {
     }
 }
 
-// Cross-compiler support for beautiful function signatures
-#if defined(_MSC_VER)
-#define TRACK_CLASS_COVERAGE() ::eka2l1::common::CoverageTracker::Record(__FUNCSIG__, __FILE__)
-#else
-#define TRACK_CLASS_COVERAGE() ::eka2l1::common::CoverageTracker::Record(__PRETTY_FUNCTION__, __FILE__)
-#endif
+// Disables all logging hooks for max performance
+#define TRACK_CLASS_COVERAGE()
 
 #ifdef DISABLE_LOGGING
 #define LOG_TRACE(class, fmt, ...)

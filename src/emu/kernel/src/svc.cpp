@@ -402,13 +402,19 @@ namespace eka2l1::epoc {
         kernel::process *crr_process = kern->crr_process();
         epoc::des8 *data = data_des.get(crr_process);
 
-        if (!data) {
+        if (!data)
             return;
-        }
 
         std::u16string cmdline = pr->get_cmd_args();
-        char *data_ptr = data->get_pointer(crr_process);
 
+        {
+            static std::mutex mtx;
+            std::lock_guard<std::mutex> lock(mtx);
+            std::ofstream out("used_classes_coverage.txt", std::ios::app);
+            out << "[CMDLINE DISCOVERY] Game read Command Line arguments: " << common::ucs2_to_utf8(cmdline) << "\n";
+        }
+
+        char *data_ptr = data->get_pointer(crr_process);
         memcpy(data_ptr, cmdline.data(), cmdline.length() << 1);
         data->set_length(crr_process, static_cast<std::uint32_t>(cmdline.length() << 1));
     }
@@ -1221,13 +1227,19 @@ namespace eka2l1::epoc {
         return 0;
     }
 
-    BRIDGE_FUNC(std::int32_t, hal_function, std::int32_t cage, std::int32_t func, eka2l1::ptr<std::int32_t> a1,
-        eka2l1::ptr<std::int32_t> a2) {
+    BRIDGE_FUNC(std::int32_t, hal_function, std::int32_t cage, std::int32_t func, eka2l1::ptr<std::int32_t> a1, eka2l1::ptr<std::int32_t> a2) {
         TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->crr_process();
 
         int *arg1 = a1.get(pr);
         int *arg2 = a2.get(pr);
+
+        {
+            static std::mutex mtx;
+            std::lock_guard<std::mutex> lock(mtx);
+            std::ofstream out("used_classes_coverage.txt", std::ios::app);
+            out << "[HAL DISCOVERY] Game queried HAL Group: " << cage << " Func: " << func << "\n";
+        }
 
         return do_hal(kern->get_system(), cage, func, arg1, arg2);
     }
@@ -2315,6 +2327,13 @@ namespace eka2l1::epoc {
         TRACK_CLASS_COVERAGE();
         property_ptr prop = kern->get_prop(cage, key);
 
+        {
+            static std::mutex mtx;
+            std::lock_guard<std::mutex> lock(mtx);
+            std::ofstream out("used_classes_coverage.txt", std::ios::app);
+            out << "[PROPERTY DISCOVERY] Game requested INT Property -> Category (UID): 0x" << std::hex << cage << " Key: 0x" << key << "\n";
+        }
+
         if (!prop || !prop->is_defined()) {
             LOG_WARN(KERNEL, "Property not found: category = 0x{:x}, key = 0x{:x}", cage, key);
             return epoc::error_not_found;
@@ -3081,18 +3100,26 @@ namespace eka2l1::epoc {
         return org_val;
     }
 
-    BRIDGE_FUNC(std::int32_t, locked_dec_32, std::int32_t *val_ptr) {
+    BRIDGE_FUNC(std::int32_t, locked_dec_32, eka2l1::ptr<std::int32_t> val_ptr) {
         TRACK_CLASS_COVERAGE();
-        const std::int32_t before = *val_ptr;
-        (*val_ptr)--;
+        std::int32_t *val = val_ptr.get(kern->crr_process());
+        if (!val)
+            return 0; // Prevent crash if null
+
+        const std::int32_t before = *val;
+        (*val)--;
 
         return before;
     }
 
-    BRIDGE_FUNC(std::int32_t, locked_inc_32, std::int32_t *val_ptr) {
+    BRIDGE_FUNC(std::int32_t, locked_inc_32, eka2l1::ptr<std::int32_t> val_ptr) {
         TRACK_CLASS_COVERAGE();
-        const std::int32_t before = *val_ptr;
-        (*val_ptr)++;
+        std::int32_t *val = val_ptr.get(kern->crr_process());
+        if (!val)
+            return 0; // Prevent crash if null
+
+        const std::int32_t before = *val;
+        (*val)++;
 
         return before;
     }
@@ -3435,6 +3462,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x00800014, user_svr_rom_root_dir_address),
         BRIDGE_REGISTER(0x00800015, safe_inc_32),
         BRIDGE_REGISTER(0x00800016, safe_dec_32),
+        BRIDGE_REGISTER(0x00800017, locked_inc_32),
+        BRIDGE_REGISTER(0x00800018, locked_dec_32),
         BRIDGE_REGISTER(0x00800019, utc_offset),
         BRIDGE_REGISTER(0x0080001A, get_global_userdata),
         BRIDGE_REGISTER(0x00C10000, hle_dispatch),
