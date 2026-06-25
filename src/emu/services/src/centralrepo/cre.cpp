@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -44,6 +45,7 @@ namespace eka2l1 {
      * 
     */
     int do_state_for_cre(common::chunkyseri &seri, eka2l1::central_repo &repo) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t uid1 = 0x10000037; // Direct file store UID
         std::uint32_t uid2 = 0;
         std::uint32_t uid3 = 0x10202BE9; // Cenrep Server UID
@@ -243,6 +245,7 @@ namespace eka2l1 {
     }
 
     void central_repo::write_changes(eka2l1::io_system *io, device_manager *mngr) {
+  NGAGE_COVERAGE_LOG();
         std::vector<std::uint8_t> bufs;
 
         {
@@ -272,6 +275,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::write_changes(eka2l1::io_system *io, device_manager *mngr) {
+  NGAGE_COVERAGE_LOG();
         attach_repo->write_changes(io, mngr);
     }
 }

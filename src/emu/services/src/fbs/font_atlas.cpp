@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -26,6 +27,7 @@ namespace eka2l1::epoc {
         : atlas_handle_(0)
         , atlas_data_(nullptr)
         , pack_handle_(0) {
+  NGAGE_COVERAGE_LOG();
     }
 
     font_atlas::font_atlas(adapter::font_file_adapter_base *adapter, const std::size_t typeface_idx, const char16_t initial_start,
@@ -38,10 +40,12 @@ namespace eka2l1::epoc {
         , typeface_idx_(typeface_idx)
         , atlas_data_(nullptr)
         , pack_handle_(0) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void font_atlas::init(adapter::font_file_adapter_base *adapter, const std::size_t typeface_idx, const char16_t initial_start,
         const char16_t initial_char_count, const int font_size, const std::uint32_t metric_identifier) {
+  NGAGE_COVERAGE_LOG();
         adapter_ = adapter;
         atlas_handle_ = 0;
         metric_identifier_ = metric_identifier;
@@ -54,6 +58,7 @@ namespace eka2l1::epoc {
     }
 
     void font_atlas::destroy(drivers::graphics_driver *driver) {
+  NGAGE_COVERAGE_LOG();
         if (atlas_handle_) {
             drivers::graphics_command_builder builder;
             builder.destroy_bitmap(atlas_handle_);
@@ -74,10 +79,12 @@ namespace eka2l1::epoc {
     }
 
     int font_atlas::get_atlas_width() const {
+  NGAGE_COVERAGE_LOG();
         return common::align(ESTIMATE_MAX_CHAR_IN_ATLAS_WIDTH * size_, 1024);
     }
 
     bool font_atlas::draw_text(const std::u16string &text, const eka2l1::rect &text_box, const epoc::text_alignment alignment, drivers::graphics_driver *driver, drivers::graphics_command_builder &builder, const eka2l1::vec2f scale_vector) {
+  NGAGE_COVERAGE_LOG();
         const int width = get_atlas_width();
         drivers::graphics_command_builder upload_builder;
 

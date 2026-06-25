@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2021 EKA2L1 Team
  * 
@@ -28,6 +29,7 @@ namespace eka2l1::epoc::hwrm::power {
         : charging_status_prop_(nullptr)
         , battery_level_prop_(nullptr)
         , battery_status_prop_(nullptr) {
+  NGAGE_COVERAGE_LOG();
         // Create and define the property. Remember to destroy later.
         charging_status_prop_ = kern->create<service::property>();
         battery_level_prop_ = kern->create<service::property>();

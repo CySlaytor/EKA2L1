@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2022 EKA2L1 Team
  * 
@@ -48,6 +49,7 @@ extern "C" {
 
 namespace eka2l1::epoc::internet {
     std::unique_ptr<epoc::socket::socket> inet_bridged_protocol::make_socket(const std::uint32_t family_id, const std::uint32_t protocol_id, const socket::socket_type sock_type) {
+  NGAGE_COVERAGE_LOG();
         std::unique_ptr<epoc::socket::socket> sock = std::make_unique<inet_socket>(this);
         inet_socket *sock_casted = reinterpret_cast<inet_socket*>(sock.get());
 
@@ -59,6 +61,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_bridged_protocol::initialize_looper() {
+  NGAGE_COVERAGE_LOG();
         if (!looper_->started()) {
             looper_->set_loop_thread_prepare_callback([]() { common::set_thread_priority(common::thread_priority_very_high); });
             looper_->start();
@@ -88,6 +91,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::close_down() {
+  NGAGE_COVERAGE_LOG();
         if (accept_server_) {
             accept_server_->cancel_accept();
         }
@@ -142,10 +146,12 @@ namespace eka2l1::epoc::internet {
     }
 
     inet_socket::~inet_socket() {
+  NGAGE_COVERAGE_LOG();
         close_down();
     }
 
     bool inet_socket::open(const std::uint32_t family_id, const std::uint32_t protocol_id, const epoc::socket::socket_type sock_type) {
+  NGAGE_COVERAGE_LOG();
         const int family_translated = ((family_id == INET6_ADDRESS_FAMILY) ? AF_INET6 : AF_INET);
 
         switch (sock_type) {
@@ -234,6 +240,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::create_frequent_tcp_tasks() {
+  NGAGE_COVERAGE_LOG();
         connect_task_ = libuv::create_task([this]() {
             tcp_connect_impl_async();
         });
@@ -264,6 +271,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::create_frequent_udp_tasks() {
+  NGAGE_COVERAGE_LOG();
         connect_task_ = libuv::create_task([this]() {
             udp_connect_impl_async();
         });
@@ -286,6 +294,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::create_frequent_common_tasks() {
+  NGAGE_COVERAGE_LOG();
         bind_task_ = libuv::create_task([this]() {
             bind_impl_async();
         });
@@ -296,6 +305,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::handle_connect_done_error_code(const int error_code) {
+  NGAGE_COVERAGE_LOG();
         if (connect_done_info_.empty()) {
             return;
         }
@@ -350,6 +360,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::complete_connect_done_info(const int err) {
+  NGAGE_COVERAGE_LOG();
         if (connect_done_info_.empty()) {
             return;
         }
@@ -358,6 +369,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::tcp_connect_impl_async() {
+  NGAGE_COVERAGE_LOG();
         uv_connect_t *connect = reinterpret_cast<uv_connect_t *>(opaque_connect_);
         int err = uv_tcp_connect(
             connect,
@@ -375,6 +387,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::udp_connect_impl_async() {
+  NGAGE_COVERAGE_LOG();
         const int err = uv_udp_connect(
             reinterpret_cast<uv_udp_t*>(opaque_handle_),
             reinterpret_cast<const sockaddr*>(&connect_addr_));
@@ -383,6 +396,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::connect(const epoc::socket::saddress &addr, epoc::notify_info &info) {
+  NGAGE_COVERAGE_LOG();
         if (!opaque_handle_) {
             info.complete(epoc::error_not_ready);
             return;
@@ -410,6 +424,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::bind_impl_async() {
+  NGAGE_COVERAGE_LOG();
         sockaddr *ip_addr_ptr = nullptr;
         GUEST_TO_BSD_ADDR(bind_addr_, ip_addr_ptr);
 
@@ -444,6 +459,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::bind(const epoc::socket::saddress &addr, epoc::notify_info &info) {
+  NGAGE_COVERAGE_LOG();
         if (!opaque_handle_) {
             info.complete(epoc::error_not_ready);
             return;
@@ -461,6 +477,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::bind_callback_impl_async() {
+  NGAGE_COVERAGE_LOG();
         sockaddr *ip_addr_ptr = nullptr;
         GUEST_TO_BSD_ADDR(bind_addr_, ip_addr_ptr);
 
@@ -474,6 +491,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::bind_callback(const epoc::socket::saddress &addr, std::function<void(int)> callback) {
+  NGAGE_COVERAGE_LOG();
         if (!opaque_handle_) {
             callback(epoc::error_not_ready);
             return;
@@ -486,6 +504,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::handle_new_connection() {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = nullptr;
         if (!accept_done_info_.empty()) {
             kern = accept_done_info_.requester->get_kernel_object_owner();
@@ -521,11 +540,13 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::set_listen_event(const int listen_event_result) {
+  NGAGE_COVERAGE_LOG();
         listen_event_.set();
         listen_event_result_ = listen_event_result;
     }
 
     void inet_socket::listen_impl_async() {
+  NGAGE_COVERAGE_LOG();
         const int err = uv_listen(reinterpret_cast<uv_stream_t*>(opaque_handle_),
             backlog_count_,
             [](uv_stream_t *server, int status) {
@@ -541,6 +562,7 @@ namespace eka2l1::epoc::internet {
     }
 
     std::int32_t inet_socket::listen(const std::uint32_t backlog) {
+  NGAGE_COVERAGE_LOG();
         if (!opaque_handle_) {
             return epoc::error_not_ready;
         }
@@ -571,6 +593,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::handle_accept_impl() {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = nullptr;
         if (!accept_done_info_.empty()) {
             kern = accept_done_info_.requester->get_kernel_object_owner();
@@ -611,6 +634,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::accept(std::unique_ptr<epoc::socket::socket> *pending_sock, epoc::notify_info &complete_info) {
+  NGAGE_COVERAGE_LOG();
         if (!accept_done_info_.empty()) {
             LOG_ERROR(SERVICE_INTERNET, "Accept is called when pending accept is not yet finished!");
             complete_info.complete(epoc::error_permission_denied);
@@ -627,6 +651,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::cancel_accept() {
+  NGAGE_COVERAGE_LOG();
         // NOTE: Sad race condition
         if (accept_done_info_.empty()) {
             return;
@@ -638,6 +663,7 @@ namespace eka2l1::epoc::internet {
     }   
 
     std::int32_t inet_socket::local_name(epoc::socket::saddress &result, std::uint32_t &result_len) {
+  NGAGE_COVERAGE_LOG();
         if (!opaque_handle_) {
             return epoc::error_not_ready;
         }
@@ -662,6 +688,7 @@ namespace eka2l1::epoc::internet {
     }
 
     std::int32_t inet_socket::remote_name(epoc::socket::saddress &result, std::uint32_t &result_len) {
+  NGAGE_COVERAGE_LOG();
         if (!opaque_handle_) {
             return epoc::error_not_ready;
         }
@@ -686,6 +713,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::complete_send_done_info(const int err) {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = nullptr;
         if (!send_done_info_.empty()) {
             kern = send_done_info_.requester->get_kernel_object_owner();
@@ -707,6 +735,7 @@ namespace eka2l1::epoc::internet {
     }
     
     bool retrieve_local_ip_info(epoc::socket::saddress &broadcast, epoc::socket::saddress *my_selfip) {
+  NGAGE_COVERAGE_LOG();
         inet_interface_info info_temp;
         inet_socket_interface_iterator iterator;
 
@@ -731,6 +760,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::udp_send_impl_async() {
+  NGAGE_COVERAGE_LOG();
         uv_udp_t *udp = reinterpret_cast<uv_udp_t *>(opaque_handle_);
         uv_udp_send_t *send_info = reinterpret_cast<uv_udp_send_t *>(opaque_send_info_);
 
@@ -747,6 +777,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::tcp_send_impl_async() {
+  NGAGE_COVERAGE_LOG();
         uv_stream_t *stream = reinterpret_cast<uv_stream_t *>(opaque_handle_);
         uv_write_t *write = reinterpret_cast<uv_write_t *>(opaque_write_info_);
 
@@ -762,6 +793,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::send(const std::uint8_t *data, std::uint32_t data_size, std::uint32_t *sent_size, const epoc::socket::saddress *addr_ptr, std::uint32_t flags, epoc::notify_info &complete_info) {
+  NGAGE_COVERAGE_LOG();
         if (!send_done_info_.empty()) {
             complete_info.complete(epoc::error_in_use);
             return;
@@ -841,6 +873,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::prepare_buffer_for_recv(const std::size_t suggested_size, void *buf_ptr) {
+  NGAGE_COVERAGE_LOG();
         uv_buf_t *buf = reinterpret_cast<uv_buf_t*>(buf_ptr);
         temp_buffer_.resize(suggested_size);
         
@@ -849,6 +882,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::handle_udp_delivery(const std::int64_t bytes_read_arg, const void *buf_ptr, const void *addr) {
+  NGAGE_COVERAGE_LOG();
         const uv_buf_t *buf = reinterpret_cast<const uv_buf_t*>(buf_ptr);
         const sockaddr *recv_addr = reinterpret_cast<const sockaddr*>(addr);
 
@@ -902,6 +936,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::handle_tcp_delivery(const std::int64_t bytes_read_arg, const void *buf_ptr) {
+  NGAGE_COVERAGE_LOG();
         const uv_buf_t *buf = reinterpret_cast<const uv_buf_t*>(buf_ptr);
         kernel_system *kern = nullptr;
 
@@ -973,6 +1008,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::udp_recv_impl_async() {
+  NGAGE_COVERAGE_LOG();
         uv_udp_t *udp = reinterpret_cast<uv_udp_t*>(opaque_handle_);
         
         uv_udp_set_broadcast(udp, 1);
@@ -984,6 +1020,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::tcp_recv_impl_async() {
+  NGAGE_COVERAGE_LOG();
         uv_stream_t *tcp_stream = reinterpret_cast<uv_stream_t*>(opaque_handle_);
 
         int start_err = uv_read_start(tcp_stream, [](uv_handle_t *handle, std::size_t suggested_size, uv_buf_t *buf) {
@@ -999,6 +1036,7 @@ namespace eka2l1::epoc::internet {
 
     void inet_socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *recv_size, epoc::socket::saddress *addr_ptr,
         std::uint32_t flags, epoc::notify_info &complete_info, epoc::socket::receive_done_callback callback) {
+  NGAGE_COVERAGE_LOG();
         if (!recv_done_info_.empty()) {
             complete_info.complete(epoc::error_in_use);
             return;
@@ -1054,6 +1092,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::tcp_cancel_recv_impl_async() {
+  NGAGE_COVERAGE_LOG();
         if (recv_done_info_.empty()) {
             return;
         }
@@ -1071,6 +1110,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::udp_cancel_recv_impl_async() {
+  NGAGE_COVERAGE_LOG();
         if (recv_done_info_.empty()) {
             return;
         }
@@ -1085,6 +1125,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::cancel_receive() {
+  NGAGE_COVERAGE_LOG();
         if (recv_done_info_.empty()) {
             return;
         }
@@ -1093,14 +1134,17 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::cancel_send() {
+  NGAGE_COVERAGE_LOG();
         send_done_info_.complete(epoc::error_cancel);
     }
 
     void inet_socket::cancel_connect() {
+  NGAGE_COVERAGE_LOG();
         connect_done_info_.complete(epoc::error_cancel);
     }
 
     void inet_socket::complete_shutdown_info(const int err) {
+  NGAGE_COVERAGE_LOG();
         if (shutdown_info_.empty()) {
             return;
         }
@@ -1119,6 +1163,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::tcp_shutdown_impl_async() {
+  NGAGE_COVERAGE_LOG();
         uv_stream_t *stream = reinterpret_cast<uv_stream_t *>(opaque_handle_);
         uv_shutdown_t *shut = new uv_shutdown_t;
 
@@ -1134,6 +1179,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::udp_shutdown_impl_async() {
+  NGAGE_COVERAGE_LOG();
         uv_udp_t *udp_h = reinterpret_cast<uv_udp_t*>(opaque_handle_);
         uv_udp_recv_stop(udp_h);
         
@@ -1141,6 +1187,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::shutdown(epoc::notify_info &complete_info, int reason) {
+  NGAGE_COVERAGE_LOG();
         if (!shutdown_info_.empty()) {
             complete_info.complete(epoc::error_in_use);
             return;
@@ -1152,6 +1199,7 @@ namespace eka2l1::epoc::internet {
 
     std::size_t inet_socket::get_option(const std::uint32_t option_id, const std::uint32_t option_family,
         std::uint8_t *buffer, const std::size_t avail_size) {
+  NGAGE_COVERAGE_LOG();
         if (option_family == INET_INTERFACE_CONTROL_OPT_FAMILY) {
             switch (option_id) {
             case INET_NEXT_INTERFACE_OPT: {
@@ -1168,6 +1216,7 @@ namespace eka2l1::epoc::internet {
 
     bool inet_socket::set_option(const std::uint32_t option_id, const std::uint32_t option_family,
         std::uint8_t *buffer, const std::size_t avail_size) {
+  NGAGE_COVERAGE_LOG();
         if (option_family == INET_INTERFACE_CONTROL_OPT_FAMILY) {
             switch (option_id) {
             case INET_ENUM_INTERFACES_OPT: {
@@ -1219,6 +1268,7 @@ namespace eka2l1::epoc::internet {
     }
 
     std::size_t inet_socket::retrieve_next_interface_info(std::uint8_t *buffer, const std::size_t avail_size) {
+  NGAGE_COVERAGE_LOG();
         if (avail_size != sizeof(inet_interface_info)) {
             LOG_ERROR(SERVICE_ESOCK, "Size of buffer is not correct!");
             return MAKE_SOCKET_GETOPT_ERROR(epoc::error_argument);
@@ -1228,6 +1278,7 @@ namespace eka2l1::epoc::internet {
     }
 
     std::size_t inet_socket_interface_iterator::next(inet_interface_info &info) {
+  NGAGE_COVERAGE_LOG();
         if (!opaque_interface_info_) {
             return MAKE_SOCKET_GETOPT_ERROR(epoc::error_not_ready);
         }
@@ -1360,6 +1411,7 @@ namespace eka2l1::epoc::internet {
     }
 
     inet_socket_interface_iterator::~inet_socket_interface_iterator() {
+  NGAGE_COVERAGE_LOG();
 #if EKA2L1_PLATFORM(WIN32)
         if (opaque_interface_info_) {
             free(opaque_interface_info_);
@@ -1370,6 +1422,7 @@ namespace eka2l1::epoc::internet {
     }
 
     bool inet_socket_interface_iterator::start() {
+  NGAGE_COVERAGE_LOG();
         if (opaque_interface_info_) {
             // Restart existing info
 #if EKA2L1_PLATFORM(WIN32)

@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -39,6 +40,7 @@
 
 namespace eka2l1::epoc {
     static void *decide_bitmap_pointer_to_pass(wsbitmap *server_bmp, std::uint8_t &affected_flags, const bool is_mask) {
+  NGAGE_COVERAGE_LOG();
         if (server_bmp->parent_) {
             return server_bmp->get_and_update_parent();
         }
@@ -48,10 +50,12 @@ namespace eka2l1::epoc {
     }
 
     bool graphic_context::no_building() const {
+  NGAGE_COVERAGE_LOG();
         return !attached_window || (attached_window->abs_rect.size == eka2l1::vec2(0, 0));
     }
 
     void graphic_context::active(service::ipc_context &context, ws_cmd cmd) {
+  NGAGE_COVERAGE_LOG();
         const std::uint32_t window_to_attach_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
         attached_window = reinterpret_cast<epoc::canvas_base *>(client->get_object(window_to_attach_handle));
 
@@ -95,6 +99,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::do_command_draw_bitmap(service::ipc_context &ctx, void *bitmap, eka2l1::rect source_rect, eka2l1::rect dest_rect, const std::uint8_t flags) {
+  NGAGE_COVERAGE_LOG();
         epoc::gdi_store_command draw_cmd;
         epoc::gdi_store_command_draw_bitmap_data &draw_data = draw_cmd.get_data_struct<epoc::gdi_store_command_draw_bitmap_data>();
 
@@ -114,6 +119,7 @@ namespace eka2l1::epoc {
     void graphic_context::do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left,
         eka2l1::vec2 bottom_right, const std::u16string &text, epoc::text_alignment align,
         const int baseline_offset, const int margin, const bool fill_surrounding) {
+  NGAGE_COVERAGE_LOG();
         // Complete it first, cause we gonna open up the kernel
         ctx.complete(epoc::error_none);
 
@@ -164,6 +170,7 @@ namespace eka2l1::epoc {
     }
 
     bool graphic_context::get_brush_color(eka2l1::vec4 &color_result) {
+  NGAGE_COVERAGE_LOG();
         color_result = common::rgba_to_vec(brush_color);
 
         // Don't bother even sending any draw command
@@ -192,6 +199,7 @@ namespace eka2l1::epoc {
     }
 
     bool graphic_context::get_pen_color_and_style(eka2l1::vec4 &pen_color_result, drivers::pen_style &style) {
+  NGAGE_COVERAGE_LOG();
         pen_color_result = common::rgba_to_vec(pen_color);
 
         // Don't bother even sending any draw command
@@ -227,6 +235,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::do_submit_clipping() {
+  NGAGE_COVERAGE_LOG();
         eka2l1::rect the_clip;
         common::region *the_region = nullptr;
 
@@ -311,6 +320,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::set_brush_color(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = context.sys->get_kernel_system();
         brush_color = *reinterpret_cast<const common::rgba *>(cmd.data_ptr);
 
@@ -324,6 +334,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::set_pen_color(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = context.sys->get_kernel_system();
         pen_color = *reinterpret_cast<const common::rgba *>(cmd.data_ptr);
 
@@ -337,12 +348,14 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::on_command_batch_done(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         if (attached_window) {
             submit_queue_commands(ctx.msg->own_thr);
         }
     }
 
     void graphic_context::submit_queue_commands(kernel::thread *rq) {
+  NGAGE_COVERAGE_LOG();
         if (!flushed) {
             // Content of the window changed, so call the handler
             if ((attached_window->flags & window::flags_in_redraw) == 0) {
@@ -353,6 +366,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::deactive(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         if (attached_window) {
             context_attach_link.deque();
 
@@ -367,6 +381,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::draw_bitmap(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_draw_bitmap *bitmap_cmd = reinterpret_cast<ws_cmd_draw_bitmap *>(cmd.data_ptr);
         fbsbitmap *bw_bmp = client->get_ws().get_raw_fbsbitmap(bitmap_cmd->handle);
 
@@ -379,6 +394,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::draw_bitmap_2(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_draw_bitmap2 *bitmap_cmd = reinterpret_cast<ws_cmd_draw_bitmap2 *>(cmd.data_ptr);
         fbsbitmap *bw_bmp = client->get_ws().get_raw_fbsbitmap(bitmap_cmd->handle);
 
@@ -399,6 +415,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::draw_bitmap_3(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_draw_bitmap3 *bitmap_cmd = reinterpret_cast<ws_cmd_draw_bitmap3 *>(cmd.data_ptr);
         fbsbitmap *bw_bmp = client->get_ws().get_raw_fbsbitmap(bitmap_cmd->handle);
 
@@ -422,6 +439,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::draw_mask_impl(void *source_bitmap, void *mask_bitmap, eka2l1::rect dest_rect, eka2l1::rect source_rect, const std::uint8_t extra_flags) {
+  NGAGE_COVERAGE_LOG();
         epoc::gdi_store_command draw_bmp_cmd;
         epoc::gdi_store_command_draw_bitmap_data &draw_data = draw_bmp_cmd.get_data_struct<gdi_store_command_draw_bitmap_data>();
 
@@ -439,6 +457,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::ws_draw_bitmap_masked(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_draw_ws_bitmap_masked *blt_cmd = reinterpret_cast<ws_cmd_draw_ws_bitmap_masked *>(cmd.data_ptr);
 
         epoc::wsbitmap *myside_source_bmp = reinterpret_cast<epoc::wsbitmap *>(client->get_object(blt_cmd->source_handle));
@@ -469,6 +488,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::gdi_blt_masked(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_gdi_blt_masked *blt_cmd = reinterpret_cast<ws_cmd_gdi_blt_masked *>(cmd.data_ptr);
         fbsbitmap *bmp = client->get_ws().get_raw_fbsbitmap(blt_cmd->source_handle);
         fbsbitmap *masked = client->get_ws().get_raw_fbsbitmap(blt_cmd->mask_handle);
@@ -494,6 +514,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::gdi_ws_blt_masked(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_gdi_blt_masked *blt_cmd = reinterpret_cast<ws_cmd_gdi_blt_masked *>(cmd.data_ptr);
 
         epoc::wsbitmap *myside_source_bmp = reinterpret_cast<epoc::wsbitmap *>(client->get_object(blt_cmd->source_handle));
@@ -524,6 +545,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::gdi_blt_impl(service::ipc_context &context, ws_cmd &cmd, const int ver, const bool ws) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_gdi_blt3 *blt_cmd = reinterpret_cast<ws_cmd_gdi_blt3 *>(cmd.data_ptr);
 
         eka2l1::rect source_rect;
@@ -571,37 +593,45 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::gdi_blt2(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         gdi_blt_impl(context, cmd, 2, false);
     }
 
     void graphic_context::gdi_blt3(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         gdi_blt_impl(context, cmd, 3, false);
     }
 
     void graphic_context::gdi_ws_blt2(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         gdi_blt_impl(context, cmd, 2, true);
     }
 
     void graphic_context::gdi_ws_blt3(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         gdi_blt_impl(context, cmd, 3, true);
     }
 
     void graphic_context::set_brush_style(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         fill_mode = *reinterpret_cast<brush_style *>(cmd.data_ptr);
         context.complete(epoc::error_none);
     }
 
     void graphic_context::set_pen_style(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         line_mode = *reinterpret_cast<pen_style *>(cmd.data_ptr);
         context.complete(epoc::error_none);
     }
 
     void graphic_context::set_pen_size(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         pen_size = *reinterpret_cast<eka2l1::vec2 *>(cmd.data_ptr);
         context.complete(epoc::error_none);
     }
 
     void graphic_context::draw_line(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::rect area = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
         drivers::pen_style pen_style;
         eka2l1::vec4 pen_color;
@@ -626,6 +656,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::draw_rect(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::rect area = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
 
         // Symbian rectangle second vector is the bottom right, not the size
@@ -677,6 +708,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::clear(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::rect area(attached_window->pos, attached_window->size());
 
         if (!area.valid()) {
@@ -702,6 +734,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::clear_rect(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::rect area = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
 
         // Symbian rectangle second vector is the bottom right, not the size
@@ -730,6 +763,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::plot(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::point pos = *reinterpret_cast<eka2l1::point*>(cmd.data_ptr);
         
         // For now emulate it with drawing a 1x1 rectangle
@@ -749,6 +783,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::reset_context() {
+  NGAGE_COVERAGE_LOG();
         if (text_font) {
             text_font = nullptr;
         }
@@ -767,11 +802,13 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::reset(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         reset_context();
         context.complete(epoc::error_none);
     }
 
     void graphic_context::use_font(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         service::uid font_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
         fbs_server *fbs = client->get_ws().get_fbs_server();
 
@@ -787,27 +824,32 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::discard_font(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         if (text_font) {
             text_font = nullptr;
         }
     }
 
     void graphic_context::set_underline_style(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // TODO: Implement set underline style
         context.complete(epoc::error_none);
     }
 
     void graphic_context::set_strikethrough_style(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // TODO: Implement set strikethrough style
         context.complete(epoc::error_none);
     }
     
     void graphic_context::set_draw_mode(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // Not easy to implement under hardware acceleration, ignore for now
         context.complete(epoc::error_none);
     }
 
     void graphic_context::draw_text(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_draw_text *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
         std::u16string text(reinterpret_cast<char16_t *>(reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(ws_cmd_draw_text)), info->length);
 
@@ -816,6 +858,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::draw_box_text_optimised1(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_draw_box_text_optimised1 *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
         std::u16string text(reinterpret_cast<char16_t *>(reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(ws_cmd_draw_box_text_optimised1)), info->length);
 
@@ -824,6 +867,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::draw_box_text_optimised2(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_draw_box_text_optimised2 *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
         std::u16string text(reinterpret_cast<char16_t *>(reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(ws_cmd_draw_box_text_optimised2)), info->length);
 
@@ -832,6 +876,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::set_clipping_rect(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::rect the_clip = *reinterpret_cast<eka2l1::rect *>(cmd.data_ptr);
         the_clip.transform_from_symbian_rectangle();
 
@@ -842,6 +887,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::set_clipping_region(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         std::optional<common::region> region = get_region_from_context(context, cmd);
         if (!region.has_value()) {
             context.complete(epoc::error_argument);
@@ -855,6 +901,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::cancel_clipping_rect(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         clipping_rect.make_empty();    
         do_submit_clipping();
 
@@ -862,6 +909,7 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::cancel_clipping_region(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         clipping_region.make_empty();    
         do_submit_clipping();
 
@@ -869,16 +917,19 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::destroy(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         context.complete(epoc::error_none);
         client->delete_object(cmd.obj_handle);
     }
 
     void graphic_context::set_opaque(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // TODO: Unstub!
         context.complete(epoc::error_none);
     }
 
     bool graphic_context::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         //LOG_TRACE(SERVICE_WINDOW, "Graphics context opcode {}", cmd.header.op);
         ws_graphics_context_opcode op = static_cast<decltype(op)>(cmd.header.op);
 
@@ -1109,9 +1160,11 @@ namespace eka2l1::epoc {
         , brush_color(0xFFFFFFFF)
         , pen_color(0)
         , pen_size(1, 1) {
+  NGAGE_COVERAGE_LOG();
     }
     
     graphic_context::~graphic_context() {
+  NGAGE_COVERAGE_LOG();
         context_attach_link.deque();
     }
 }

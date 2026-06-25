@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2021 EKA2L1 Team
  * 
@@ -22,6 +23,7 @@
 
 namespace eka2l1::epoc::acc {
     generic_id_array::generic_id_array() {
+  NGAGE_COVERAGE_LOG();
         // Set all unavailables
         for (std::uint32_t i = 0; i < GENERIC_ID_ARRAY_COUNT; i++) {
             ids_[i].header_.dbid_ = epoc::error_not_found;

@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -27,9 +28,11 @@
 namespace eka2l1 {
     hwrm_session::hwrm_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(serv, client_ss_uid, client_version) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void hwrm_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx->msg->function) {
         case hwrm_fundamental_op_create_vibration_service: {
             resource_ = std::make_unique<epoc::vibration_resource>(ctx->sys->get_kernel_system());
@@ -57,11 +60,13 @@ namespace eka2l1 {
 
     hwrm_server::hwrm_server(system *sys)
         : service::typical_server(sys, "!HWRMServer") {
+  NGAGE_COVERAGE_LOG();
         // konna koto ii na
         power_data_ = std::make_unique<epoc::hwrm::power::resource_data>(kern);
     }
 
     void hwrm_server::connect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         if (!light_data_ || !vibration_data_) {
             if (!init()) {
                 LOG_ERROR(SERVICE_HWRM, "Fail to initialise HWRM service shared data!");
@@ -73,6 +78,7 @@ namespace eka2l1 {
     }
 
     bool hwrm_server::init() {
+  NGAGE_COVERAGE_LOG();
         // Initialise light common data
         kernel_system *kern = sys->get_kernel_system();
 

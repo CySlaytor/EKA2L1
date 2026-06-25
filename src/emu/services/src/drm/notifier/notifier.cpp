@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -27,9 +28,11 @@ namespace eka2l1 {
     drm_notifier_server::drm_notifier_server(eka2l1::system *sys)
         : service::typical_server(sys, "!DRMNotifier")
         , storage_(nullptr) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void drm_notifier_server::connect(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         create_session<drm_notifier_client_session>(&context);
         context.complete(epoc::error_none);
     }
@@ -37,9 +40,11 @@ namespace eka2l1 {
     drm_notifier_client_session::drm_notifier_client_session(service::typical_server *serv, const kernel::uid ss_id,
         epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void drm_notifier_client_session::send_event(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<address> data_to_send_ptr = ctx->get_argument_value<address>(0);
         std::optional<std::uint32_t> event_type_op = ctx->get_argument_value<std::uint32_t>(1);
 
@@ -60,6 +65,7 @@ namespace eka2l1 {
     }
 
     void drm_notifier_client_session::listen_for_event(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<address> data_to_write_guest_ptr = ctx->get_argument_value<address>(0);
         std::optional<address> event_type_to_write_guest_ptr = ctx->get_argument_value<address>(1);
 
@@ -89,6 +95,7 @@ namespace eka2l1 {
     }
 
     void drm_notifier_client_session::cancel_listen_for_event(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (!notify_.empty()) {
             notify_.complete(epoc::error_cancel);
         }
@@ -97,6 +104,7 @@ namespace eka2l1 {
     }
 
     void drm_notifier_client_session::register_event(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> event_type = ctx->get_argument_data_from_descriptor<std::uint32_t>(0);
 
         if (!event_type) {
@@ -113,6 +121,7 @@ namespace eka2l1 {
     }
 
     void drm_notifier_client_session::unregister_event(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> event_type = ctx->get_argument_data_from_descriptor<std::uint32_t>(0);
 
         if (!event_type) {
@@ -129,6 +138,7 @@ namespace eka2l1 {
     }
 
     void drm_notifier_client_session::register_event_with_uri(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> event_type = ctx->get_argument_data_from_descriptor<std::uint32_t>(0);
         std::optional<std::string> uri = ctx->get_argument_value<std::string>(1);
 
@@ -146,6 +156,7 @@ namespace eka2l1 {
     }
 
     void drm_notifier_client_session::unregister_event_with_uri(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> event_type = ctx->get_argument_data_from_descriptor<std::uint32_t>(0);
         std::optional<std::string> uri = ctx->get_argument_value<std::string>(1);
 
@@ -163,6 +174,7 @@ namespace eka2l1 {
     }
 
     void drm_notifier_client_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx->msg->function) {
         case drm_notifier_send_events:
             send_event(ctx);

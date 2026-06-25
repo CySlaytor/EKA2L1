@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -25,10 +26,12 @@
 namespace eka2l1::epoc {
     vibration_resource::vibration_resource(kernel_system *kern)
         : kern_(kern) {
+  NGAGE_COVERAGE_LOG();
         viber_ = drivers::hwrm::make_suitable_vibrator();
     }
 
     void vibration_resource::vibrate_with_default_intensity(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> duration_in_millis = ctx.get_argument_value<std::uint32_t>(0);
         if (!duration_in_millis.has_value()) {
             ctx.complete(epoc::error_argument);
@@ -44,6 +47,7 @@ namespace eka2l1::epoc {
     }
 
     void vibration_resource::vibrate(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> duration_in_millis = ctx.get_argument_value<std::uint32_t>(0);
         std::optional<std::int32_t> intensity = ctx.get_argument_value<std::int32_t>(1);
         if (!duration_in_millis.has_value() || !intensity.has_value()) {
@@ -62,6 +66,7 @@ namespace eka2l1::epoc {
     }
 
     void vibration_resource::stop_vibrate(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         if (viber_)
             viber_->stop_vibrate();
 
@@ -69,10 +74,12 @@ namespace eka2l1::epoc {
     }
 
     void vibration_resource::vibrate_cleanup(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx.complete(epoc::error_none);
     }
 
     void vibration_resource::execute_command(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx.msg->function) {
         case hwrm_vibrate_start_with_default_intensity:
             vibrate_with_default_intensity(ctx);

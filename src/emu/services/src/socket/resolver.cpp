@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -25,6 +26,7 @@
 
 namespace eka2l1::epoc::socket {
     void host_resolver::next(name_entry *result, epoc::notify_info &complete_info) {
+  NGAGE_COVERAGE_LOG();
         complete_info.complete(epoc::error_eof);
     }
 
@@ -33,14 +35,17 @@ namespace eka2l1::epoc::socket {
         : socket_subsession(parent)
         , resolver_(std::move(resolver))
         , conn_(conn) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void socket_host_resolver::get_host_name(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->write_arg(0, resolver_->host_name());
         ctx->complete(epoc::error_none);
     }
 
     void socket_host_resolver::set_host_name(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> new_name = ctx->get_argument_value<std::u16string>(0);
 
         if (!new_name) {
@@ -59,6 +64,7 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_host_resolver::get_by_name(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> name = ctx->get_argument_value<std::u16string>(0);
 
         if (!name.has_value()) {
@@ -81,6 +87,7 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_host_resolver::get_by_address(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<saddress> addr = ctx->get_argument_data_from_descriptor<saddress>(0);
 
         if (!addr.has_value()) {
@@ -101,6 +108,7 @@ namespace eka2l1::epoc::socket {
     }
     
     void socket_host_resolver::next(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         epoc::socket::name_entry *entry = reinterpret_cast<epoc::socket::name_entry*>(ctx->get_descriptor_argument_ptr(1));
         if (!entry) {
             ctx->complete(epoc::error_argument);
@@ -114,16 +122,19 @@ namespace eka2l1::epoc::socket {
     }
     
     void socket_host_resolver::cancel(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         resolver_->cancel();
         ctx->complete(epoc::error_none);
     }
 
     void socket_host_resolver::close(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         parent_->subsessions_.remove(id_);
         ctx->complete(epoc::error_none);
     }
 
     void socket_host_resolver::dispatch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (parent_->is_oldarch()) {
             switch (ctx->msg->function) {
             case socket_old_hr_get_host_name:

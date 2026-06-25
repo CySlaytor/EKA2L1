@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -33,21 +34,26 @@ namespace eka2l1::epoc {
         : handle(handle)
         , type(evt_code)
         , time(common::get_current_utc_time_in_microseconds_since_0ad()) {
+  NGAGE_COVERAGE_LOG();
     }
 
     bool is_display_mode_color(const epoc::display_mode disp_mode) {
+  NGAGE_COVERAGE_LOG();
         return disp_mode >= epoc::display_mode::color16;
     }
 
     bool is_display_mode_mono(const epoc::display_mode disp_mode) {
+  NGAGE_COVERAGE_LOG();
         return disp_mode <= epoc::display_mode::gray256;
     }
 
     bool is_display_mode_alpha(const display_mode disp_mode) {
+  NGAGE_COVERAGE_LOG();
         return (disp_mode == epoc::display_mode::color16ma) || (disp_mode == epoc::display_mode::color16map);
     }
 
     int get_bpp_from_display_mode(const epoc::display_mode bpp) {
+  NGAGE_COVERAGE_LOG();
         switch (bpp) {
         case epoc::display_mode::gray2:
             return 1;
@@ -75,6 +81,7 @@ namespace eka2l1::epoc {
     }
 
     int get_num_colors_from_display_mode(const epoc::display_mode disp_mode) {
+  NGAGE_COVERAGE_LOG();
         switch (disp_mode) {
         case epoc::display_mode::gray2:
             return 2;
@@ -101,6 +108,7 @@ namespace eka2l1::epoc {
     }
 
     epoc::display_mode get_display_mode_from_bpp(const int bpp, const bool has_color) {
+  NGAGE_COVERAGE_LOG();
         switch (bpp) {
         case 1:
             return epoc::display_mode::gray2;
@@ -126,6 +134,7 @@ namespace eka2l1::epoc {
     }
     
     int get_byte_width(const std::uint32_t pixels_width, const std::uint8_t bits_per_pixel) {
+  NGAGE_COVERAGE_LOG();
         int word_width = 0;
 
         switch (bits_per_pixel) {
@@ -175,6 +184,7 @@ namespace eka2l1::epoc {
     }
 
     epoc::display_mode string_to_display_mode(const std::string &disp_str) {
+  NGAGE_COVERAGE_LOG();
         const std::string disp_str_lower = common::lowercase_string(disp_str);
         if (disp_str_lower == "color16map")
             return epoc::display_mode::color16map;
@@ -190,6 +200,7 @@ namespace eka2l1::epoc {
     }
 
     std::string display_mode_to_string(const epoc::display_mode disp_mode) {
+  NGAGE_COVERAGE_LOG();
         switch (disp_mode) {
         case epoc::display_mode::color16map:
             return "color16map";
@@ -232,6 +243,7 @@ namespace eka2l1::epoc {
     }
 
     key_code map_scancode_to_keycode(std_scan_code scan_code) {
+  NGAGE_COVERAGE_LOG();
         if (scan_code <= std_key_scroll_lock) {
             return keymap[scan_code];
         } else if (scan_code > std_key_scroll_lock && scan_code < std_key_f1) {
@@ -243,6 +255,7 @@ namespace eka2l1::epoc {
     }
 
     std_scan_code post_processing_scancode(std_scan_code resulted, const int rotation) {
+  NGAGE_COVERAGE_LOG();
         const std_scan_code ROUND_ARROW_MAP[] = {
             std_key_right_arrow,
             std_key_up_arrow,
@@ -281,6 +294,7 @@ namespace eka2l1::epoc {
     }
 
     std::optional<std::uint32_t> map_button_to_inputcode(button_map &map, int controller_id, int button) {
+  NGAGE_COVERAGE_LOG();
         auto key = std::make_pair(controller_id, button);
         auto it = map.find(key);
 
@@ -292,6 +306,7 @@ namespace eka2l1::epoc {
     }
 
     std::optional<std::uint32_t> map_key_to_inputcode(key_map &map, std::uint32_t keycode) {
+  NGAGE_COVERAGE_LOG();
         auto it = map.find(keycode);
 
         if (it == map.end()) {
@@ -302,6 +317,7 @@ namespace eka2l1::epoc {
     }
     
     int get_approximate_pixel_to_twips_mul(const epocver ver) {
+  NGAGE_COVERAGE_LOG();
         switch (ver) {
         case epocver::epoc6:
         case epocver::epoc7:

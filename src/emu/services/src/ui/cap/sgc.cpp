@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -27,6 +28,7 @@
 
 namespace eka2l1::epoc::cap {
     void sgc_server::wg_state::set_fullscreen(bool set) {
+  NGAGE_COVERAGE_LOG();
         if (set)
             flags_.set(FLAG_FULLSCREEN);
         else
@@ -34,10 +36,12 @@ namespace eka2l1::epoc::cap {
     }
 
     bool sgc_server::wg_state::is_fullscreen() const {
+  NGAGE_COVERAGE_LOG();
         return flags_.get(FLAG_FULLSCREEN);
     }
 
     void sgc_server::wg_state::set_legacy_layout(const bool set) {
+  NGAGE_COVERAGE_LOG();
         if (set)
             flags_.set(FLAG_LEGACY_LAYOUT);
         else
@@ -45,10 +49,12 @@ namespace eka2l1::epoc::cap {
     }
 
     bool sgc_server::wg_state::is_legacy_layout() const {
+  NGAGE_COVERAGE_LOG();
         return flags_.get(FLAG_LEGACY_LAYOUT);
     }
 
     void sgc_server::wg_state::set_understand_partial_foreground(const bool set) {
+  NGAGE_COVERAGE_LOG();
         if (set)
             flags_.set(FLAG_UNDERSTAND_PARTIAL_FOREGROUND);
         else
@@ -56,10 +62,12 @@ namespace eka2l1::epoc::cap {
     }
 
     bool sgc_server::wg_state::understands_partial_foreground() const {
+  NGAGE_COVERAGE_LOG();
         return flags_.get(FLAG_UNDERSTAND_PARTIAL_FOREGROUND);
     }
 
     void sgc_server::wg_state::set_orientation_specified(const bool set) {
+  NGAGE_COVERAGE_LOG();
         if (set)
             flags_.set(FLAG_ORIENTATION_SPECIFIED);
         else
@@ -67,10 +75,12 @@ namespace eka2l1::epoc::cap {
     }
 
     bool sgc_server::wg_state::orientation_specified() const {
+  NGAGE_COVERAGE_LOG();
         return flags_.get(FLAG_ORIENTATION_SPECIFIED);
     }
 
     void sgc_server::wg_state::set_orientation_landspace(const bool set) {
+  NGAGE_COVERAGE_LOG();
         if (set)
             flags_.set(FLAG_ORIENTATION_LANDSCAPE);
         else
@@ -78,6 +88,7 @@ namespace eka2l1::epoc::cap {
     }
 
     bool sgc_server::wg_state::orientation_landscape() const {
+  NGAGE_COVERAGE_LOG();
         return flags_.get(FLAG_ORIENTATION_LANDSCAPE);
     }
 
@@ -94,9 +105,11 @@ namespace eka2l1::epoc::cap {
     sgc_server::sgc_server()
         : orientation_prop_(nullptr)
         , hardware_layout_prop_(nullptr) {
+  NGAGE_COVERAGE_LOG();
     }
 
     static void update_screen_state_from_wg_callback(void *userdata, epoc::window_group *group, eka2l1::epoc::focus_change_property property) {
+  NGAGE_COVERAGE_LOG();
         if (property != eka2l1::epoc::focus_change_target) {
             return;
         }
@@ -105,6 +118,7 @@ namespace eka2l1::epoc::cap {
     }
 
     bool sgc_server::init(kernel_system *kern, drivers::graphics_driver *driver) {
+  NGAGE_COVERAGE_LOG();
         orientation_prop_ = kern->create<service::property>();
         hardware_layout_prop_ = kern->create<service::property>();
 
@@ -139,6 +153,7 @@ namespace eka2l1::epoc::cap {
     }
 
     sgc_server::wg_state *sgc_server::get_wg_state(const std::uint32_t wg_id, const bool new_one_if_not_exist) {
+  NGAGE_COVERAGE_LOG();
         auto result = std::find_if(states_.begin(), states_.end(), [=](const wg_state &state) {
             return state.id_ == wg_id;
         });
@@ -163,6 +178,7 @@ namespace eka2l1::epoc::cap {
     static constexpr std::uint32_t HARDWARE_LAYOUT_SWITCH_UID = 0x10202672;
 
     void sgc_server::update_screen_state_from_wg(epoc::window_group *group) {
+  NGAGE_COVERAGE_LOG();
         if (!group) {
             return;
         }
@@ -208,6 +224,7 @@ namespace eka2l1::epoc::cap {
 
     void sgc_server::change_wg_param(const std::uint32_t id, wg_state::wg_state_flags &flags, const std::int32_t sp_layout,
         const std::int32_t sp_flags, const std::int32_t app_screen_mode) {
+  NGAGE_COVERAGE_LOG();
         wg_state *state = get_wg_state(id, true);
 
         const bool was_fullscreen = state->is_fullscreen();

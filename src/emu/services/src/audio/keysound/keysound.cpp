@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -39,6 +40,7 @@ namespace eka2l1 {
     keysound_session::keysound_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(svr, client_ss_uid, client_version)
         , previous_repeat_(0) {
+  NGAGE_COVERAGE_LOG();
         drivers::audio_driver *aud_driver = svr->get_system()->get_audio_driver();
 
         if (aud_driver) {
@@ -58,9 +60,11 @@ namespace eka2l1 {
         , ms_(0)
         , duration_unit_(0)
         , parser_pos_(0) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void keysound_session::parser_state::set(epoc::keysound::sound_info &new_sound) {
+  NGAGE_COVERAGE_LOG();
         frames_ = 0;
         ms_ = 0;
         parser_pos_ = 0;
@@ -71,6 +75,7 @@ namespace eka2l1 {
     }
 
     std::size_t keysound_session::play_sounds(std::int16_t *buffer, std::size_t frames) {
+  NGAGE_COVERAGE_LOG();
         auto parse_to_get_freq = [this]() -> bool {
             if (state_.sound_.type_ == epoc::keysound::sound_type::sound_type_tone) {
                 if (!state_.frames_) {
@@ -158,6 +163,7 @@ namespace eka2l1 {
     }
 
     void keysound_session::init(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const bool inited = server<keysound_server>()->initialized();
         ctx->write_data_to_descriptor_argument<std::int32_t>(0, inited);
 
@@ -171,6 +177,7 @@ namespace eka2l1 {
     }
 
     void keysound_session::push_context(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const auto item_count = ctx->get_argument_value<std::uint32_t>(0);
         const auto uid = ctx->get_argument_value<std::uint32_t>(2);
         const auto rsc_id = ctx->get_argument_value<std::int32_t>(3);
@@ -193,11 +200,13 @@ namespace eka2l1 {
     }
 
     void keysound_session::pop_context(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         contexts_.pop_back();
         ctx->complete(epoc::error_none);
     }
 
     void keysound_session::play_key(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         dispatch::dispatcher *dserv = ctx->sys->get_dispatcher();
         if (/*!dserv->get_audren_sema()->free()*/ true) {
             // shut up we are in gamer mode
@@ -246,6 +255,7 @@ namespace eka2l1 {
     }
 
     void keysound_session::play_sid(const std::uint32_t sid) {
+  NGAGE_COVERAGE_LOG();
         epoc::keysound::sound_info *info = server<keysound_server>()->get_sound(sid);
 
         if (!info) {
@@ -266,11 +276,13 @@ namespace eka2l1 {
     }
 
     void keysound_session::play_sid(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->complete(epoc::error_none);
         play_sid(ctx->get_argument_value<std::uint32_t>(0).value());
     }
 
     void keysound_session::add_sids(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::uint8_t *sound_descriptor = ctx->get_descriptor_argument_ptr(2);
         const std::optional<std::uint32_t> sound_descriptor_size = ctx->get_argument_value<std::uint32_t>(1);
         const std::optional<std::uint32_t> uid = ctx->get_argument_value<std::uint32_t>(0);
@@ -341,14 +353,17 @@ namespace eka2l1 {
     }
 
     void keysound_session::bring_to_foreground(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->complete(epoc::error_none);
     }
 
     void keysound_session::lock_context(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->complete(epoc::error_none);
     }
 
     void keysound_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx->msg->function) {
         case epoc::keysound::opcode_init: {
             init(ctx);
@@ -401,14 +416,17 @@ namespace eka2l1 {
     keysound_server::keysound_server(system *sys)
         : service::typical_server(sys, SERVICE_KEYSOUND_SERVER_NAME)
         , inited_(false) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void keysound_server::connect(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         create_session<keysound_session>(&context);
         context.complete(0);
     }
 
     epoc::keysound::sound_info *keysound_server::get_sound(const std::uint32_t sid) {
+  NGAGE_COVERAGE_LOG();
         auto ite = std::find_if(sounds_.begin(), sounds_.end(), [sid](const epoc::keysound::sound_info &info) {
             return info.id_ == sid;
         });

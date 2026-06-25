@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 #include <common/platform.h>
 #include <config/config.h>
 #include <services/accessory/accessory.h>
@@ -75,6 +76,7 @@
 
 namespace eka2l1::epoc {
     epoc::locale get_locale_info() {
+  NGAGE_COVERAGE_LOG();
         epoc::locale locale;
 
 #if EKA2L1_PLATFORM(WIN32)
@@ -105,6 +107,7 @@ namespace eka2l1::epoc {
     }
 
     static void initialize_system_properties(eka2l1::system *sys, eka2l1::config::state *cfg) {
+  NGAGE_COVERAGE_LOG();
         auto lang = epoc::locale_language{ epoc::lang_english, 0, 0, 0, 0, 0, 0, 0 };
         auto locale = epoc::get_locale_info();
         auto &dvcs = sys->get_device_manager()->get_devices();
@@ -144,6 +147,7 @@ namespace eka2l1::epoc {
 namespace eka2l1 {
     namespace service {
         void init_services(system *sys) {
+  NGAGE_COVERAGE_LOG();
             CREATE_SERVER_D(sys, fs_server);
             CREATE_SERVER(sys, loader_server);
 
@@ -184,6 +188,7 @@ namespace eka2l1 {
         }
 
         void init_services_post_bootup(system *sys) {
+  NGAGE_COVERAGE_LOG();
             // Intentionally left blank. We deleted SMS, so we don't supply SIM settings anymore.
         }
     }

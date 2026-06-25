@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2018 EKA2L1 Team
  * 
@@ -72,6 +73,7 @@ namespace eka2l1::epoc {
     }
 
     graphics_orientation number_to_orientation(int rot) {
+  NGAGE_COVERAGE_LOG();
         switch (rot) {
         case 0: {
             return graphics_orientation::normal;
@@ -99,6 +101,7 @@ namespace eka2l1::epoc {
     }
 
     window_server_client::~window_server_client() {
+  NGAGE_COVERAGE_LOG();
         window_server &serv = get_ws();
         bool canceling = false;
 
@@ -128,6 +131,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::parse_command_buffer(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::string> dat = ctx.get_argument_value<std::string>(cmd_slot);
 
         if (!dat) {
@@ -169,9 +173,11 @@ namespace eka2l1::epoc {
         , cli_version(ver)
         , primary_device(nullptr)
         , uid_counter(0) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void window_server_client::execute_commands(service::ipc_context &ctx, std::vector<ws_cmd> cmds) {
+  NGAGE_COVERAGE_LOG();
         for (auto &cmd : cmds) {
             if (cmd.obj_handle == guest_session->unique_id()) {
                 if (last_obj) {
@@ -205,11 +211,13 @@ namespace eka2l1::epoc {
     }
 
     std::uint32_t window_server_client::queue_redraw(epoc::canvas_base *user, const eka2l1::rect &redraw_rect) {
+  NGAGE_COVERAGE_LOG();
         return redraws.queue_event(user, epoc::redraw_event{ user->get_client_handle(), redraw_rect.top, redraw_rect.size + redraw_rect.top },
             user->redraw_priority());
     }
 
     std::uint32_t window_server_client::add_object(window_client_obj_ptr &obj) {
+  NGAGE_COVERAGE_LOG();
         auto free_slot = std::find(objects.begin(), objects.end(), nullptr);
 
         if (free_slot != objects.end()) {
@@ -222,6 +230,7 @@ namespace eka2l1::epoc {
     }
 
     epoc::window_client_obj *window_server_client::get_object(const std::uint32_t handle) {
+  NGAGE_COVERAGE_LOG();
         const std::uint32_t idx = handle & 0xFFFF;
 
         if (idx > objects.size() || idx == 0) {
@@ -233,6 +242,7 @@ namespace eka2l1::epoc {
     }
 
     bool window_server_client::delete_object(const std::uint32_t handle) {
+  NGAGE_COVERAGE_LOG();
         const std::uint32_t idx = handle & 0xFFFF;
 
         if (idx > objects.size() || idx == 0) {
@@ -245,6 +255,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::create_screen_device(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         LOG_INFO(SERVICE_WINDOW, "Create screen device.");
 
         ws_cmd_screen_device_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
@@ -268,6 +279,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::create_dsa(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         window_client_obj_ptr dsa_inst = std::make_unique<epoc::dsa>(this);
         if (!dsa_inst) {
             ctx.complete(epoc::error_general);
@@ -278,12 +290,14 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::restore_hotkey(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         THotKey key = *reinterpret_cast<THotKey *>(cmd.data_ptr);
 
         LOG_WARN(SERVICE_WINDOW, "Unknown restore key op.");
     }
 
     void window_server_client::create_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_window_group_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
         int device_handle = header->screen_device_handle;
 
@@ -333,6 +347,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::create_window_base(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_window_header *header = reinterpret_cast<decltype(header)>(cmd.data_ptr);
         epoc::window *parent = reinterpret_cast<epoc::window *>(get_object(header->parent));
 
@@ -387,11 +402,13 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::create_graphic_context(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         window_client_obj_ptr gcontext = std::make_unique<epoc::graphic_context>(this);
         ctx.complete(add_object(gcontext));
     }
 
     void window_server_client::create_sprite(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_create_sprite_header *sprite_header = reinterpret_cast<decltype(sprite_header)>(cmd.data_ptr);
         epoc::window *win = reinterpret_cast<epoc::window *>(get_object(sprite_header->window_handle));
 
@@ -406,6 +423,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::create_pointer_cursor(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         //ws_cmd_create_pointer_cursor_header *pointer_cursor_header = reinterpret_cast<decltype(pointer_cursor_header)>(cmd.data_ptr);
 
         window_client_obj_ptr spr = std::make_unique<epoc::sprite>(this, nullptr, nullptr, eka2l1::vec2(0, 0));
@@ -413,6 +431,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::create_graphic(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_WINDOW, "Create graphic drawer stubbed!");
 
         window_client_obj_ptr drawer = std::make_unique<epoc::graphics_piece>(this, nullptr);
@@ -420,6 +439,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::create_anim_dll(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         const int dll_name_length = *reinterpret_cast<int *>(cmd.data_ptr);
         const char16_t *dll_name_ptr = reinterpret_cast<char16_t *>(reinterpret_cast<std::uint8_t *>(cmd.data_ptr) + sizeof(int));
 
@@ -442,6 +462,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::create_click_dll(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_WINDOW, "Create CLICKDLL (button click sound plugin), stubbed object");
 
         window_client_obj_ptr clickdll = std::make_unique<epoc::click_dll>(this, nullptr);
@@ -449,6 +470,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::create_wsbmp(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         const std::uint32_t bmp_handle = *reinterpret_cast<const std::uint32_t *>(cmd.data_ptr);
         fbs_server *serv = get_ws().get_fbs_server();
 
@@ -473,6 +495,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::get_window_group_list(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_window_group_list *list_req = reinterpret_cast<decltype(list_req)>(cmd.data_ptr);
 
         std::vector<std::uint8_t> ids;
@@ -496,11 +519,13 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::get_number_of_window_groups(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ctx.complete(static_cast<int>(get_ws().get_total_window_groups(
             cmd.header.op == ws_cl_op_num_window_groups ? *static_cast<int *>(cmd.data_ptr) : -1)));
     }
 
     void window_server_client::send_event_to_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_send_event_to_window_group evt = *reinterpret_cast<ws_cmd_send_event_to_window_group *>(cmd.data_ptr);
         epoc::window_group *group = get_ws().get_group_from_id(evt.id);
 
@@ -514,6 +539,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::send_event_to_all_window_groups(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_send_event_to_window_group evt = *reinterpret_cast<ws_cmd_send_event_to_window_group *>(cmd.data_ptr);
         get_ws().send_event_to_window_groups(evt.evt);
 
@@ -521,6 +547,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::send_message_to_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_send_message_to_window_group *msg = reinterpret_cast<decltype(msg)>(cmd.data_ptr);
         epoc::window_group *group = get_ws().get_group_from_id(msg->id_or_priority);
 
@@ -553,6 +580,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::fetch_message(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         const std::uint32_t group_id = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
         epoc::window_group *group = get_ws().get_group_from_id(group_id);
 
@@ -576,6 +604,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::find_window_group_id(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_find_window_group_identifier *find_info = reinterpret_cast<decltype(find_info)>(cmd.data_ptr);
         epoc::window_group *group = nullptr;
 
@@ -622,6 +651,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::find_window_group_id_thread(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t prev_id = 0;
         kernel::uid thr_id = 0;
 
@@ -668,6 +698,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::set_pointer_cursor_mode(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // TODO: Check errors
         if (get_ws().get_focus() && get_ws().get_focus()->client == this) {
             get_ws().cursor_mode() = *reinterpret_cast<epoc::pointer_cursor_mode *>(cmd.data_ptr);
@@ -679,10 +710,12 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::get_pointer_cursor_mode(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ctx.complete(static_cast<int>(get_ws().cursor_mode()));
     }
 
     void window_server_client::get_window_group_client_thread_id(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t group_id = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
         epoc::window_group *win = get_ws().get_group_from_id(group_id);
 
@@ -705,6 +738,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::get_window_group_ordinal_priority(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t group_id = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
         epoc::window_group *win = get_ws().get_group_from_id(group_id);
 
@@ -718,6 +752,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::get_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         auto evt = redraws.get_evt_opt();
 
         if (!evt) {
@@ -734,6 +769,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::get_event(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         auto evt = events.get_event();
 
         // Allow the context to shrink if needed, since the struct certainly got larger as Symbian
@@ -743,6 +779,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::get_focus_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // TODO: Epoc < 9
         if (cmd.header.cmd_len == 0) {
             ctx.complete(get_ws().get_current_focus_screen()->focus->id);
@@ -762,6 +799,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::get_window_group_name_from_id(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_get_window_group_name_from_id *find_info = reinterpret_cast<decltype(find_info)>(cmd.data_ptr);
         epoc::window_group *group = get_ws().get_group_from_id(find_info->id);
 
@@ -786,6 +824,7 @@ namespace eka2l1::epoc {
 
     struct window_clear_store_walker : public epoc::window_tree_walker {
         bool do_it(epoc::window *win) {
+  NGAGE_COVERAGE_LOG();
             if (win->type == window_kind::group) {
                 win->client->trigger_redraw();
             }
@@ -804,6 +843,7 @@ namespace eka2l1::epoc {
     };
 
     void window_server_client::clear_all_redraw_stores(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // Clear all stored drawing commands. We have none, but keep this here if we ever did.
         // Send redraws commands to all client window
         window_clear_store_walker walker;
@@ -816,6 +856,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::set_window_group_ordinal_position(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_set_window_group_ordinal_position *set = reinterpret_cast<decltype(set)>(cmd.data_ptr);
 
         window_server &serv = get_ws();
@@ -837,6 +878,7 @@ namespace eka2l1::epoc {
     };
 
     void window_server_client::get_def_mode_max_num_colors(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         const int screen_num = *reinterpret_cast<int *>(cmd.data_ptr);
         epoc::screen *scr = get_ws().get_screen(screen_num);
 
@@ -853,6 +895,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::get_color_mode_list(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         std::int32_t screen_num = *reinterpret_cast<std::int32_t *>(cmd.data_ptr);
         epoc::screen *scr = get_ws().get_screen(screen_num);
 
@@ -865,6 +908,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::set_pointer_area(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_set_pointer_cursor_area *area_info = reinterpret_cast<ws_cmd_set_pointer_cursor_area *>(cmd.data_ptr);
         area_info->pointer_area.transform_from_symbian_rectangle();
 
@@ -878,6 +922,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::set_pointer_cursor_position(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::vec2 *pos = reinterpret_cast<eka2l1::vec2 *>(cmd.data_ptr);
         // Set for the default screen
         epoc::screen *scr = get_ws().get_screen(0);
@@ -888,6 +933,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::get_number_of_screen(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // We want to get the number of screen currently connected to the emulator
         epoc::screen *scr = get_ws().get_screens();
         std::uint32_t connected_count = 0;
@@ -906,10 +952,12 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::get_focus_screen(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ctx.complete(get_ws().focus_screen_->number);
     }
 
     void window_server_client::get_ready(service::ipc_context &ctx, ws_cmd *cmd, const event_listener_type list_type) {
+  NGAGE_COVERAGE_LOG();
         epoc::notify_info info;
         info.requester = ctx.msg->own_thr;
 
@@ -942,6 +990,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::add_raw_event(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         epoc::raw_event evt;
 
         if (cmd.header.cmd_len > sizeof(epoc::raw_event_eka1)) {
@@ -958,6 +1007,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::set_keyboard_repeat_rate(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_keyboard_repeat_rate *repeat_rate = reinterpret_cast<ws_cmd_keyboard_repeat_rate *>(cmd.data_ptr);
         get_ws().set_keyboard_repeat_rate(repeat_rate->initial_time, repeat_rate->next_time);
 
@@ -965,6 +1015,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::get_keyboard_repeat_rate(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         std::uint64_t initial_time = 0;
         std::uint64_t next_time = 0;
 
@@ -984,6 +1035,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::get_double_click_settings(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         struct double_click_settings_data {
             std::uint32_t max_interval_us_;
             std::int32_t max_distance_between_click_pixels_;
@@ -999,17 +1051,20 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::event_ready_cancel(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         events.cancel_listener();
         ctx.complete(epoc::error_none);
     }
 
     void window_server_client::redraw_ready_cancel(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         redraws.cancel_listener();
         ctx.complete(epoc::error_none);
     }
 
     // This handle both sync and async
     void window_server_client::execute_command(service::ipc_context &ctx, ws_cmd cmd) {
+  NGAGE_COVERAGE_LOG();
         // LOG_TRACE(SERVICE_WINDOW, "Window client op: {}", (int)cmd.header.op);
         epoc::version cli_ver = client_version();
 
@@ -1255,6 +1310,7 @@ namespace eka2l1::epoc {
     }
 
     ws::uid window_server_client::add_capture_key_notifier_to_server(epoc::event_capture_key_notifier &notifier) {
+  NGAGE_COVERAGE_LOG();
         const ws::uid id = ++get_ws().key_capture_uid_counter;
         notifier.id = id;
 
@@ -1270,6 +1326,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::send_screen_change_events(epoc::screen *scr) {
+  NGAGE_COVERAGE_LOG();
         for (auto &request: screen_changes) {
             if (request.user->scr == scr) {
                 epoc::event evt;
@@ -1281,6 +1338,7 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::send_focus_group_change_events(epoc::screen *scr) {
+  NGAGE_COVERAGE_LOG();
         for (auto &request: focus_group_change_notifies) {
             if (request.user->scr == scr) {
                 epoc::event evt;
@@ -1295,6 +1353,7 @@ namespace eka2l1::epoc {
 
 namespace eka2l1 {
     std::string get_winserv_name_by_epocver(const epocver ver) {
+  NGAGE_COVERAGE_LOG();
         if (ver < epocver::eka2) {
             return "Windowserver";
         }
@@ -1303,6 +1362,7 @@ namespace eka2l1 {
     }
 
     void window_server::load_wsini() {
+  NGAGE_COVERAGE_LOG();
         io_system *io = sys->get_io_system();
         std::optional<eka2l1::drive> drv;
         drive_number dn = drive_z;
@@ -1335,6 +1395,7 @@ namespace eka2l1 {
     }
 
     void window_server::parse_wsini() {
+  NGAGE_COVERAGE_LOG();
         common::ini_node_ptr no_redraw_storing_node = ws_config.find("NOREDRAWSTORING");
         if (no_redraw_storing_node || (kern->get_epoc_version() <= epocver::epoc81b)) {
             config_flags |= CONFIG_FLAG_NO_REDRAW_STORING;
@@ -1572,6 +1633,7 @@ namespace eka2l1 {
     }
 
     window_server::~window_server() {
+  NGAGE_COVERAGE_LOG();
         if (!clients.empty()) {
             LOG_WARN(SERVICE_WINDOW, "Kernel is having a leakage with window server!");
             clients.clear();
@@ -1595,20 +1657,24 @@ namespace eka2l1 {
     }
 
     drivers::graphics_driver *window_server::get_graphics_driver() {
+  NGAGE_COVERAGE_LOG();
         return get_system()->get_graphics_driver();
     }
 
     ntimer *window_server::get_ntimer() {
+  NGAGE_COVERAGE_LOG();
         return get_system()->get_ntimer();
     }
 
     kernel_system *window_server::get_kernel_system() {
+  NGAGE_COVERAGE_LOG();
         return get_system()->get_kernel_system();
     }
 
     constexpr std::int64_t input_update_us = 100;
 
     bool make_key_event(epoc::key_map &map, drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
+  NGAGE_COVERAGE_LOG();
         // For up and down events, the keycode will always be 0
         // We still have to fill valid value for event_code::key
         guest_evt_.key_evt_.code = 0;
@@ -1636,6 +1702,7 @@ namespace eka2l1 {
     }
 
     bool make_button_event(epoc::button_map &map, drivers::input_event &driver_evt_, epoc::event &guest_evt_) {
+  NGAGE_COVERAGE_LOG();
         guest_evt_.key_evt_.code = 0;
         guest_evt_.type = (driver_evt_.button_.state_ == drivers::button_state::pressed) ? epoc::event_code::key_down : epoc::event_code::key_up;
 
@@ -1656,6 +1723,7 @@ namespace eka2l1 {
      * make a guest pointer event from host mouse event, return true if success.
      */
     void window_server::make_mouse_event(drivers::input_event &driver_evt_, epoc::event &guest_evt_, epoc::screen *scr) {
+  NGAGE_COVERAGE_LOG();
         guest_evt_.type = epoc::event_code::touch;
         guest_evt_.adv_pointer_evt_.pos_z = driver_evt_.mouse_.pos_z_;
         guest_evt_.adv_pointer_evt_.ptr_num = driver_evt_.mouse_.mouse_id;
@@ -1729,6 +1797,7 @@ namespace eka2l1 {
     }
 
     void window_server::queue_input_from_driver(drivers::input_event &evt) {
+  NGAGE_COVERAGE_LOG();
         if (!loaded) {
             return;
         }
@@ -1739,6 +1808,7 @@ namespace eka2l1 {
     }
 
     void window_server::handle_input_from_driver(drivers::input_event input_event) {
+  NGAGE_COVERAGE_LOG();
         epoc::event guest_event;
 
         epoc::window *root_current = get_current_focus_screen()->root->child;
@@ -1860,6 +1930,7 @@ namespace eka2l1 {
     }
 
     static void create_screen_buffer_for_dsa(kernel_system *kern, epoc::screen *scr) {
+  NGAGE_COVERAGE_LOG();
         // Try to create memory chunk at kernel mapping, for DSA
         const std::string chunk_name = fmt::format("ScreenBuffer{}", scr->number);
 
@@ -1880,6 +1951,7 @@ namespace eka2l1 {
     }
 
     void window_server::init_screens() {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = get_kernel_system();
         const bool is_screenplay = (kern->get_epoc_version() >= epocver::epoc10);
 
@@ -1913,6 +1985,7 @@ namespace eka2l1 {
     }
 
     epoc::screen *window_server::get_screen(const int number) {
+  NGAGE_COVERAGE_LOG();
         if (!screens) {
             do_base_init();
         }
@@ -1932,6 +2005,7 @@ namespace eka2l1 {
     }
 
     epoc::screen *window_server::get_screens() {
+  NGAGE_COVERAGE_LOG();
         if (!loaded) {
             do_base_init();
         }
@@ -1940,6 +2014,7 @@ namespace eka2l1 {
     }
 
     epoc::window_group *window_server::get_group_from_id(const epoc::ws::uid id) {
+  NGAGE_COVERAGE_LOG();
         epoc::screen *current = screens;
 
         while (current) {
@@ -1959,6 +2034,7 @@ namespace eka2l1 {
     }
 
     epoc::window_group *window_server::get_starting_group() {
+  NGAGE_COVERAGE_LOG();
         epoc::screen *current = screens;
 
         while (current) {
@@ -1974,6 +2050,7 @@ namespace eka2l1 {
     }
 
     void window_server::emit_ws_thread_code() {
+  NGAGE_COVERAGE_LOG();
         // Emit stub code
         common::cpu_info info;
         info.bARMv7 = false;
@@ -2010,6 +2087,7 @@ namespace eka2l1 {
     }
 
     void window_server::init_ws_mem() {
+  NGAGE_COVERAGE_LOG();
         if (!ws_global_mem_chunk) {
             ws_global_mem_chunk = kern->create_and_add<kernel::chunk>(
                                           kernel::owner_type::kernel,
@@ -2045,6 +2123,7 @@ namespace eka2l1 {
     }
 
     void window_server::delete_key_mapping(const std::uint32_t target) {
+  NGAGE_COVERAGE_LOG();
         for (auto ite = input_mapping.key_input_map.begin(); ite != input_mapping.key_input_map.end(); ite++) {
             if (ite->second == target) {
                 input_mapping.key_input_map.erase(ite);
@@ -2061,6 +2140,7 @@ namespace eka2l1 {
     }
 
     void window_server::init_key_mappings() {
+  NGAGE_COVERAGE_LOG();
         input_mapping.key_input_map.clear();
         input_mapping.button_input_map.clear();
 
@@ -2081,6 +2161,7 @@ namespace eka2l1 {
     }
 
     void window_server::do_base_init() {
+  NGAGE_COVERAGE_LOG();
         load_wsini();
         parse_wsini();
         init_screens();
@@ -2091,6 +2172,7 @@ namespace eka2l1 {
     }
 
     void window_server::init_repeatable() {
+  NGAGE_COVERAGE_LOG();
         initial_repeat_delay_ = epoc::WS_DEFAULT_KEYBOARD_REPEAT_INIT_DELAY;
         next_repeat_delay_ = epoc::WS_DEFAULT_KEYBOARD_REPEAT_NEXT_DELAY;
 
@@ -2153,6 +2235,7 @@ namespace eka2l1 {
     }
 
     void window_server::connect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::version> the_ver = service::get_server_version(kern, &ctx);
 
         if (!the_ver) {
@@ -2167,11 +2250,13 @@ namespace eka2l1 {
     }
 
     void window_server::disconnect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         clients.erase(ctx.msg->msg_session->unique_id());
         server::disconnect(ctx);
     }
 
     epoc::window_server_client *window_server::get_client(const std::uint64_t unique_id) {
+  NGAGE_COVERAGE_LOG();
         auto ite = clients.find(unique_id);
         if (ite == clients.end()) {
             return nullptr;
@@ -2181,6 +2266,7 @@ namespace eka2l1 {
     }
 
     void window_server::init(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         if (!loaded) {
             do_base_init();
         }
@@ -2189,6 +2275,7 @@ namespace eka2l1 {
     }
 
     epoc::config::screen *window_server::get_current_focus_screen_config() {
+  NGAGE_COVERAGE_LOG();
         int num = 0;
         if (focus_screen_) {
             return &focus_screen_->scr_config;
@@ -2203,10 +2290,12 @@ namespace eka2l1 {
     }
 
     void window_server::send_to_command_buffer(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         clients[ctx.msg->msg_session->unique_id()]->parse_command_buffer(ctx);
     }
 
     void window_server::on_unhandled_opcode(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         if (ctx.msg->function & ws_mess_async_service) {
             switch (ctx.msg->function & ~ws_mess_async_service) {
             case ws_cl_op_redraw_ready:
@@ -2252,9 +2341,11 @@ namespace eka2l1 {
             , flags(flags)
             , accept_pri(accept_pri)
             , buffer_vector(buffer_vector) {
+  NGAGE_COVERAGE_LOG();
         }
 
         bool do_it(epoc::window *win) {
+  NGAGE_COVERAGE_LOG();
             if (win && (win->type != epoc::window_kind::group)) {
                 return false;
             }
@@ -2298,6 +2389,7 @@ namespace eka2l1 {
     };
 
     std::uint32_t window_server::get_total_window_groups(const int pri, const int scr_num) {
+  NGAGE_COVERAGE_LOG();
         epoc::screen *scr = get_screen(scr_num);
 
         if (!scr) {
@@ -2315,6 +2407,7 @@ namespace eka2l1 {
     }
 
     std::uint32_t window_server::get_window_group_list(std::uint32_t *ids, const std::uint32_t max, const int pri, const int scr_num) {
+  NGAGE_COVERAGE_LOG();
         epoc::screen *scr = get_screen(scr_num);
 
         if (!scr) {
@@ -2329,6 +2422,7 @@ namespace eka2l1 {
     }
 
     std::uint32_t window_server::get_window_group_list_and_chain(epoc::window_group_chain_info *infos, const std::uint32_t max, const int pri, const int scr_num) {
+  NGAGE_COVERAGE_LOG();
         epoc::screen *scr = get_screen(scr_num);
 
         if (!scr) {
@@ -2343,6 +2437,7 @@ namespace eka2l1 {
     }
 
     fbs_server *window_server::get_fbs_server() {
+  NGAGE_COVERAGE_LOG();
         if (!fbss) {
             fbss = reinterpret_cast<fbs_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>(
                 epoc::get_fbs_server_name_by_epocver(sys->get_symbian_version_use()))));
@@ -2352,6 +2447,7 @@ namespace eka2l1 {
     }
 
     epoc::chunk_allocator *window_server::allocator() {
+  NGAGE_COVERAGE_LOG();
         if (!ws_global_mem_allocator) {
             init_ws_mem();
         }
@@ -2360,6 +2456,7 @@ namespace eka2l1 {
     }
 
     address window_server::sync_thread_code_address() {
+  NGAGE_COVERAGE_LOG();
         if (!ws_global_mem_allocator) {
             init_ws_mem();
         }
@@ -2368,6 +2465,7 @@ namespace eka2l1 {
     }
 
     epoc::bitwise_bitmap *window_server::get_bitmap(const std::uint32_t h) {
+  NGAGE_COVERAGE_LOG();
         fbsbitmap *bmp = get_fbs_server()->get<fbsbitmap>(h);
         if (bmp) {
             bmp = bmp->final_clean();
@@ -2378,21 +2476,25 @@ namespace eka2l1 {
     }
 
     fbsbitmap *window_server::get_raw_fbsbitmap(const std::uint32_t h) {
+  NGAGE_COVERAGE_LOG();
         return get_fbs_server()->get<fbsbitmap>(h);
     }
 
     void window_server::set_keyboard_repeat_rate(const std::uint64_t initial_time, const std::uint64_t next_time) {
+  NGAGE_COVERAGE_LOG();
         // TODO: Use these parameters.
         initial_repeat_delay_ = initial_time;
         next_repeat_delay_ = next_time;
     }
 
     void window_server::get_keyboard_repeat_rate(std::uint64_t &initial_time, std::uint64_t &next_time) {
+  NGAGE_COVERAGE_LOG();
         initial_time = initial_repeat_delay_;
         next_time = next_repeat_delay_;
     }
 
     void window_server::send_event_to_window_group(epoc::window_group *group, const epoc::event &evt) {
+  NGAGE_COVERAGE_LOG();
         epoc::window_server_client *cli = group->client;
 
         epoc::event evt_copy = evt;
@@ -2402,6 +2504,7 @@ namespace eka2l1 {
     }
 
     void window_server::send_event_to_window_groups(const epoc::event &evt) {
+  NGAGE_COVERAGE_LOG();
         epoc::screen *scr = get_screens();
 
         while (scr) {
@@ -2416,6 +2519,7 @@ namespace eka2l1 {
     }
 
     void window_server::send_screen_change_events(epoc::screen *scr) {
+  NGAGE_COVERAGE_LOG();
         for (auto &[uid, cli]: clients) {
             if (cli) {
                 cli->send_screen_change_events(scr);
@@ -2424,6 +2528,7 @@ namespace eka2l1 {
     }
 
     void window_server::send_focus_group_change_events(epoc::screen *scr) {
+  NGAGE_COVERAGE_LOG();
         for (auto &[uid, cli]: clients) {
             if (cli) {
                 cli->send_focus_group_change_events(scr);
@@ -2432,6 +2537,7 @@ namespace eka2l1 {
     }
 
     void window_server::set_screen_sync_buffer_option(const int option) {
+  NGAGE_COVERAGE_LOG();
         bool on = false;
 
         if (option == config::screen_buffer_sync_option_preferred) {

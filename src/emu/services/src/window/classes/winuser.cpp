@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -49,9 +50,11 @@ namespace eka2l1::epoc {
     // ======================= WINDOW TOP USER (CLIENT) ===============================
     top_canvas::top_canvas(window_server_client_ptr client, screen *scr, window *parent)
         : canvas_interface(client, scr, parent, window_kind::top_client) {
+  NGAGE_COVERAGE_LOG();
     }
 
     std::uint32_t top_canvas::redraw_priority(int *shift) {
+  NGAGE_COVERAGE_LOG();
         const std::uint32_t ordinal_pos = std::min<std::uint32_t>(max_ordpos_pri, ordinal_position(false));
         if (shift) {
             *shift = max_pri_level;
@@ -61,6 +64,7 @@ namespace eka2l1::epoc {
     }
 
     eka2l1::vec2 top_canvas::absolute_position() const {
+  NGAGE_COVERAGE_LOG();
         return { 0, 0 };
     }
 
@@ -80,6 +84,7 @@ namespace eka2l1::epoc {
         , last_fps_sync_(0)
         , fps_count_(0)
         , in_visibility_delay_report_(false) {
+  NGAGE_COVERAGE_LOG();
         set_initial_state();
 
         abs_rect.top = reinterpret_cast<canvas_interface *>(parent)->absolute_position();
@@ -110,6 +115,7 @@ namespace eka2l1::epoc {
     }
 
     canvas_base::~canvas_base() {
+  NGAGE_COVERAGE_LOG();
         if (in_visibility_delay_report_) {
             ntimer *timer = client->get_ws().get_ntimer();
             timer->unschedule_event(client->get_ws().get_deliver_delay_report_visiblity_event(),
@@ -128,6 +134,7 @@ namespace eka2l1::epoc {
     }
 
     void canvas_base::add_canvas_observer(canvas_observer *ob) {
+  NGAGE_COVERAGE_LOG();
         auto ite = std::find(observers_.begin(), observers_.end(), ob);
         if (ite == observers_.end()) {
             observers_.push_back(ob);
@@ -135,6 +142,7 @@ namespace eka2l1::epoc {
     }
 
     void canvas_base::remove_canvas_observer(canvas_observer *ob) {
+  NGAGE_COVERAGE_LOG();
         auto ite = std::find(observers_.begin(), observers_.end(), ob);
         if (ite != observers_.end()) {
             observers_.erase(ite);
@@ -142,10 +150,12 @@ namespace eka2l1::epoc {
     }
 
     bool canvas_base::is_dsa_active() const {
+  NGAGE_COVERAGE_LOG();
         return !directs_.empty();
     }
 
     void canvas_base::add_dsa_active(dsa *dsa) {
+  NGAGE_COVERAGE_LOG();
         auto result = std::find(directs_.begin(), directs_.end(), dsa);
         if (result == directs_.end()) {
             directs_.push_back(dsa);
@@ -153,6 +163,7 @@ namespace eka2l1::epoc {
     }
 
     void canvas_base::remove_dsa_active(dsa *dsa) {
+  NGAGE_COVERAGE_LOG();
         auto result = std::find(directs_.begin(), directs_.end(), dsa);
         if (result != directs_.end()) {
             directs_.erase(result);
@@ -160,6 +171,7 @@ namespace eka2l1::epoc {
     }
 
     void canvas_base::add_draw_command(gdi_store_command &command) {
+  NGAGE_COVERAGE_LOG();
         if (win_type == window_type::blank) {
             return;
         }
@@ -207,14 +219,17 @@ namespace eka2l1::epoc {
     }
 
     bool canvas_base::can_be_physically_seen() const {
+  NGAGE_COVERAGE_LOG();
         return is_visible() && !visible_region.empty();
     }
 
     bool canvas_base::is_visible() const {
+  NGAGE_COVERAGE_LOG();
         return ((flags & flags_active) && (flags & flags_visible));
     }
 
     eka2l1::rect canvas_base::bounding_rect() const {
+  NGAGE_COVERAGE_LOG();
         eka2l1::rect bound;
         bound.top = { 0, 0 };
         bound.size = abs_rect.size;
@@ -223,14 +238,17 @@ namespace eka2l1::epoc {
     }
 
     eka2l1::rect canvas_base::absolute_rect() const {
+  NGAGE_COVERAGE_LOG();
         return abs_rect;
     }
 
     eka2l1::vec2 canvas_base::size() const {
+  NGAGE_COVERAGE_LOG();
         return abs_rect.size;
     }
 
     eka2l1::vec2 canvas_base::size_for_egl_surface() const {
+  NGAGE_COVERAGE_LOG();
         if ((flags & epoc::window::flag_fix_native_orientation) && (abs_rect.size == scr->current_mode().size)) {
             // Fullscreen window, but must change the size to native orientation
             return scr->size();
@@ -240,6 +258,7 @@ namespace eka2l1::epoc {
     }
 
     void canvas_base::report_visiblity_change(const bool forced) {
+  NGAGE_COVERAGE_LOG();
         if (!forced && in_visibility_delay_report_) {
             return;
         }
@@ -277,6 +296,7 @@ namespace eka2l1::epoc {
     }
 
     void canvas_base::queue_event(const epoc::event &evt) {
+  NGAGE_COVERAGE_LOG();
         if (!is_visible()) {
             // TODO: Im not sure... I think it can certainly receive
             LOG_TRACE(SERVICE_WINDOW, "The client window 0x{:X} is not visible, and can't receive any events", id);
@@ -291,9 +311,11 @@ namespace eka2l1::epoc {
 
         explicit window_absolute_postion_change_walker(const eka2l1::vec2 &diff)
             : diff_(diff) {
+  NGAGE_COVERAGE_LOG();
         }
 
         bool do_it(epoc::window *win) override {
+  NGAGE_COVERAGE_LOG();
             if (win->type == window_kind::client) {
                 canvas_base *user = reinterpret_cast<canvas_base*>(win);
                 user->recalculate_absolute_position(diff_);
@@ -304,6 +326,7 @@ namespace eka2l1::epoc {
     };
 
     void canvas_base::recalculate_absolute_position(const eka2l1::vec2 &diff) {
+  NGAGE_COVERAGE_LOG();
         if (diff == eka2l1::vec2(0, 0)) {
             return;
         }
@@ -317,6 +340,7 @@ namespace eka2l1::epoc {
     }
 
     void canvas_base::set_extent(const eka2l1::vec2 &top, const eka2l1::vec2 &new_size) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::vec2 pos_diff = top - pos;
 
         const bool size_changed = (new_size != abs_rect.size);
@@ -350,6 +374,7 @@ namespace eka2l1::epoc {
     }
 
     static bool should_purge_canvas_base(void *win, epoc::event &evt) {
+  NGAGE_COVERAGE_LOG();
         epoc::canvas_base *user = reinterpret_cast<epoc::canvas_base *>(win);
         if (user->client_handle == evt.handle) {
             return false;
@@ -359,6 +384,7 @@ namespace eka2l1::epoc {
     }
 
     void canvas_base::set_visible(const bool vis) {
+  NGAGE_COVERAGE_LOG();
         bool should_trigger_redraw = false;
         bool current_visible_status = (flags & flags_visible) != 0;
 
@@ -387,6 +413,7 @@ namespace eka2l1::epoc {
     }
 
     std::uint32_t canvas_base::redraw_priority(int *child_shift) {
+  NGAGE_COVERAGE_LOG();
         int ordpos = ordinal_position(false);
         if (ordpos > max_ordpos_pri) {
             ordpos = max_ordpos_pri;
@@ -407,6 +434,7 @@ namespace eka2l1::epoc {
     }
 
     epoc::window_group *canvas_base::get_group() {
+  NGAGE_COVERAGE_LOG();
         epoc::window_group *are_you = reinterpret_cast<epoc::window_group *>(parent);
         while (are_you->type != epoc::window_kind::group) {
             are_you = reinterpret_cast<epoc::window_group *>(are_you->parent);
@@ -416,15 +444,18 @@ namespace eka2l1::epoc {
     }
 
     eka2l1::vec2 canvas_base::absolute_position() const {
+  NGAGE_COVERAGE_LOG();
         return abs_rect.top;
     }
 
     epoc::display_mode canvas_base::display_mode() const {
+  NGAGE_COVERAGE_LOG();
         // Fallback to screen
         return scr->disp_mode;
     }
 
     std::uint64_t canvas_base::try_update(kernel::thread *drawer) {
+  NGAGE_COVERAGE_LOG();
         if (scr->need_update_visible_regions()) {
             scr->recalculate_visible_regions();
         }
@@ -475,6 +506,7 @@ namespace eka2l1::epoc {
     }
 
     void canvas_base::set_non_fading(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         const std::uint32_t non_fading = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
 
         if (non_fading) {
@@ -487,6 +519,7 @@ namespace eka2l1::epoc {
     }
 
     void canvas_base::set_size(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // refer to canvas_base::set_extent()
         const object_size new_size = *reinterpret_cast<object_size *>(cmd.data_ptr);
         set_extent(pos, new_size);
@@ -494,12 +527,14 @@ namespace eka2l1::epoc {
     }
 
     void canvas_base::set_transparency_alpha_channel(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         flags |= flags_enable_alpha;
         LOG_TRACE(SERVICE_WINDOW, "Enable alpha for window {}", id);
         context.complete(epoc::error_none);
     }
 
     void canvas_base::destroy(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // Try to redraw the screen
         on_command_batch_done(context);
 
@@ -508,6 +543,7 @@ namespace eka2l1::epoc {
     }
 
     void canvas_base::alloc_pointer_buffer(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_alloc_pointer_buffer *alloc_params = reinterpret_cast<ws_cmd_alloc_pointer_buffer *>(cmd.data_ptr);
 
         if ((alloc_params->max_points >= 100) || (alloc_params->max_points == 0)) {
@@ -523,6 +559,7 @@ namespace eka2l1::epoc {
     }
     
     void canvas_base::fix_native_orientation(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         if (flags & flags_active) {
             LOG_TRACE(SERVICE_WINDOW, "The window has already been activated, fix native orientation is illegal!");
             context.complete(epoc::error_none);
@@ -542,16 +579,19 @@ namespace eka2l1::epoc {
     }
 
     bool redraw_msg_canvas::clear_redraw_store() {
+  NGAGE_COVERAGE_LOG();
         //has_redraw_content(false);
         return true;
     }
 
     void redraw_msg_canvas::store_draw_commands(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_WINDOW, "Store draw command stubbed");
         ctx.complete(epoc::error_none);
     }
 
     void redraw_msg_canvas::invalidate(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::rect prototype_irect;
         eka2l1::rect whole_win = bounding_rect();
 
@@ -575,10 +615,12 @@ namespace eka2l1::epoc {
     }
 
     void redraw_msg_canvas::on_activate() {
+  NGAGE_COVERAGE_LOG();
         invalidate(bounding_rect());
     }
 
     void canvas_base::activate(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         flags |= flags_active;
         on_activate();
 
@@ -590,6 +632,7 @@ namespace eka2l1::epoc {
     }
 
     void canvas_base::scroll(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::rect clip_rect;
         eka2l1::point offset;
         eka2l1::rect source_rect;
@@ -615,6 +658,7 @@ namespace eka2l1::epoc {
     }
 
     void canvas_base::set_shape(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         std::optional<common::region> shape = get_region_from_context(context, cmd);
         if (!shape.has_value()) {
             context.complete(epoc::error_argument);
@@ -631,6 +675,7 @@ namespace eka2l1::epoc {
     }
     
     void canvas_base::enable_visiblity_change_events(service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         flags |= flag_visiblity_event_report;
 
         // Delay the report a bit... With IPC + system expected delay
@@ -653,6 +698,7 @@ namespace eka2l1::epoc {
     }
     
     void canvas_base::inquire_offset(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // The data given is a 32 bit handle.
         // We are suppose to write back the offset distance between the given window and this.
         const std::uint32_t handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
@@ -681,11 +727,13 @@ namespace eka2l1::epoc {
 
 
     bool canvas_base::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         bool useless = false;
         return execute_command_detail(ctx, cmd, useless);
     }
 
     bool canvas_base::execute_command_detail(service::ipc_context &ctx, ws_cmd &cmd, bool &did_it) {
+  NGAGE_COVERAGE_LOG();
         bool result = execute_command_for_general_node(ctx, cmd);
         bool quit = false;
         //LOG_TRACE(SERVICE_WINDOW, "Window user op: {}", (int)cmd.header.op);
@@ -921,9 +969,11 @@ namespace eka2l1::epoc {
     blank_canvas::blank_canvas(window_server_client_ptr client, screen *scr, window *parent,
             const epoc::display_mode dmode, const std::uint32_t client_handle)
         : canvas_base(client, scr, parent, window_type::blank, dmode, client_handle) {
+  NGAGE_COVERAGE_LOG();
     }
         
     bool blank_canvas::draw(drivers::graphics_command_builder &builder) {
+  NGAGE_COVERAGE_LOG();
         if (!clear_color_enable || !can_be_physically_seen() || (!scr->is_screenplay_architecture() && scr->scr_config.blt_offscreen)) {
             return false;
         }
@@ -953,9 +1003,11 @@ namespace eka2l1::epoc {
     redraw_msg_canvas::redraw_msg_canvas(window_server_client_ptr client, screen *scr, window *parent,
         const epoc::display_mode dmode, const std::uint32_t client_handle)
         : canvas_base(client, scr, parent, epoc::window_type::redraw, dmode, client_handle) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void redraw_msg_canvas::handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) {
+  NGAGE_COVERAGE_LOG();
         if (new_size != abs_rect.size) {
             resize_needed = true;
 
@@ -990,10 +1042,12 @@ namespace eka2l1::epoc {
     }
 
     void redraw_msg_canvas::get_invalid_region_count(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         context.complete(static_cast<std::int32_t>(redraw_region.rects_.size()));
     }
 
     void redraw_msg_canvas::get_invalid_region(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         std::int32_t to_get_count = *reinterpret_cast<std::int32_t *>(cmd.data_ptr);
 
         if (to_get_count < 0) {
@@ -1017,6 +1071,7 @@ namespace eka2l1::epoc {
     }
 
     void redraw_msg_canvas::invalidate(const eka2l1::rect &irect) {
+  NGAGE_COVERAGE_LOG();
         if (irect.empty()) {
             return;
         }
@@ -1037,6 +1092,7 @@ namespace eka2l1::epoc {
     }
 
     void redraw_msg_canvas::end_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         redraw_rect_curr.make_empty();
         redraw_segments_.promote_last_segment();
 
@@ -1059,6 +1115,7 @@ namespace eka2l1::epoc {
     }
 
     void redraw_msg_canvas::begin_redraw(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // LOG_TRACE(SERVICE_WINDOW, "Begin redraw to window 0x{:X}!", id);
         if (flags & flags_in_redraw) {
             ctx.complete(epoc::error_in_use);
@@ -1108,6 +1165,7 @@ namespace eka2l1::epoc {
     }
 
     void redraw_msg_canvas::add_draw_command(gdi_store_command &command) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(scr->screen_mutex);
 
         if ((flags & flags_in_redraw) == 0) {
@@ -1136,6 +1194,7 @@ namespace eka2l1::epoc {
     }
 
     bool redraw_msg_canvas::scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) {
+  NGAGE_COVERAGE_LOG();
         // Don't have framebuffer, so can't copy now!
         eka2l1::rect rect = source_rect;
         rect = rect.intersect(clip_space);
@@ -1151,10 +1210,12 @@ namespace eka2l1::epoc {
     }
 
     std::uint64_t redraw_msg_canvas::try_update(kernel::thread *drawer) {
+  NGAGE_COVERAGE_LOG();
         return canvas_base::try_update(drawer);
     }
 
     bool redraw_msg_canvas::draw(drivers::graphics_command_builder &builder) {
+  NGAGE_COVERAGE_LOG();
         if (!can_be_physically_seen()) {
             // No need to redraw this window yet. It doesn't even have any content ready.
             return false;
@@ -1257,6 +1318,7 @@ namespace eka2l1::epoc {
     }
 
     bool redraw_msg_canvas::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // LOG_TRACE(SERVICE_WINDOW, "Redraw canvas opcode {}", cmd.header.op);
 
         bool did_it = false;
@@ -1313,13 +1375,16 @@ namespace eka2l1::epoc {
         , bitmap_(nullptr)
         , driver_win_id(0)
         , ping_pong_driver_win_id(0) {
+  NGAGE_COVERAGE_LOG();
         resize_needed = true;
     }
 
     void bitmap_backed_canvas::on_activate() {
+  NGAGE_COVERAGE_LOG();
     }
 
     void bitmap_backed_canvas::handle_extent_changed(const eka2l1::vec2 &new_size, const eka2l1::vec2 &new_pos) {
+  NGAGE_COVERAGE_LOG();
         if (abs_rect.size != new_size) {
             if (ping_pong_driver_win_id) {
                 // Let's just recreate later, just a temp for scrolling
@@ -1340,6 +1405,7 @@ namespace eka2l1::epoc {
     }
 
     bitmap_backed_canvas::~bitmap_backed_canvas() {
+  NGAGE_COVERAGE_LOG();
         if (bitmap_) {
             bitmap_->deref();
         }
@@ -1369,6 +1435,7 @@ namespace eka2l1::epoc {
     }
 
     void bitmap_backed_canvas::create_backed_bitmap() {
+  NGAGE_COVERAGE_LOG();
         fbs_server *serv = client->get_ws().get_fbs_server();
 
         fbs_bitmap_data_info info;
@@ -1397,6 +1464,7 @@ namespace eka2l1::epoc {
     }
 
     void bitmap_backed_canvas::bitmap_handle(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         if (!bitmap_) {
             create_backed_bitmap();
         }
@@ -1410,6 +1478,7 @@ namespace eka2l1::epoc {
     }
 
     std::uint64_t bitmap_backed_canvas::try_update(kernel::thread *drawer) {
+  NGAGE_COVERAGE_LOG();
         drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
 
         if (!content_changed()) {
@@ -1455,11 +1524,13 @@ namespace eka2l1::epoc {
     }
 
     void bitmap_backed_canvas::add_draw_command(gdi_store_command &command) {
+  NGAGE_COVERAGE_LOG();
         canvas_base::add_draw_command(command);
         content_changed(true);
     }
 
     void bitmap_backed_canvas::prepare_for_draw() {
+  NGAGE_COVERAGE_LOG();
         if (resize_needed) {
             drivers::graphics_driver *drv = client->get_ws().get_graphics_driver();
 
@@ -1482,6 +1553,7 @@ namespace eka2l1::epoc {
     }
 
     void bitmap_backed_canvas::sync_from_bitmap(std::optional<common::region> reg_clip) {
+  NGAGE_COVERAGE_LOG();
         if (!bitmap_) {
             return;
         }
@@ -1513,6 +1585,7 @@ namespace eka2l1::epoc {
     }
 
     void bitmap_backed_canvas::update_screen(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         if (!bitmap_) {
             ctx.complete(epoc::error_none);
             return;
@@ -1533,7 +1606,8 @@ namespace eka2l1::epoc {
         canvas_base::try_update(ctx.msg->own_thr);
     }
 
-    bool bitmap_backed_canvas::scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) {        
+    bool bitmap_backed_canvas::scroll(eka2l1::rect clip_space, const eka2l1::vec2 offset, eka2l1::rect source_rect) {
+  NGAGE_COVERAGE_LOG();        
         if (((offset.x == 0) && (offset.y == 0)) || !driver_win_id) {
             return false;
         }
@@ -1569,6 +1643,7 @@ namespace eka2l1::epoc {
     }
 
     bool bitmap_backed_canvas::draw(drivers::graphics_command_builder &builder) {
+  NGAGE_COVERAGE_LOG();
         if (!driver_win_id || !can_be_physically_seen()) {
             // No need to redraw this window yet. It doesn't even have any content ready.
             return false;
@@ -1609,7 +1684,8 @@ namespace eka2l1::epoc {
         return true;
     }
 
-    bool bitmap_backed_canvas::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {        
+    bool bitmap_backed_canvas::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();        
         // LOG_TRACE(SERVICE_WINDOW, "Backed up canvas opcode {}", cmd.header.op);
 
         bool did_it = false;

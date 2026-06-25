@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2021 EKA2L1 Team
  * 
@@ -26,14 +27,17 @@ namespace eka2l1::epoc::msv {
         , state_(operation_state_idle)
         , buffer_(buffer)
         , complete_info_(std::move(complete_info)) {
+  NGAGE_COVERAGE_LOG();
 
     }
 
     void operation::cancel() {
+  NGAGE_COVERAGE_LOG();
         complete_info_.complete(epoc::error_cancel);
     }
 
     std::int32_t operation::system_progress(system_progress_info &progress) {
+  NGAGE_COVERAGE_LOG();
         return epoc::error_not_supported;
     }
 }

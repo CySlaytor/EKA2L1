@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2023 EKA2L1 Team
  * 
@@ -22,6 +23,7 @@
 
 namespace eka2l1::epoc {
     void add_anim_executor_factory_to_list(anim_dll_filename_and_factory_list &factories) {
+  NGAGE_COVERAGE_LOG();
         factories.emplace_back(u"Z:\\SYSTEM\\LIBS\\CLOCKA.DLL", std::make_unique<clock_anim_executor_factory>());
     }
 }

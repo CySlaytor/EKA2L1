@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2018 EKA2L1 Team.
  * 
@@ -44,6 +45,7 @@
 
 namespace eka2l1 {
     const std::string get_loader_server_name_through_epocver(const epocver ver) {
+  NGAGE_COVERAGE_LOG();
         if (ver < epocver::eka2) {
             return "Loader";
         }
@@ -52,11 +54,13 @@ namespace eka2l1 {
     }
 
     static std::vector<common::pystr16> get_additional_search_paths(const std::u16string &search_list) {
+  NGAGE_COVERAGE_LOG();
         common::pystr16 str(search_list);
         return str.split(u';');
     }
 
     void loader_server::load_process(eka2l1::service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::ldr_info> info = std::nullopt;
         std::optional<epoc::ldr_info_eka1> info_eka1 = std::nullopt;
 
@@ -140,6 +144,7 @@ namespace eka2l1 {
     }
 
     void loader_server::load_library(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::ldr_info> info = std::nullopt;
         std::optional<epoc::ldr_info_eka1> info_eka1 = std::nullopt;
 
@@ -235,6 +240,7 @@ namespace eka2l1 {
     }
 
     void loader_server::get_info(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<utf16_str> lib_name = ctx.get_argument_value<utf16_str>(1);
         epoc::des8 *buffer = eka2l1::ptr<epoc::des8>(ctx.msg->args.args[2]).get(ctx.sys->get_kernel_system()->crr_process());
 
@@ -279,6 +285,7 @@ namespace eka2l1 {
     }
 
     void loader_server::get_info_from_header(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         std::uint8_t *header_data = context.get_descriptor_argument_ptr(0);
         const std::size_t header_size = context.get_argument_data_size(0);
 
@@ -320,6 +327,7 @@ namespace eka2l1 {
     }
 
     void loader_server::delete_loader(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<utf16_str> lib_name = ctx.get_argument_value<utf16_str>(1);
 
         if (!lib_name) {
@@ -338,6 +346,7 @@ namespace eka2l1 {
     }
 
     void loader_server::check_library_hash(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<utf16_str> lib_name = ctx.get_argument_value<utf16_str>(1);
 
         if (!lib_name) {
@@ -349,6 +358,7 @@ namespace eka2l1 {
     }
 
     void loader_server::load_logical_device(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         std::optional<utf16_str> ldd_name = context.get_argument_value<utf16_str>(1);
         if (!ldd_name.has_value()) {
             context.complete(epoc::error_argument);
@@ -360,6 +370,7 @@ namespace eka2l1 {
     }
 
     void loader_server::load_locale(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         context.complete(epoc::error_not_found);
     }
 

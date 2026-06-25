@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2018 EKA2L1 Team
  * 
@@ -37,9 +38,11 @@ namespace eka2l1 {
 
     rights_server::rights_server(eka2l1::system *sys)
         : service::typical_server(sys, RIGHTS_SERVER_NAME) {
+  NGAGE_COVERAGE_LOG();
     }
 
     std::uint32_t rights_server::get_suitable_seri_version() const {
+  NGAGE_COVERAGE_LOG();
         const epocver ver = sys->get_symbian_version_use();        
         if (ver <= epocver::epoc93fp1) {
             return 0;
@@ -49,6 +52,7 @@ namespace eka2l1 {
     }
 
     void rights_server::initialize() {
+  NGAGE_COVERAGE_LOG();
         io_system *io = sys->get_io_system();
         if (!io) {
             return;
@@ -68,6 +72,7 @@ namespace eka2l1 {
 
     bool rights_server::import_ng2l(const std::string &content, std::vector<std::string> &success_game_name,
                                     std::vector<std::string> &failed_game_name) {
+  NGAGE_COVERAGE_LOG();
         if (!database_) {
             initialize();
         }
@@ -181,6 +186,7 @@ namespace eka2l1 {
     }
 
     void rights_server::startup_imports() {
+  NGAGE_COVERAGE_LOG();
         io_system *io = sys->get_io_system();
         if (!io) {
             return;
@@ -222,6 +228,7 @@ namespace eka2l1 {
     }
 
     void rights_server::connect(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         if (!database_) {
             initialize();
         }
@@ -234,9 +241,11 @@ namespace eka2l1 {
         epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version)
         , check_status_(rights_crediental_not_checked) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void rights_client_session::get_entry_list(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::string> cid = ctx->get_argument_value<std::string>(1);
 
         if (!cid.has_value()) {
@@ -295,6 +304,7 @@ namespace eka2l1 {
     }
 
     void rights_client_session::init_key(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::string> cid = ctx->get_argument_value<std::string>(0);
 
         if (!cid.has_value()) {
@@ -311,6 +321,7 @@ namespace eka2l1 {
     }
 
     void rights_client_session::verify_crediental(kernel::process *client, const std::string &cid, const epoc::drm::rights_intent intent) {
+  NGAGE_COVERAGE_LOG();
         std::vector<epoc::drm::rights_permission> perms;
         if (!server<rights_server>()->database().get_permission_list(cid, perms)) {
             check_status_ = rights_crediental_checked_and_denied;
@@ -363,6 +374,7 @@ namespace eka2l1 {
     }
 
     void rights_client_session::consume(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         epoc::drm::rights_intent intent = static_cast<epoc::drm::rights_intent>(ctx->msg->args.args[0]);
         std::optional<std::string> cid = ctx->get_argument_value<std::string>(1);
 
@@ -376,6 +388,7 @@ namespace eka2l1 {
     }
 
     void rights_client_session::get_key(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (check_status_ == rights_crediental_checked_and_allowed) {
             if (current_key_.empty()) {
                 ctx->complete(ERROR_CA_NO_RIGHTS);
@@ -389,6 +402,7 @@ namespace eka2l1 {
     }
 
     void rights_client_session::check_consume(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::string> cid = ctx->get_argument_value<std::string>(1);
         if (!cid.has_value()) {
             ctx->complete(epoc::error_argument);
@@ -408,6 +422,7 @@ namespace eka2l1 {
     }
 
     void rights_client_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx->msg->function) {
         case rights_opcode_get_entry_list:
             get_entry_list(ctx);

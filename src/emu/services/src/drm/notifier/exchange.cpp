@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -25,9 +26,11 @@ namespace eka2l1 {
         : type_(drm::notifier_event_type_none)
         , next_(nullptr)
         , count_(1) {
+  NGAGE_COVERAGE_LOG();
     }
 
     bool drm_notifier_server::release(drm_event_message *msg) {
+  NGAGE_COVERAGE_LOG();
         msg->count_--;
 
         if (msg->count_ > 0) {
@@ -62,6 +65,7 @@ namespace eka2l1 {
     }
 
     bool drm_notifier_server::send_event(const std::uint32_t event, std::uint8_t *data) {
+  NGAGE_COVERAGE_LOG();
         drm_event_message *msg = new drm_event_message;
         msg->type_ = static_cast<drm::notifier_event_type>(event);
 
@@ -120,6 +124,7 @@ namespace eka2l1 {
     }
 
     void drm_notifier_client_session::finish_listen(drm_event_message *msg) {
+  NGAGE_COVERAGE_LOG();
         to_write_event_type_->assign(notify_.requester->owning_process(), reinterpret_cast<std::uint8_t *>(&msg->type_),
             sizeof(msg->type_));
 
@@ -131,6 +136,7 @@ namespace eka2l1 {
     }
 
     bool drm_notifier_client_session::listen(epoc::notify_info &info, std::uint8_t *data_to_write, epoc::des8 *event_type_to_write) {
+  NGAGE_COVERAGE_LOG();
         if (!notify_.empty()) {
             return false;
         }
@@ -150,6 +156,7 @@ namespace eka2l1 {
     }
 
     bool drm_notifier_client_session::can_accept(drm_event_message *msg) {
+  NGAGE_COVERAGE_LOG();
         for (const drm_accept_event_type &accept : accept_types_) {
             // We can accept if event type of the registered is same as the message.
             // Content URI of the registered is empty then this condition is a free pass.
@@ -162,6 +169,7 @@ namespace eka2l1 {
     }
 
     bool drm_notifier_client_session::receive_event(drm_event_message *msg) {
+  NGAGE_COVERAGE_LOG();
         if (!can_accept(msg)) {
             return false;
         }
@@ -176,6 +184,7 @@ namespace eka2l1 {
     }
 
     bool drm_notifier_client_session::register_event(const std::uint32_t type, const std::string uri) {
+  NGAGE_COVERAGE_LOG();
         for (std::size_t i = 0; i < accept_types_.size(); i++) {
             if ((accept_types_[i].event_type_ == type) && (accept_types_[i].content_uri_ == uri)) {
                 return false;
@@ -187,6 +196,7 @@ namespace eka2l1 {
     }
 
     bool drm_notifier_client_session::unregister_event(const std::uint32_t type, const std::string uri) {
+  NGAGE_COVERAGE_LOG();
         for (std::size_t i = 0; i < accept_types_.size(); i++) {
             if ((accept_types_[i].event_type_ == type) && (accept_types_[i].content_uri_ == uri)) {
                 accept_types_.erase(accept_types_.begin() + i);

@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2021 EKA2L1 Team
  * 
@@ -25,6 +26,7 @@
 
 namespace eka2l1 {
     std::optional<common::region> get_region_from_context(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         if (cmd.header.cmd_len != 4) { 
             LOG_ERROR(SERVICE_WINDOW, "Region object's header data size is not 4 bytes!");
             return std::nullopt;
@@ -63,6 +65,7 @@ namespace eka2l1 {
     }
     
     void scale_rectangle(eka2l1::rect &r, const float scale_factor) {
+  NGAGE_COVERAGE_LOG();
         r.top *= scale_factor;
         r.size *= scale_factor;
     }

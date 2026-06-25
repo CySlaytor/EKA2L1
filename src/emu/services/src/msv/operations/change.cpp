@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2021 EKA2L1 Team
  * 
@@ -30,9 +31,11 @@ namespace eka2l1::epoc::msv {
     change_operation::change_operation(const msv_id operation_id, const operation_buffer &buffer,
         epoc::notify_info complete_info)
         : operation(operation_id, buffer, complete_info) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void change_operation::execute(msv_server *server, const kernel::uid process_uid) {
+  NGAGE_COVERAGE_LOG();
         state(operation_state_pending);
         entry target_entry;
 
@@ -70,6 +73,7 @@ namespace eka2l1::epoc::msv {
     }
 
     std::int32_t change_operation::system_progress(system_progress_info &progress) {
+  NGAGE_COVERAGE_LOG();
         local_operation_progress *localprg = progress_data<local_operation_progress>();
 
         progress.err_code_ = localprg->error_;

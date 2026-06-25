@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -36,6 +37,7 @@
 
 namespace eka2l1 {
     void fs_server_client::open_dir(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         auto dir = ctx->get_argument_value<std::u16string>(0);
         std::optional<epoc::uid_type> utype = ctx->get_argument_data_from_descriptor<epoc::uid_type>(2);
 
@@ -120,6 +122,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::close_dir(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle_res) {
@@ -139,6 +142,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::read_dir(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::int32_t> handle = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle) {
@@ -171,6 +175,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::read_dir_packed(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::int32_t> handle = ctx->get_argument_value<std::int32_t>(3);
         std::optional<std::int32_t> entry_arr_vir_ptr = ctx->get_argument_value<std::int32_t>(0);
 

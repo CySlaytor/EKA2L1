@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -26,11 +27,13 @@
 
 namespace eka2l1::epoc {
     static void on_anim_due(std::uint64_t userdata, const int cycles_late) {
+  NGAGE_COVERAGE_LOG();
         anim_due_callback_data *callback = reinterpret_cast<anim_due_callback_data *>(userdata);
         callback->sched->invoke_due_animation(callback->driver, callback->screen_number);
     }
 
     static void on_scan_callback(std::uint64_t userdata, const int cycles_late) {
+  NGAGE_COVERAGE_LOG();
         sched_scan_callback_data *callback = reinterpret_cast<sched_scan_callback_data *>(userdata);
         callback->sched->idle_callback(callback->driver);
     }
@@ -39,6 +42,7 @@ namespace eka2l1::epoc {
         : kern_(kern)
         , timing_(timing)
         , callback_scheduled_(false) {
+  NGAGE_COVERAGE_LOG();
         anim_due_evt_ = timing_->register_event("anim_sched_anim_due_evt", on_anim_due);
         callback_evt_ = timing->register_event("anim_sched_callback_evt", on_scan_callback);
 
@@ -57,10 +61,12 @@ namespace eka2l1::epoc {
     }
 
     animation_scheduler::~animation_scheduler() {
+  NGAGE_COVERAGE_LOG();
         cancel_all();
     }
 
     bool animation_scheduler::cancel_all() {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(lock_);
 
         if (callback_evt_ == 0) {
@@ -87,6 +93,7 @@ namespace eka2l1::epoc {
     }
 
     void animation_scheduler::schedule(drivers::graphics_driver *driver, screen *scr, const std::uint64_t time) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(lock_);
 
         // Get screen number
@@ -112,6 +119,7 @@ namespace eka2l1::epoc {
     }
 
     void animation_scheduler::unschedule(const int screen_number) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(lock_);
 
         if (schedules_.size() <= screen_number) {
@@ -122,6 +130,7 @@ namespace eka2l1::epoc {
     }
 
     animation_scheduler::anim_schedule *animation_scheduler::get_scheduled_screen_update(const int scr_num) {
+  NGAGE_COVERAGE_LOG();
         if (schedules_.size() <= scr_num) {
             return nullptr;
         }
@@ -134,6 +143,7 @@ namespace eka2l1::epoc {
     }
 
     std::int64_t animation_scheduler::get_due_delta(const bool force_redraw, const std::uint64_t due) {
+  NGAGE_COVERAGE_LOG();
         if (force_redraw) {
             // use granularity
             // For now, 0
@@ -146,6 +156,7 @@ namespace eka2l1::epoc {
     }
 
     void animation_scheduler::scan_for_redraw(drivers::graphics_driver *driver, const int screen_number, const bool force_redraw) {
+  NGAGE_COVERAGE_LOG();
         anim_schedule *sched = get_scheduled_screen_update(screen_number);
 
         if (sched) {
@@ -197,6 +208,7 @@ namespace eka2l1::epoc {
     }
 
     void animation_scheduler::invoke_due_animation(drivers::graphics_driver *driver, const int screen_number) {
+  NGAGE_COVERAGE_LOG();
         lock_.lock();
 
         anim_schedule *sched = get_scheduled_screen_update(screen_number);
@@ -228,6 +240,7 @@ namespace eka2l1::epoc {
     }
 
     void animation_scheduler::idle_callback(drivers::graphics_driver *driver) {
+  NGAGE_COVERAGE_LOG();
         lock_.lock();
         callback_scheduled_ = false;
 
@@ -239,6 +252,7 @@ namespace eka2l1::epoc {
     }
 
     void animation_scheduler::schedule_scans(drivers::graphics_driver *driver) {
+  NGAGE_COVERAGE_LOG();
         // Schedule scan, create some screen update delay to be correspond with hardware.
         // TODO: Maybe get rid of this function?
         static constexpr std::uint16_t scheduled_us = 500;

@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -21,6 +22,7 @@
 
 namespace eka2l1::epoc {
     void font_store::add_fonts(std::vector<std::uint8_t> &buf, const epoc::adapter::font_file_adapter_kind adapter_kind) {
+  NGAGE_COVERAGE_LOG();
         auto adapter = epoc::adapter::make_font_file_adapter(adapter_kind, buf);
 
         if (!adapter->is_valid()) {
@@ -117,6 +119,7 @@ namespace eka2l1::epoc {
     }
 
     open_font_info *font_store::seek_the_font_by_uid(const epoc::uid the_uid, open_font_metrics &target_metric, std::uint32_t *metric_identifier) {
+  NGAGE_COVERAGE_LOG();
         for (auto &info : open_font_store) {
             if (std::optional<open_font_metrics> result = info.adapter->get_metric_with_uid(info.idx, the_uid, metric_identifier)) {
                 target_metric = std::move(result.value());
@@ -128,6 +131,7 @@ namespace eka2l1::epoc {
     }
 
     open_font_info *font_store::seek_the_open_font(epoc::font_spec_base &spec) {
+  NGAGE_COVERAGE_LOG();
         open_font_info *best = nullptr;
         int best_score = -99999999;
 
@@ -209,6 +213,7 @@ namespace eka2l1::epoc {
     }
 
     epoc::typeface_support *font_store::get_typeface_support(const std::uint32_t index) {
+  NGAGE_COVERAGE_LOG();
         if (index >= open_font_store.size()) {
             return nullptr;
         }

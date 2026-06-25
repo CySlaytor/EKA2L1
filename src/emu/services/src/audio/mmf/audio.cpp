@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team.
  * 
@@ -32,9 +33,11 @@ namespace eka2l1 {
         : service::typical_server(sys, MMF_AUDIO_SERVER_NAME)
         , dev_(dev)
         , flags_(0) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void mmf_audio_server::connect(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         if (!(flags_ & FLAG_INITIALIZED)) {
             init(sys->get_kernel_system());
         }
@@ -51,6 +54,7 @@ namespace eka2l1 {
     }
 
     void mmf_audio_server::init(kernel_system *kern) {
+  NGAGE_COVERAGE_LOG();
         // Determine if the set devsound info is available. This change our opcode list
         auto seg = kern->get_lib_manager()->load(u"mmfaudioserverproxy.dll");
 
@@ -64,12 +68,14 @@ namespace eka2l1 {
     }
 
     kernel_system *mmf_audio_server::get_kernel_system() {
+  NGAGE_COVERAGE_LOG();
         return sys->get_kernel_system();
     }
 
     mmf_audio_server_session::mmf_audio_server_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(serv, client_ss_uid, client_version)
         , dev_session_(nullptr) {
+  NGAGE_COVERAGE_LOG();
         mmf_audio_server *aud_serv = server<mmf_audio_server>();
 
         kernel_system *kern = aud_serv->get_kernel_system();
@@ -88,6 +94,7 @@ namespace eka2l1 {
     }
 
     mmf_audio_server_session::~mmf_audio_server_session() {
+  NGAGE_COVERAGE_LOG();
         if (dev_session_) {
             mmf_audio_server *aud_serv = server<mmf_audio_server>();
             kernel_system *kern = aud_serv->get_kernel_system();
@@ -97,10 +104,12 @@ namespace eka2l1 {
     }
 
     void mmf_audio_server_session::set_devsound_info(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->complete(epoc::error_none);
     }
 
     void mmf_audio_server_session::get_dev_session(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         mmf_audio_server *aud_serv = server<mmf_audio_server>();
         kernel_system *kern = aud_serv->get_kernel_system();
 
@@ -114,6 +123,7 @@ namespace eka2l1 {
     }
 
     void mmf_audio_server_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (!server<mmf_audio_server>()->is_devsound_info_available())
             ctx->msg->function += 1;
 

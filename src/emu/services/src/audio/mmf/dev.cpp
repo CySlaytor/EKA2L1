@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2018 EKA2L1 Team.
  *
@@ -40,6 +41,7 @@ namespace eka2l1 {
     static constexpr std::uint32_t MMF_BUFFER_SIZE_DEFAULT = 0x1000;
 
     static std::uint32_t recommended_buffer_size(const std::uint32_t sample_rate) {
+  NGAGE_COVERAGE_LOG();
         if (sample_rate < 16000) {
             return MMF_BUFFER_SIZE_MIN;
         }
@@ -60,6 +62,7 @@ namespace eka2l1 {
     }
 
     const std::uint32_t freq_enum_to_number(const epoc::mmf_sample_rate rate) {
+  NGAGE_COVERAGE_LOG();
         switch (rate) {
         case epoc::mmf_sample_rate_8000hz:
             return 8000;
@@ -105,6 +108,7 @@ namespace eka2l1 {
     }
 
     const std::optional<std::uint32_t> mmf_format_to_fourcc(const std::uint32_t format) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t target_fourcc = 0;
 
         switch (format) {
@@ -124,19 +128,23 @@ namespace eka2l1 {
     }
 
     inline std::uint32_t duration_to_samples(const std::uint32_t duration_ms, const epoc::mmf_sample_rate rate) {
+  NGAGE_COVERAGE_LOG();
         static constexpr std::uint64_t MS_PER_SEC = 1000;
         return static_cast<std::uint32_t>(static_cast<std::uint64_t>(duration_ms * freq_enum_to_number(rate) / MS_PER_SEC));
     }
 
     inline std::uint32_t samples_to_bytes(const std::uint32_t sample_count, const epoc::mmf_capabilities &caps) {
+  NGAGE_COVERAGE_LOG();
         return caps.average_bytes_per_sample() * sample_count;
     }
 
     inline std::uint32_t duration_to_bytes(const std::uint32_t duration_ms, const epoc::mmf_capabilities &caps) {
+  NGAGE_COVERAGE_LOG();
         return duration_to_samples(duration_ms, static_cast<epoc::mmf_sample_rate>(caps.rate_)) * caps.average_bytes_per_sample();
     }
 
     std::uint32_t epoc::mmf_capabilities::average_bytes_per_sample() const {
+  NGAGE_COVERAGE_LOG();
         std::uint8_t bb = 0;
 
         switch (encoding_) {
@@ -158,11 +166,13 @@ namespace eka2l1 {
     }
 
     std::uint32_t epoc::mmf_capabilities::buffer_size_recommended() const {
+  NGAGE_COVERAGE_LOG();
         return common::align(average_bytes_per_sample() * freq_enum_to_number(static_cast<epoc::mmf_sample_rate>(rate_)) / 4, MMF_BUFFER_SIZE_ALIGN, 0);
     }
 
     mmf_dev_server::mmf_dev_server(eka2l1::system *sys)
         : service::typical_server(sys, MMF_DEV_SERVER_NAME) {
+  NGAGE_COVERAGE_LOG();
         config::state *state = sys->get_config();
         if (state && state->report_mmfdev_underflow) {
             flags_ |= FLAG_ENABLE_UNDERFLOW_REPORT;
@@ -170,6 +180,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server::connect(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         create_session<mmf_dev_server_session>(&context);
         context.complete(epoc::error_none);
     }
@@ -187,6 +198,7 @@ namespace eka2l1 {
         , right_balance_(50)
         , underflow_event_(0)
         , volume_ramp_us_(0) {
+  NGAGE_COVERAGE_LOG();
         conf_.channels_ = 1;
         conf_.rate_ = epoc::mmf_sample_rate_8000hz;
         conf_.buffer_size_ = MMF_BUFFER_SIZE_DEFAULT;
@@ -194,6 +206,7 @@ namespace eka2l1 {
     }
 
     mmf_dev_server_session::~mmf_dev_server_session() {
+  NGAGE_COVERAGE_LOG();
         mmf_dev_server *serv = server<mmf_dev_server>();
         kernel_system *kern = serv->get_kernel_object_owner();
         ntimer *timing = kern->get_ntimer();
@@ -207,6 +220,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::complete_play(const std::int32_t error) {
+  NGAGE_COVERAGE_LOG();
         stop();
 
         if (evt_msg_queue_) {
@@ -217,6 +231,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::complete_record(const std::int32_t error) {
+  NGAGE_COVERAGE_LOG();
         stop();
 
         if (evt_msg_queue_) {
@@ -227,6 +242,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::init_stream_through_state() {
+  NGAGE_COVERAGE_LOG();
         drivers::audio_driver *drv = server<mmf_dev_server>()->get_system()->get_audio_driver();
 
         switch (desired_state_) {
@@ -286,6 +302,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::max_volume(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(2);
 
@@ -301,6 +318,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::volume(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(2);
 
@@ -316,6 +334,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::set_priority_settings(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::mmf_priority_settings> pri_settings = ctx->get_argument_data_from_descriptor<epoc::mmf_priority_settings>(1);
 
         if (!pri_settings) {
@@ -328,6 +347,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::set_volume(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(1);
 
@@ -345,6 +365,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::set_gain(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(1);
 
@@ -366,6 +387,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::gain(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(2);
 
@@ -386,6 +408,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::max_gain(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(2);
 
@@ -406,6 +429,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::play_balance(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(2);
 
@@ -422,6 +446,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::set_play_balance(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(1);
 
@@ -437,6 +462,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::init3(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (stream_ && stream_->is_playing()) {
             ctx->complete(epoc::error_in_use);
             return;
@@ -484,6 +510,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::send_event_to_msg_queue(const epoc::mmf_dev_sound_queue_item &item) {
+  NGAGE_COVERAGE_LOG();
         if (!evt_msg_queue_) {
             return;
         }
@@ -492,6 +519,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::init0(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (stream_ && stream_->is_playing()) {
             ctx->complete(epoc::error_in_use);
             return;
@@ -522,6 +550,7 @@ namespace eka2l1 {
     }
 
     epoc::mmf_capabilities mmf_dev_server_session::get_caps() {
+  NGAGE_COVERAGE_LOG();
         epoc::mmf_capabilities caps;
 
         caps.channels_ = 2;
@@ -534,6 +563,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::capabilities(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(2);
 
@@ -549,6 +579,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::set_config(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(1);
 
@@ -569,6 +600,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::get_config(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(2);
 
@@ -584,6 +616,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::get_supported_input_data_types() {
+  NGAGE_COVERAGE_LOG();
         four_ccs_.clear();
         four_ccs_.push_back(PCM8_CC);
         four_ccs_.push_back(PCM16_CC);
@@ -593,12 +626,14 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::get_supported_input_data_types(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         get_supported_input_data_types();
         ctx->write_data_to_descriptor_argument<int>(2, static_cast<int>(four_ccs_.size()));
         ctx->complete(epoc::error_none);
     }
 
     void mmf_dev_server_session::copy_fourcc_array(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->write_data_to_descriptor_argument(2, reinterpret_cast<const std::uint8_t *>(four_ccs_.data()),
             static_cast<std::uint32_t>(four_ccs_.size() * sizeof(std::uint32_t)));
 
@@ -606,6 +641,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::set_volume_ramp(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(2);
 
@@ -619,11 +655,13 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::samples_played(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->write_data_to_descriptor_argument<std::uint32_t>(2, stream_->samples_played());
         ctx->complete(epoc::error_none);
     }
 
     void mmf_dev_server_session::stop() {
+  NGAGE_COVERAGE_LOG();
         stream_->stop();
         stream_state_ = epoc::mmf_state_idle;
 
@@ -640,15 +678,18 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::stop(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         stop();
         ctx->complete(epoc::error_none);
     }
 
     void mmf_dev_server_session::close(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         stop(ctx);
     }
 
     void mmf_dev_server_session::play_init(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (stream_state_ != epoc::mmf_state_idle) {
             if ((stream_state_ == epoc::mmf_state_playing) || (stream_state_ == epoc::mmf_state_playing_recording)) {
                 ctx->complete(epoc::error_none);
@@ -668,6 +709,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::record_init(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (stream_state_ != epoc::mmf_state_idle) {
             if ((stream_state_ == epoc::mmf_state_recording) || (stream_state_ == epoc::mmf_state_playing_recording)) {
                 ctx->complete(epoc::error_none);
@@ -687,6 +729,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::async_command(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         auto pack = ctx->get_argument_data_from_descriptor<epoc::mmf_msg_destination>(0);
         std::optional<std::string> arg1 = ctx->get_argument_value<std::string>(1);
         std::optional<std::string> arg2 = ctx->get_argument_value<std::string>(2);
@@ -695,11 +738,13 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::request_resource_notification(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_MMFAUD, "Request resource notification stubbed");
         ctx->complete(epoc::error_none);
     }
 
     void mmf_dev_server_session::cancel_complete_error(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(dev_access_lock_);
 
         finish_info_.complete(epoc::error_cancel);
@@ -707,6 +752,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::cancel_get_buffer(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(dev_access_lock_);
 
         buffer_info_.complete(epoc::error_cancel);
@@ -714,6 +760,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::deref_audio_buffer_chunk() {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = server<mmf_dev_server>()->get_kernel_object_owner();
 
         if (buffer_chunk_) {
@@ -727,6 +774,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::do_report_buffer_to_be_emptied() {
+  NGAGE_COVERAGE_LOG();
         mmf_dev_server *serv = server<mmf_dev_server>();
 
         kernel_system *kern = serv->get_kernel_object_owner();
@@ -746,6 +794,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::do_report_buffer_to_be_filled() {
+  NGAGE_COVERAGE_LOG();
         mmf_dev_server *serv = server<mmf_dev_server>();
 
         kernel_system *kern = serv->get_kernel_object_owner();
@@ -777,6 +826,7 @@ namespace eka2l1 {
     }
 
     bool mmf_dev_server_session::prepare_audio_buffer_chunk() {
+  NGAGE_COVERAGE_LOG();
         mmf_dev_server *serv = server<mmf_dev_server>();
         kernel_system *kern = serv->get_kernel_object_owner();
 
@@ -797,6 +847,7 @@ namespace eka2l1 {
     }
 
     kernel::handle mmf_dev_server_session::do_set_buffer_buf_and_get_return_value() {
+  NGAGE_COVERAGE_LOG();
         mmf_dev_server *serv = server<mmf_dev_server>();
         kernel_system *kern = serv->get_kernel_object_owner();
         epocver ver_use = kern->get_epoc_version();
@@ -842,6 +893,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::do_set_buffer_to_be_filled() {
+  NGAGE_COVERAGE_LOG();
         if (buffer_info_.empty()) {
             return;
         }
@@ -856,6 +908,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::do_submit_buffer_data_receive() {
+  NGAGE_COVERAGE_LOG();
         if (buffer_info_.empty()) {
             return;
         }
@@ -866,6 +919,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::get_buffer(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (!buffer_info_.empty()) {
             ctx->complete(epoc::error_bad_handle);
             return;
@@ -892,11 +946,13 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::complete_error(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(dev_access_lock_);
         finish_info_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
 
     void mmf_dev_server_session::record_data(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if ((stream_state_ != epoc::mmf_state_recording) && (stream_state_ != epoc::mmf_state_playing_recording)) {
             ctx->complete(epoc::error_not_supported);
             return;
@@ -909,6 +965,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::play_data(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if ((stream_state_ != epoc::mmf_state_playing) && (stream_state_ != epoc::mmf_state_playing_recording)) {
             ctx->complete(epoc::error_not_supported);
             return;
@@ -959,6 +1016,7 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx->msg->function) {
         case epoc::mmf_dev_init0:
             init0(ctx);

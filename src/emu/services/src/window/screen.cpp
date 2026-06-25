@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -41,9 +42,11 @@ namespace eka2l1::epoc {
         explicit window_drawer_walker(drivers::graphics_command_builder &builder)
             : builder_(builder)
             , total_redrawed_(0) {
+  NGAGE_COVERAGE_LOG();
         }
 
         bool do_it(window *win) {
+  NGAGE_COVERAGE_LOG();
             if (win->type != window_kind::client) {
                 return false;
             }
@@ -62,9 +65,11 @@ namespace eka2l1::epoc {
 
         explicit window_dsa_abort_walker(const std::int32_t reason)
             : reason_(reason) {
+  NGAGE_COVERAGE_LOG();
         }
 
         bool do_it(window *win) {
+  NGAGE_COVERAGE_LOG();
             if (win->type == window_kind::client) {
                 canvas_base *user = reinterpret_cast<canvas_base*>(win);
                 if (user->is_dsa_active()) {
@@ -81,26 +86,32 @@ namespace eka2l1::epoc {
     };
 
     bool focus_callback_free_check_func(screen::focus_change_callback &data) {
+  NGAGE_COVERAGE_LOG();
         return !data.second;
     }
 
     void focus_callback_free_func(screen::focus_change_callback &data) {
+  NGAGE_COVERAGE_LOG();
         data.second = nullptr;
     }
 
     bool screen_redraw_callback_free_check_func(screen::screen_redraw_callback &data) {
+  NGAGE_COVERAGE_LOG();
         return !data.second;
     }
 
     void screen_redraw_callback_free_func(screen::screen_redraw_callback &data) {
+  NGAGE_COVERAGE_LOG();
         data.second = nullptr;
     }
 
     bool screen_mode_change_callback_free_check_func(screen::screen_mode_change_callback &data) {
+  NGAGE_COVERAGE_LOG();
         return !data.second;
     }
 
     void screen_mode_change_callback_free_func(screen::screen_mode_change_callback &data) {
+  NGAGE_COVERAGE_LOG();
         data.second = nullptr;
     }
 
@@ -128,6 +139,7 @@ namespace eka2l1::epoc {
         , focus_callbacks(focus_callback_free_check_func, focus_callback_free_func)
         , screen_redraw_callbacks(screen_redraw_callback_free_check_func, screen_redraw_callback_free_func)
         , screen_mode_change_callbacks(screen_mode_change_callback_free_check_func, screen_mode_change_callback_free_func) {
+  NGAGE_COVERAGE_LOG();
         root = std::make_unique<epoc::window>(nullptr, this, nullptr);
         disp_mode = scr_conf.disp_mode;
 
@@ -143,6 +155,7 @@ namespace eka2l1::epoc {
     }
 
     static void flip_screen_image(std::uint8_t *buffer, const std::uint32_t line_pitch, const std::uint32_t line_count) {
+  NGAGE_COVERAGE_LOG();
         std::uint8_t *pitcher = new std::uint8_t[line_pitch];
 
         for (std::size_t y = 0; y < line_count / 2; y++) {
@@ -155,6 +168,7 @@ namespace eka2l1::epoc {
     }
 
     void screen::sync_screen_buffer_data(drivers::graphics_driver *driver) {
+  NGAGE_COVERAGE_LOG();
         std::uint8_t *buffer_ptr = screen_buffer_ptr();
         const config::screen_mode &crrmode = current_mode();
 
@@ -168,6 +182,7 @@ namespace eka2l1::epoc {
     }
 
     bool screen::redraw(drivers::graphics_command_builder &builder, const bool need_bind) {
+  NGAGE_COVERAGE_LOG();
         if (need_update_visible_regions()) {
             recalculate_visible_regions();
         }
@@ -204,6 +219,7 @@ namespace eka2l1::epoc {
     }
 
     void screen::redraw(drivers::graphics_driver *driver) {
+  NGAGE_COVERAGE_LOG();
         if (!screen_texture) {
             set_screen_mode(nullptr, driver, crr_mode);
         }
@@ -223,6 +239,7 @@ namespace eka2l1::epoc {
     }
 
     void screen::deinit(drivers::graphics_driver *driver) {
+  NGAGE_COVERAGE_LOG();
         // Make command list first, and bind our screen bitmap
         if (driver) {
             drivers::graphics_command_builder builder;
@@ -241,6 +258,7 @@ namespace eka2l1::epoc {
     }
 
     const void screen::get_max_num_colors(int &colors, int &greys) const {
+  NGAGE_COVERAGE_LOG();
         greys = 0;
         colors = get_num_colors_from_display_mode(disp_mode);
         if (!is_display_mode_color(disp_mode)) {
@@ -250,6 +268,7 @@ namespace eka2l1::epoc {
     }
 
     void screen::resize(drivers::graphics_driver *driver, const eka2l1::vec2 &new_size) {
+  NGAGE_COVERAGE_LOG();
         // Make command list first, and bind our screen bitmap
         drivers::graphics_command_builder builder;
         bool need_bind = true;
@@ -277,6 +296,7 @@ namespace eka2l1::epoc {
     }
 
     static epoc::window_group *find_group_to_focus(epoc::window *root) {
+  NGAGE_COVERAGE_LOG();
         epoc::window_group *next_to_focus = reinterpret_cast<epoc::window_group *>(root->child);
 
         while (next_to_focus != nullptr) {
@@ -291,6 +311,7 @@ namespace eka2l1::epoc {
     }
 
     void screen::restore_from_config(drivers::graphics_driver *driver, const eka2l1::config::app_setting &setting) {
+  NGAGE_COVERAGE_LOG();
         refresh_rate = static_cast<std::uint8_t>(setting.fps);
         flags_ &= ~FLAG_SCREEN_UPSCALE_FACTOR_LOCK;
 
@@ -307,6 +328,7 @@ namespace eka2l1::epoc {
     }
 
     void screen::store_to_config(drivers::graphics_driver *driver, eka2l1::config::app_setting &setting) {
+  NGAGE_COVERAGE_LOG();
         setting.fps = refresh_rate;
 
         if (flags_ & FLAG_SCREEN_UPSCALE_FACTOR_LOCK) {
@@ -323,6 +345,7 @@ namespace eka2l1::epoc {
     }
 
     epoc::window_group *screen::update_focus(window_server *serv, epoc::window_group *closing_group) {
+  NGAGE_COVERAGE_LOG();
         epoc::window_group *old_focus = focus;
 
         // Iterate through root's childs.
@@ -390,10 +413,12 @@ namespace eka2l1::epoc {
     }
 
     epoc::window_group *screen::get_group_chain() {
+  NGAGE_COVERAGE_LOG();
         return reinterpret_cast<epoc::window_group *>(root->child);
     }
 
     void screen::fire_focus_change_callbacks(const focus_change_property property) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(screen_mutex);
 
         for (auto &callback : focus_callbacks) {
@@ -403,6 +428,7 @@ namespace eka2l1::epoc {
     }
 
     void screen::fire_screen_redraw_callbacks(const bool is_dsa) {
+  NGAGE_COVERAGE_LOG();
         for (auto &callback : screen_redraw_callbacks) {
             if (callback.second)
                 callback.second(callback.first, this, is_dsa);
@@ -410,6 +436,7 @@ namespace eka2l1::epoc {
     }
 
     void screen::fire_screen_mode_change_callbacks(const int old_mode) {
+  NGAGE_COVERAGE_LOG();
         for (auto &callback : screen_mode_change_callbacks) {
             if (callback.second)
                 callback.second(callback.first, this, old_mode);
@@ -417,6 +444,7 @@ namespace eka2l1::epoc {
     }
 
     std::size_t screen::add_focus_change_callback(void *userdata, focus_change_callback_handler handler) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(screen_mutex);
 
         focus_change_callback callback_pair = { userdata, handler };
@@ -424,11 +452,13 @@ namespace eka2l1::epoc {
     }
 
     bool screen::remove_focus_change_callback(const std::size_t cb) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(screen_mutex);
         return focus_callbacks.remove(cb);
     }
 
     std::size_t screen::add_screen_redraw_callback(void *userdata, screen_redraw_callback_handler handler) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(screen_mutex);
 
         screen_redraw_callback callback_pair = { userdata, handler };
@@ -436,11 +466,13 @@ namespace eka2l1::epoc {
     }
 
     bool screen::remove_screen_redraw_callback(const std::size_t cb) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(screen_mutex);
         return screen_redraw_callbacks.remove(cb);
     }
 
     std::size_t screen::add_screen_mode_change_callback(void *userdata, screen_mode_change_callback_handler handler) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(screen_mutex);
 
         screen_mode_change_callback callback_pair = { userdata, handler };
@@ -448,16 +480,19 @@ namespace eka2l1::epoc {
     }
 
     bool screen::remove_screen_mode_change_callback(const std::size_t cb) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(screen_mutex);
         return screen_mode_change_callbacks.remove(cb);
     }
 
     void screen::abort_all_dsas(const std::int32_t reason) {
+  NGAGE_COVERAGE_LOG();
         window_dsa_abort_walker walker(reason);
         root->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
     }
 
     void screen::set_screen_mode(window_server *winserv, drivers::graphics_driver *drv, const int mode) {
+  NGAGE_COVERAGE_LOG();
         const int old_mode = crr_mode;
         bool really_changed = false;
 
@@ -491,6 +526,7 @@ namespace eka2l1::epoc {
     }
 
     void screen::vsync(ntimer *timing, std::uint64_t &next_vsync_us) {
+  NGAGE_COVERAGE_LOG();
         const std::uint64_t tnow = common::get_current_utc_time_in_microseconds_since_epoch();
 
         std::uint64_t delta = tnow - last_vsync;
@@ -518,6 +554,7 @@ namespace eka2l1::epoc {
     }
 
     const epoc::config::screen_mode *screen::mode_info(const int number) const {
+  NGAGE_COVERAGE_LOG();
         if (number < scr_config.modes.size()) {
             return &scr_config.modes[number];
         }
@@ -526,18 +563,22 @@ namespace eka2l1::epoc {
     }
 
     const epoc::config::screen_mode &screen::current_mode() const {
+  NGAGE_COVERAGE_LOG();
         return *mode_info(crr_mode);
     }
 
     eka2l1::vec2 screen::size() const {
+  NGAGE_COVERAGE_LOG();
         return mode_info(physical_mode)->size;
     }
 
     const int screen::total_screen_mode() const {
+  NGAGE_COVERAGE_LOG();
         return static_cast<int>(scr_config.modes.size());
     }
 
     void screen::set_rotation(window_server *winserv, drivers::graphics_driver *drv, const int rot) {
+  NGAGE_COVERAGE_LOG();
         if (orientation_lock()) {
             // Feel like we are at home
             ui_rotation = rot;
@@ -554,6 +595,7 @@ namespace eka2l1::epoc {
     }
 
     void screen::set_orientation_lock(drivers::graphics_driver *drv, const bool lock) {
+  NGAGE_COVERAGE_LOG();
         if (orientation_lock() == lock) {
             return;
         }
@@ -570,6 +612,7 @@ namespace eka2l1::epoc {
     }
 
     std::uint8_t *screen::screen_buffer_ptr() {
+  NGAGE_COVERAGE_LOG();
         return reinterpret_cast<std::uint8_t *>(screen_buffer_chunk->host_base()) + sizeof(std::uint16_t) * WORD_PALETTE_ENTRIES_COUNT;
     }
 
@@ -580,9 +623,11 @@ namespace eka2l1::epoc {
         explicit window_visible_region_calc_walker(const common::region &master_region, bool trigger_redraw = true)
             : visible_left_region_(master_region)
             , trigger_redraw_(trigger_redraw) {
+  NGAGE_COVERAGE_LOG();
         }
 
         bool do_it(epoc::window *win) override {
+  NGAGE_COVERAGE_LOG();
             if (win->type == epoc::window_kind::client) {
                 epoc::canvas_base *winuser = reinterpret_cast<epoc::canvas_base*>(win);
                 common::region previous_region = winuser->visible_region;
@@ -626,6 +671,7 @@ namespace eka2l1::epoc {
     };
 
     void screen::recalculate_visible_regions(bool dont_trigger_redraw) {
+  NGAGE_COVERAGE_LOG();
         common::region master_region;
         eka2l1::rect master_rect{ eka2l1::vec2(0, 0), current_mode().size };
 
@@ -637,6 +683,7 @@ namespace eka2l1::epoc {
     }
 
     void screen::ref_dsa_usage() {
+  NGAGE_COVERAGE_LOG();
         active_dsa_count_++;
 
         if (need_update_visible_regions()) {
@@ -645,10 +692,12 @@ namespace eka2l1::epoc {
     }
 
     void screen::deref_dsa_usage() {
+  NGAGE_COVERAGE_LOG();
         active_dsa_count_--;
     }
 
     void screen::need_update_visible_regions(const bool value) {
+  NGAGE_COVERAGE_LOG();
         if (value) {
             flags_ |= FLAG_NEED_RECALC_VISIBLE;
 
@@ -661,6 +710,7 @@ namespace eka2l1::epoc {
     }
 
     void screen::try_change_display_rescale(drivers::graphics_driver *driver, const float new_scale_factor) {
+  NGAGE_COVERAGE_LOG();
         if (new_scale_factor != display_scale_factor) {
             // Resize the screen bitmap
             if (screen_texture) {
@@ -681,6 +731,7 @@ namespace eka2l1::epoc {
 
     void screen::set_native_scale_factor(drivers::graphics_driver *driver, const float new_scale_factor_x,
         const float new_scale_factor_y) {
+  NGAGE_COVERAGE_LOG();
         if (logic_scale_factor_x != new_scale_factor_x) {
             logic_scale_factor_x = new_scale_factor_x;
         }

@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2021 EKA2L1 Team
  * 
@@ -22,6 +23,7 @@
 
 namespace eka2l1::epoc::socket {
     std::unique_ptr<connection> generic_connect_agent::start_connection(conn_preferences &prefs) {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Starting new connection unimplemented, null stubbing");
         return nullptr;
     }

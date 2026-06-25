@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -28,6 +29,7 @@ namespace eka2l1::epoc {
         : client(client)
         , scr(scr)
         , id(0) {
+  NGAGE_COVERAGE_LOG();
         if (client) {
             id = client->get_ws().next_uid();
         } else {
@@ -37,6 +39,7 @@ namespace eka2l1::epoc {
     }
 
     bool window_client_obj::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_WINDOW, "Unimplemented command handler for object with handle: 0x{:x}", cmd.obj_handle);
         return false;
     }

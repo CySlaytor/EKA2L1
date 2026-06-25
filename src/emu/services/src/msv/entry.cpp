@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -42,6 +43,7 @@ namespace eka2l1::epoc::msv {
         , rom_drv_(drive_z)
         , preferred_lang_(preferred_lang)
         , msg_dir_(msg_folder) {
+  NGAGE_COVERAGE_LOG();
         drive_number drv_target = drive_z;
 
         for (drive_number drv = drive_z; drv >= drive_a; drv--) {
@@ -66,6 +68,7 @@ namespace eka2l1::epoc::msv {
     }
 
     entry_indexer::~entry_indexer() {
+  NGAGE_COVERAGE_LOG();
         while (!folders_.empty()) {
             visible_folder *ff = E_LOFF(folders_.first()->deque(), visible_folder, indexer_link_);
             delete ff;
@@ -73,6 +76,7 @@ namespace eka2l1::epoc::msv {
     }
 
     static bool msv_entry_comparator(const entry &lhs, const entry &rhs) {
+  NGAGE_COVERAGE_LOG();
         return (lhs.id_ & 0x0FFFFFFF) < (rhs.id_ & 0x0FFFFFFF);
     }
 
@@ -84,6 +88,7 @@ namespace eka2l1::epoc::msv {
     };
 
     std::u16string get_folder_name(const std::uint32_t id, const msv_folder_type type) {
+  NGAGE_COVERAGE_LOG();
         if ((id == 0) && (type == MSV_FOLDER_TYPE_SERVICE)) {
             return u"";
         }
@@ -109,6 +114,7 @@ namespace eka2l1::epoc::msv {
 
     std::optional<std::u16string> entry_indexer::get_entry_data_directory(const std::uint32_t id, const std::uint32_t type,
         const std::uint32_t owning_service) {
+  NGAGE_COVERAGE_LOG();
         if ((type == MSV_SERVICE_UID) || (type == MTM_SERVICE_UID_ROOT)) {
             return msg_dir_;
         }
@@ -124,6 +130,7 @@ namespace eka2l1::epoc::msv {
     }
 
     std::optional<std::u16string> entry_indexer::get_entry_data_file(entry *ent) {
+  NGAGE_COVERAGE_LOG();
         if (!ent) {
             return std::nullopt;
         }
@@ -140,6 +147,7 @@ namespace eka2l1::epoc::msv {
     }
 
     bool entry_indexer::create_standard_entries(drive_number crr_drive) {
+  NGAGE_COVERAGE_LOG();
         std::u16string DEFAULT_STANDARD_ENTRIES_FILE = u"!:\\resource\\messaging\\msgs.rsc";
         DEFAULT_STANDARD_ENTRIES_FILE[0] = drive_to_char16(rom_drv_);
 
@@ -238,6 +246,7 @@ namespace eka2l1::epoc::msv {
     }
     
     entry *entry_indexer::add_entry(entry &ent) {
+  NGAGE_COVERAGE_LOG();
         // Provide that the proper visible folder has been found
         common::double_linked_queue_element *first = folders_.first();
         common::double_linked_queue_element *end = folders_.end();
@@ -269,6 +278,7 @@ namespace eka2l1::epoc::msv {
     }
     
     entry *entry_indexer::get_entry(const std::uint32_t id) {
+  NGAGE_COVERAGE_LOG();
         if (id == MSV_ROOT_ID_VALUE) {
             return &root_entry_;
         }
@@ -294,6 +304,7 @@ namespace eka2l1::epoc::msv {
     }
 
     static void grab_children_copy_relocated_ignorance_way(visible_folder *folder, const std::uint32_t parent_id, const std::uint32_t new_folder_id, std::vector<entry> &entries) {
+  NGAGE_COVERAGE_LOG();
         entry *ent = folder->get_entry(parent_id);
         if (!ent) {
             return;
@@ -318,6 +329,7 @@ namespace eka2l1::epoc::msv {
     }
  
     bool entry_indexer::change_entry(entry &ent) {
+  NGAGE_COVERAGE_LOG();
         common::double_linked_queue_element *first = folders_.first();
         common::double_linked_queue_element *end = folders_.end();
 
@@ -410,6 +422,7 @@ namespace eka2l1::epoc::msv {
     }
 
     bool entry_indexer::owning_service(const std::uint32_t id, std::uint32_t &owning) {
+  NGAGE_COVERAGE_LOG();
         if (id == MSV_ROOT_ID_VALUE) {
             return MSV_ROOT_ID_VALUE;
         }
@@ -435,6 +448,7 @@ namespace eka2l1::epoc::msv {
 
     bool entry_indexer::get_children_id(const std::uint32_t vf, const std::uint32_t parent_id,
         std::vector<std::uint32_t> &children_ids) {
+  NGAGE_COVERAGE_LOG();
         common::double_linked_queue_element *first = folders_.first();
         common::double_linked_queue_element *end = folders_.end();
 
@@ -479,6 +493,7 @@ namespace eka2l1::epoc::msv {
     }
 
     bool entry_indexer::move_entry_to_new_folder(entry *ent, const std::uint32_t new_parent, const std::uint32_t new_folder) {
+  NGAGE_COVERAGE_LOG();
         common::double_linked_queue_element *first = folders_.first();
         common::double_linked_queue_element *end = folders_.end();
 
@@ -549,6 +564,7 @@ namespace eka2l1::epoc::msv {
         , query_child_entries_stmt_(nullptr)
         , query_child_ids_stmt_(nullptr)
         , id_counter_(MSV_FIRST_FREE_ENTRY_ID - 1) {
+  NGAGE_COVERAGE_LOG();
         bool newly_created = false;
 
         if (load_or_create_databases(newly_created)) {
@@ -560,6 +576,7 @@ namespace eka2l1::epoc::msv {
     }
 
     sql_entry_indexer::~sql_entry_indexer() {
+  NGAGE_COVERAGE_LOG();
         if (create_entry_stmt_) {
             sqlite3_finalize(create_entry_stmt_);
         }
@@ -596,6 +613,7 @@ namespace eka2l1::epoc::msv {
     static constexpr std::uint32_t MSV_SQL_DATABASE_VERSION = 2;
     
     bool sql_entry_indexer::load_or_create_databases(bool &newly_created) {
+  NGAGE_COVERAGE_LOG();
         newly_created = false;
 
         std::u16string vert_path = eka2l1::add_path(msg_dir_, u"messaging.db");
@@ -685,6 +703,7 @@ namespace eka2l1::epoc::msv {
     }
     
     msv_id sql_entry_indexer::get_suitable_visible_parent_id(const msv_id parent_id) {
+  NGAGE_COVERAGE_LOG();
         // Try to find the parent entry in cache first
         entry *parent_ent = entry_indexer::get_entry(parent_id);
         if (parent_ent) {
@@ -730,6 +749,7 @@ namespace eka2l1::epoc::msv {
     }
 
     bool sql_entry_indexer::add_or_change_entry(entry &ent, entry *&result, const bool is_add) {
+  NGAGE_COVERAGE_LOG();
         sqlite3_stmt *target_stmt = nullptr;
 
         if (is_add) {
@@ -882,6 +902,7 @@ namespace eka2l1::epoc::msv {
     }
     
     void sql_entry_indexer::change_all_children_to_new_folder(const std::uint32_t visible_folder, const std::uint32_t parent_id, const std::uint32_t new_folder) {
+  NGAGE_COVERAGE_LOG();
         // Need to apply this changes to the children too
         // CTE seems to be limited to max 16bit, assume we don't spam thousand of messages
         // Can just use a list
@@ -910,6 +931,7 @@ namespace eka2l1::epoc::msv {
     }
 
     entry *sql_entry_indexer::add_entry(entry &ent) {
+  NGAGE_COVERAGE_LOG();
         entry *result = nullptr;
 
         if (!add_or_change_entry(ent, result, true)) {
@@ -920,11 +942,13 @@ namespace eka2l1::epoc::msv {
     }
 
     bool sql_entry_indexer::change_entry(entry &ent) {
+  NGAGE_COVERAGE_LOG();
         entry *result = nullptr;
         return add_or_change_entry(ent, result, false);
     }
 
     void sql_entry_indexer::fill_entry_information(entry &the_entry, sqlite3_stmt *stmt, const bool have_extra_id) {
+  NGAGE_COVERAGE_LOG();
         the_entry.parent_id_ = static_cast<std::int32_t>(sqlite3_column_int(stmt, 0));
         the_entry.service_id_ = static_cast<std::uint32_t>(sqlite3_column_int(stmt, 1));
         the_entry.mtm_uid_ = static_cast<std::uint32_t>(sqlite3_column_int(stmt, 2));
@@ -950,6 +974,7 @@ namespace eka2l1::epoc::msv {
     }
 
     entry *sql_entry_indexer::get_entry(const std::uint32_t id) {
+  NGAGE_COVERAGE_LOG();
         // Lookup in the cache first
         entry *result = entry_indexer::get_entry(id);
         if (!result) {
@@ -991,6 +1016,7 @@ namespace eka2l1::epoc::msv {
     }
 
     bool sql_entry_indexer::collect_children_entries(const msv_id parent_id, std::vector<entry> &entries) {
+  NGAGE_COVERAGE_LOG();
         if (!query_child_entries_stmt_) {
             static const char *QUERY_CHILD_ENTRIES_STM_STR = "SELECT parentId, serviceId, mtmId, type, date, data, size, error, mtmData1,"
                     "mtmData2, mtmData3, relatedId, bioType, pcSyncCount, reserved, visibleParent,"
@@ -1033,6 +1059,7 @@ namespace eka2l1::epoc::msv {
     }
 
     std::vector<entry *> sql_entry_indexer::get_entries_by_parent(const std::uint32_t parent_id) {
+  NGAGE_COVERAGE_LOG();
         visible_folder_children_query_error error = visible_folder_children_query_ok;
         std::vector<entry*> entries;
 
@@ -1130,6 +1157,7 @@ namespace eka2l1::epoc::msv {
     
     bool sql_entry_indexer::get_children_id(const std::uint32_t visible_folder, const std::uint32_t parent_id,
         std::vector<std::uint32_t> &children_ids) {
+  NGAGE_COVERAGE_LOG();
         if (entry_indexer::get_children_id(visible_folder, parent_id, children_ids)) {
             return true;
         }
@@ -1167,6 +1195,7 @@ namespace eka2l1::epoc::msv {
     }
 
     void sql_entry_indexer::recursive_children_ids_same_folder(const std::uint32_t visible_folder, const std::uint32_t parent_id, std::vector<std::uint32_t> &children_ids) {
+  NGAGE_COVERAGE_LOG();
         std::vector<std::uint32_t> current_child_list;
         get_children_id(visible_folder, parent_id, current_child_list);
 
@@ -1178,6 +1207,7 @@ namespace eka2l1::epoc::msv {
     }
 
     bool sql_entry_indexer::move_entry(const std::uint32_t id, const std::uint32_t new_parent) {
+  NGAGE_COVERAGE_LOG();
         entry *ent = get_entry(id);
 
         if (!ent) {

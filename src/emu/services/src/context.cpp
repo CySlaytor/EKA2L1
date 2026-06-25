@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2018 EKA2L1 Team
  * 
@@ -32,9 +33,11 @@
 namespace eka2l1 {
     namespace service {
         ipc_context::ipc_context() {
+  NGAGE_COVERAGE_LOG();
         }
 
         ipc_context::~ipc_context() {
+  NGAGE_COVERAGE_LOG();
             if (auto_deref)
                 msg->unref();
         }
@@ -42,6 +45,7 @@ namespace eka2l1 {
         template <typename T>
         std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>, std::optional<T>>
         get_integral_arg_from_msg(ipc_msg_ptr &msg, const int idx) {
+  NGAGE_COVERAGE_LOG();
             if (idx >= 4) {
                 return std::nullopt;
             }
@@ -51,46 +55,55 @@ namespace eka2l1 {
 
         template <>
         std::optional<std::uint8_t> ipc_context::get_argument_value(const int idx) {
+  NGAGE_COVERAGE_LOG();
             return get_integral_arg_from_msg<std::uint8_t>(msg, idx);
         }
 
         template <>
         std::optional<std::uint16_t> ipc_context::get_argument_value(const int idx) {
+  NGAGE_COVERAGE_LOG();
             return get_integral_arg_from_msg<std::uint16_t>(msg, idx);
         }
 
         template <>
         std::optional<std::uint32_t> ipc_context::get_argument_value(const int idx) {
+  NGAGE_COVERAGE_LOG();
             return get_integral_arg_from_msg<std::uint32_t>(msg, idx);
         }
 
         template <>
         std::optional<std::int8_t> ipc_context::get_argument_value(const int idx) {
+  NGAGE_COVERAGE_LOG();
             return get_integral_arg_from_msg<std::int8_t>(msg, idx);
         }
 
         template <>
         std::optional<std::int16_t> ipc_context::get_argument_value(const int idx) {
+  NGAGE_COVERAGE_LOG();
             return get_integral_arg_from_msg<std::int16_t>(msg, idx);
         }
 
         template <>
         std::optional<std::int32_t> ipc_context::get_argument_value(const int idx) {
+  NGAGE_COVERAGE_LOG();
             return get_integral_arg_from_msg<std::int32_t>(msg, idx);
         }
 
         template <>
         std::optional<float> ipc_context::get_argument_value(const int idx) {
+  NGAGE_COVERAGE_LOG();
             return get_integral_arg_from_msg<float>(msg, idx);
         }
 
         template <>
         std::optional<double> ipc_context::get_argument_value(const int idx) {
+  NGAGE_COVERAGE_LOG();
             return get_integral_arg_from_msg<double>(msg, idx);
         }
 
         template <>
         std::optional<std::u16string> ipc_context::get_argument_value(const int idx) {
+  NGAGE_COVERAGE_LOG();
             if (idx >= 4) {
                 return std::nullopt;
             }
@@ -115,6 +128,7 @@ namespace eka2l1 {
 
         template <>
         std::optional<std::string> ipc_context::get_argument_value(const int idx) {
+  NGAGE_COVERAGE_LOG();
             if (idx >= 4) {
                 return std::nullopt;
             }
@@ -139,6 +153,7 @@ namespace eka2l1 {
         }
 
         void ipc_context::complete(int res) {
+  NGAGE_COVERAGE_LOG();
             if (msg->request_sts) {
                 kernel_system *kern = sys->get_kernel_system();
                 (msg->request_sts.get(msg->own_thr->owning_process()))->set(res, kern->is_eka1());
@@ -152,10 +167,12 @@ namespace eka2l1 {
         }
 
         int ipc_context::flag() const {
+  NGAGE_COVERAGE_LOG();
             return msg->args.flag;
         }
 
         bool ipc_context::write_arg(int idx, uint32_t data) {
+  NGAGE_COVERAGE_LOG();
             if (idx >= 0 && idx < 4 && (sys->get_kernel_system()->is_eka1() || (msg->args.get_arg_type(idx) == ipc_arg_type::handle))) {
                 msg->args.args[idx] = data;
                 return true;
@@ -165,6 +182,7 @@ namespace eka2l1 {
         }
 
         bool ipc_context::write_arg(int idx, const std::u16string &data) {
+  NGAGE_COVERAGE_LOG();
             if (idx >= 4) {
                 return false;
             }
@@ -183,6 +201,7 @@ namespace eka2l1 {
         }
 
         bool ipc_context::write_data_to_descriptor_argument(int idx, const uint8_t *data, uint32_t len, int *err_code, const bool auto_shrink_to_fit) {
+  NGAGE_COVERAGE_LOG();
             if (idx >= 4 || idx < 0) {
                 return false;
             }
@@ -236,6 +255,7 @@ namespace eka2l1 {
         }
 
         std::uint8_t *ipc_context::get_descriptor_argument_ptr(int idx) {
+  NGAGE_COVERAGE_LOG();
             const ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
             if (sys->get_kernel_system()->is_eka1() || ((int)arg_type & (int)ipc_arg_type::flag_des)) {
@@ -253,6 +273,7 @@ namespace eka2l1 {
         }
 
         std::size_t ipc_context::get_argument_max_data_size(int idx) {
+  NGAGE_COVERAGE_LOG();
             if (idx >= 4 || idx < 0) {
                 return static_cast<std::size_t>(-1);
             }
@@ -279,6 +300,7 @@ namespace eka2l1 {
         }
 
         std::size_t ipc_context::get_argument_data_size(int idx) {
+  NGAGE_COVERAGE_LOG();
             if (idx >= 4 || idx < 0) {
                 return static_cast<std::size_t>(-1);
             }
@@ -305,6 +327,7 @@ namespace eka2l1 {
         }
 
         bool ipc_context::set_descriptor_argument_length(const int idx, const std::uint32_t len) {
+  NGAGE_COVERAGE_LOG();
             ipc_arg_type arg_type = msg->args.get_arg_type(idx);
 
             if (sys->get_kernel_system()->is_eka1() || ((int)arg_type & (int)ipc_arg_type::flag_des)) {
@@ -319,20 +342,24 @@ namespace eka2l1 {
         }
 
         bool ipc_context::satisfy(epoc::security_policy &policy, epoc::security_info *missing) {
+  NGAGE_COVERAGE_LOG();
             return msg->own_thr->owning_process()->satisfy(policy, missing);
         }
 
         void server::connect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
             ctx.complete(0);
         }
 
         void server::disconnect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
             ctx.complete(0);
         }
 
         // Processed asynchronously, use for HLE service where accepted function
         // is fetched imm
         void server::process_accepted_msg() {
+  NGAGE_COVERAGE_LOG();
             ipc_msg_ptr process_msg = nullptr;
             receive(process_msg);
 

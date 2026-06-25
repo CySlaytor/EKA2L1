@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2021 EKA2L1 Team
  * 
@@ -29,9 +30,11 @@ namespace eka2l1 {
     nifman_server::nifman_server(eka2l1::system *sys)
         : service::typical_server(sys, "NifmanServer")
         , sock_serv_(nullptr) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void nifman_server::connect(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         if (!sock_serv_) {
             sock_serv_ = reinterpret_cast<socket_server *>(kern->get_by_name<service::server>(
                 get_socket_server_name_by_epocver(kern->get_epoc_version())));
@@ -46,9 +49,11 @@ namespace eka2l1 {
         : service::typical_session(serv, ss_id, client_version)
         , agent_(nullptr)
         , conn_(nullptr) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void nifman_client_session::open(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> agt_name = ctx->get_argument_value<std::u16string>(0);
         if (!agt_name.has_value()) {
             ctx->complete(epoc::error_argument);
@@ -76,6 +81,7 @@ namespace eka2l1 {
     }
 
     void nifman_client_session::get_active_settings(service::ipc_context *ctx, const epoc::socket::setting_type type) {
+  NGAGE_COVERAGE_LOG();
         if (!conn_) {
             // TODO: In morden RConnection docs (the replacement of this server), it said that you can't query
             // settings when no connection is yet to be established... Or no call Start()
@@ -115,6 +121,7 @@ namespace eka2l1 {
     }
 
     void nifman_client_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx->msg->function) {
         case nifman_open:
             open(ctx);

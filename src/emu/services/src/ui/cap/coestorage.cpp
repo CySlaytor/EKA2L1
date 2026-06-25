@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -31,9 +32,11 @@ namespace eka2l1::epoc {
         , fep_repo_(nullptr)
         , dmngr_(mngr)
         , io_(io) {
+  NGAGE_COVERAGE_LOG();
     }
 
     eka2l1::central_repo *coe_data_storage::fep_repo() {
+  NGAGE_COVERAGE_LOG();
         if (!fep_repo_) {
             fep_repo_ = serv_->load_repo_with_lookup(io_, dmngr_, FEP_FRAMEWORK_REPO_UID);
         }
@@ -43,6 +46,7 @@ namespace eka2l1::epoc {
 
     static eka2l1::central_repo_entry *get_ccr_entry(eka2l1::central_repo *rep, const std::uint32_t key,
         const eka2l1::central_repo_entry_type target) {
+  NGAGE_COVERAGE_LOG();
         if (!rep) {
             return nullptr;
         }
@@ -56,6 +60,7 @@ namespace eka2l1::epoc {
     }
 
     std::optional<std::u16string> coe_data_storage::default_fep() {
+  NGAGE_COVERAGE_LOG();
         eka2l1::central_repo *rep = fep_repo();
         eka2l1::central_repo_entry *ccre = get_ccr_entry(rep, fep_framework_repo_key_default_fepid,
             eka2l1::central_repo_entry_type::string);
@@ -68,6 +73,7 @@ namespace eka2l1::epoc {
     }
 
     void coe_data_storage::default_fep(const std::u16string &the_fep) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::central_repo *rep = fep_repo();
         eka2l1::central_repo_entry *ccre = get_ccr_entry(rep, fep_framework_repo_key_default_fepid,
             eka2l1::central_repo_entry_type::string);
@@ -89,6 +95,7 @@ namespace eka2l1::epoc {
     }
 
     void coe_data_storage::serialize() {
+  NGAGE_COVERAGE_LOG();
         eka2l1::central_repo *rep = fep_repo();
 
         if (rep) {

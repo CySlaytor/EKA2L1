@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -28,9 +29,11 @@ namespace eka2l1::epoc {
     anim_dll::anim_dll(window_server_client_ptr client, screen *scr, anim_executor_factory *factory)
         : window_client_obj(client, scr)
         , factory_(factory) {
+  NGAGE_COVERAGE_LOG();
     }
 
     bool anim_dll::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_anim_dll_opcode op = static_cast<decltype(op)>(cmd.header.op);
         bool quit = false;
 

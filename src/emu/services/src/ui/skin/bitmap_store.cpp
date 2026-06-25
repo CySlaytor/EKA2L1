@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team.
  * 
@@ -24,10 +25,12 @@
 namespace eka2l1::epoc {
 
     void akn_skin_bitmap_store::store_bitmap(fbsbitmap *bitmap) {
+  NGAGE_COVERAGE_LOG();
         bitmap_vector.emplace_back(bitmap);
     }
 
     void akn_skin_bitmap_store::remove_stored_bitmap(const std::uint32_t bmp_handle) {
+  NGAGE_COVERAGE_LOG();
         if (!bmp_handle)
             return;
 
@@ -40,6 +43,7 @@ namespace eka2l1::epoc {
     }
 
     void akn_skin_bitmap_store::destroy_bitmaps() {
+  NGAGE_COVERAGE_LOG();
         bitmap_vector.clear();
         bitmap_vector.shrink_to_fit();
     }

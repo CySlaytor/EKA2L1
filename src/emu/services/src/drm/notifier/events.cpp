@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -22,10 +23,12 @@
 
 namespace eka2l1::drm {
     bool notifier_event::internalize(common::ro_stream &stream) {
+  NGAGE_COVERAGE_LOG();
         return (stream.read(&type_, sizeof(type_)) == sizeof(type_));
     }
 
     static std::optional<std::string> read_content_id_string(common::ro_stream &stream) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t len = 0;
 
         if (stream.read(&len, 4) != 4) {
@@ -43,6 +46,7 @@ namespace eka2l1::drm {
     }
 
     bool notifier_add_remove_event::internalize(common::ro_stream &stream) {
+  NGAGE_COVERAGE_LOG();
         if (!notifier_event::internalize(stream)) {
             return false;
         }
@@ -61,6 +65,7 @@ namespace eka2l1::drm {
     }
 
     bool notifier_modify_event::internalize(common::ro_stream &stream) {
+  NGAGE_COVERAGE_LOG();
         if (!notifier_event::internalize(stream)) {
             return false;
         }
@@ -79,6 +84,7 @@ namespace eka2l1::drm {
     }
 
     bool notifier_time_change_event::internalize(common::ro_stream &stream) {
+  NGAGE_COVERAGE_LOG();
         if (!notifier_event::internalize(stream)) {
             return false;
         }

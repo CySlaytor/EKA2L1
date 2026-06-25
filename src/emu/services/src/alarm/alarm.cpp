@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -25,6 +26,7 @@
 
 namespace eka2l1 {
     static void populate_alarm_ids(common::chunkyseri &seri, std::vector<std::int32_t> &alarm_ids) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t property_count = static_cast<std::uint32_t>(alarm_ids.size());
         seri.absorb(property_count);
 
@@ -35,9 +37,11 @@ namespace eka2l1 {
 
     alarm_server::alarm_server(eka2l1::system *sys)
         : service::typical_server(sys, "!AlarmServer") {
+  NGAGE_COVERAGE_LOG();
     }
 
     void alarm_server::connect(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         create_session<alarm_session>(&context);
         context.complete(epoc::error_none);
     }
@@ -46,10 +50,12 @@ namespace eka2l1 {
         epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version)
         , change_alarm_id_fill(nullptr) {
+  NGAGE_COVERAGE_LOG();
         transfer_buf.reserve(100);
     }
 
     void alarm_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx->msg->function) {
         case alarm_get_alarm_id_list_by_state:
             get_alarm_id_list_by_state(ctx);
@@ -74,6 +80,7 @@ namespace eka2l1 {
     }
 
     void alarm_session::get_alarm_id_list_by_state(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         auto state = ctx->get_argument_value<std::uint32_t>(0);
 
         common::chunkyseri seri(nullptr, 0, common::chunkyseri_mode::SERI_MODE_MEASURE);
@@ -88,16 +95,19 @@ namespace eka2l1 {
     }
 
     void alarm_session::fetch_transfer_buffer(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&transfer_buf[0]), static_cast<std::uint32_t>(transfer_buf.size()));
         ctx->complete(epoc::error_none);
     }
 
     void alarm_session::notify_change(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         change_alarm_id_fill = ctx->get_descriptor_argument_ptr(0);
         change_notify_info = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
 
     void alarm_session::notify_change_cancel(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         change_notify_info.complete(epoc::error_cancel);
         ctx->complete(epoc::error_none);
     }

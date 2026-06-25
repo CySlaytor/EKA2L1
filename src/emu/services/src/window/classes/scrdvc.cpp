@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -32,6 +33,7 @@
 
 namespace eka2l1::epoc {
     static epoc::graphics_orientation get_orientation_from_rotation(const int rotate) {
+  NGAGE_COVERAGE_LOG();
         switch (rotate) {
         case 0:
             return epoc::graphics_orientation::normal;
@@ -59,6 +61,7 @@ namespace eka2l1::epoc {
     }
 
     void screen_device::set_screen_mode_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         pixel_twips_and_rot *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
 
         for (int i = 0; i < scr->scr_config.modes.size(); i++) {
@@ -78,6 +81,7 @@ namespace eka2l1::epoc {
     }
 
     void screen_device::set_screen_mode_and_rotation2(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         pixel_and_rot *info = reinterpret_cast<decltype(info)>(cmd.data_ptr);
 
         for (int i = 0; i < scr->scr_config.modes.size(); i++) {
@@ -97,11 +101,13 @@ namespace eka2l1::epoc {
     }
 
     void screen_device::set_screen_mode(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         const int mode = *reinterpret_cast<int *>(cmd.data_ptr);
         scr->set_screen_mode(&client->get_ws(), client->get_ws().get_graphics_driver(), mode);
     }
 
     void screen_device::get_screen_size_mode_list(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         std::vector<int> modes;
 
         for (int i = 0; i < scr->scr_config.modes.size(); i++) {
@@ -116,6 +122,7 @@ namespace eka2l1::epoc {
 
     void screen_device::get_screen_size_mode_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd,
         const bool bonus_the_twips) {
+  NGAGE_COVERAGE_LOG();
         const int mode = *reinterpret_cast<int *>(cmd.data_ptr);
         const epoc::config::screen_mode *scr_mode = scr->mode_info(mode);
 
@@ -144,6 +151,7 @@ namespace eka2l1::epoc {
 
     void screen_device::get_default_screen_size_and_rotation(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd,
         const bool twips) {
+  NGAGE_COVERAGE_LOG();
         const epoc::config::screen_mode &mode = scr->current_mode();
         if (twips) {
             pixel_twips_and_rot data;
@@ -164,18 +172,21 @@ namespace eka2l1::epoc {
     }
 
     void screen_device::get_default_screen_mode_origin(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // On emulator there is no physical scale nor coordinate
         ctx.write_data_to_descriptor_argument<eka2l1::vec2>(reply_slot, eka2l1::vec2(0, 0));
         ctx.complete(0);
     }
 
     void screen_device::get_current_screen_mode_scale(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // On emulator there is no physical scale nor coordinate
         ctx.write_data_to_descriptor_argument<eka2l1::vec2>(reply_slot, eka2l1::vec2(1, 1));
         ctx.complete(0);
     }
 
     void screen_device::is_screen_mode_dynamic(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         const std::int32_t mode_invest = *reinterpret_cast<const std::int32_t *>(cmd.data_ptr);
         const epoc::config::screen_mode *mode = scr->mode_info((mode_invest < 0) ? local_screen_mode_ : mode_invest);
 
@@ -195,6 +206,7 @@ namespace eka2l1::epoc {
     }
 
     void screen_device::get_rotation_list(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // Each bit corresponds to its ordinal in graphics_orientation enum
         std::int32_t mode_list = 0;
 
@@ -210,6 +222,7 @@ namespace eka2l1::epoc {
     }
 
     void screen_device::set_app_screen_mode(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         int mode = *reinterpret_cast<int*>(cmd.data_ptr);
         if (mode >= scr->total_screen_mode()) {
             LOG_ERROR(SERVICE_WINDOW, "Trying to set screen mode number out of range!");
@@ -221,6 +234,7 @@ namespace eka2l1::epoc {
     }
 
     bool screen_device::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_screen_device_opcode op = static_cast<decltype(op)>(cmd.header.op);
         bool quit = false;
 

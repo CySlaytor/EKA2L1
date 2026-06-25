@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -34,10 +35,12 @@ namespace eka2l1::epoc::msv {
 
     mtm_registry::mtm_registry(io_system *io)
         : io_(io) {
+  NGAGE_COVERAGE_LOG();
         list_path_ = DEFAULT_MSG_REG_LIST_FILE;
     }
 
     mtm_registry::~mtm_registry() {
+  NGAGE_COVERAGE_LOG();
         for (mtm_group &group : groups_) {
             mtm_component *next_comp = group.comps_.next_;
             while (next_comp) {
@@ -50,6 +53,7 @@ namespace eka2l1::epoc::msv {
     }
 
     bool mtm_registry::install_group_from_rsc(const std::u16string &path) {
+  NGAGE_COVERAGE_LOG();
         symfile rsc_file = io_->open_file(path, READ_MODE | BIN_MODE);
 
         if (!rsc_file) {
@@ -115,6 +119,7 @@ namespace eka2l1::epoc::msv {
     }
 
     bool mtm_registry::install_group(const std::u16string &path) {
+  NGAGE_COVERAGE_LOG();
         const std::u16string path_lower = common::lowercase_ucs2_string(path);
 
         // Try to find if this group is already loaded
@@ -140,6 +145,7 @@ namespace eka2l1::epoc::msv {
     }
 
     mtm_group *mtm_registry::query_mtm_group(const epoc::uid the_uid) {
+  NGAGE_COVERAGE_LOG();
         for (std::size_t i = 0; i < groups_.size(); i++) {
             if (groups_[i].mtm_uid_ == the_uid) {
                 return &groups_[i];
@@ -150,6 +156,7 @@ namespace eka2l1::epoc::msv {
     }
 
     mtm_component *mtm_registry::query_mtm_component(const epoc::uid_type &type) {
+  NGAGE_COVERAGE_LOG();
         if (type.uid1 != 0x10000079) {
             LOG_ERROR(SERVICE_MSV, "UID1 is not DLL magic (real value: 0x{:X})", type.uid1);
             return nullptr;
@@ -172,10 +179,12 @@ namespace eka2l1::epoc::msv {
     }
 
     std::vector<mtm_component *> &mtm_registry::get_components(const epoc::uid the_uid) {
+  NGAGE_COVERAGE_LOG();
         return comps_[the_uid];
     }
 
     void mtm_registry::load_mtm_list() {
+  NGAGE_COVERAGE_LOG();
         symfile list_file = io_->open_file(list_path_, READ_MODE | BIN_MODE);
 
         if (!list_file) {
@@ -194,6 +203,7 @@ namespace eka2l1::epoc::msv {
     }
 
     void mtm_registry::save_mtm_list() {
+  NGAGE_COVERAGE_LOG();
         const std::u16string list_dir = eka2l1::file_directory(list_path_);
         if (!io_->exist(list_dir)) {
             io_->create_directories(list_dir);
@@ -214,6 +224,7 @@ namespace eka2l1::epoc::msv {
     }
 
     void mtm_registry::add_entry_to_mtm_list(const std::u16string &path) {
+  NGAGE_COVERAGE_LOG();
         mtm_files_.push_back(path);
         save_mtm_list();
     }

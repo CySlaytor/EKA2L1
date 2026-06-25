@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -24,6 +25,7 @@
 
 namespace eka2l1::service {
     std::optional<epoc::version> get_server_version(kernel_system *kern, ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         epoc::version ver;
 
         if (kern->is_ipc_old()) {

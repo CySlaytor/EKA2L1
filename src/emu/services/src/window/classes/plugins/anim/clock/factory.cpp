@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2023 EKA2L1 Team
  * 
@@ -28,6 +29,7 @@ namespace eka2l1::epoc {
     };
 
     std::unique_ptr<anim_executor> clock_anim_executor_factory::new_executor(canvas_base *canvas, const std::uint32_t anim_type) {
+  NGAGE_COVERAGE_LOG();
         switch (anim_type) {
         case CLOCK_ANIM_TYPE_CLOCK:
             return std::make_unique<clock_anim_executor>(canvas);

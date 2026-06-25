@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -23,10 +24,12 @@
 namespace eka2l1::ui::view {
     event_queue::event_queue()
         : buffer_(nullptr) {
+  NGAGE_COVERAGE_LOG();
     }
 
     static void complete_write_and_notify_event(epoc::notify_info &info, std::uint8_t *dest_buffer,
         const view_event &evt) {
+  NGAGE_COVERAGE_LOG();
         // Just notify please
         info.complete(0);
 
@@ -37,6 +40,7 @@ namespace eka2l1::ui::view {
     }
 
     void event_queue::queue_event(const view_event &evt, const custom_message &msg) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(lock_);
 
         if (!nof_info_.empty()) {
@@ -53,6 +57,7 @@ namespace eka2l1::ui::view {
     }
 
     bool event_queue::hear(epoc::notify_info info, std::uint8_t *buffer) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(lock_);
 
         if (!nof_info_.empty() || buffer_) {
@@ -78,6 +83,7 @@ namespace eka2l1::ui::view {
     }
 
     void event_queue::cancel() {
+  NGAGE_COVERAGE_LOG();
         nof_info_.complete(epoc::error_cancel);
     }
 }

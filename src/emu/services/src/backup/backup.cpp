@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2022 EKA2L1 Team
  * 
@@ -24,9 +25,11 @@
 namespace eka2l1 {
     backup_old_server::backup_old_server(eka2l1::system *sys)
         : service::typical_server(sys, "BackupServer") {
+  NGAGE_COVERAGE_LOG();
     }
 
     void backup_old_server::connect(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         create_session<backup_old_session>(&context);
         context.complete(epoc::error_none);
     }
@@ -34,9 +37,11 @@ namespace eka2l1 {
     backup_old_session::backup_old_session(service::typical_server *serv, const kernel::uid ss_id,
         epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void backup_old_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx->msg->function) {
         case 0x1F:
         case 0x22:

@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -24,6 +25,7 @@
 
 namespace eka2l1::epoc::keysound {
     void context::do_it(common::chunkyseri &seri, const std::uint32_t info_count) {
+  NGAGE_COVERAGE_LOG();
         for (std::uint32_t i = 0; i < info_count; i++) {
             sound_trigger_info info;
 
@@ -45,6 +47,7 @@ namespace eka2l1::epoc::keysound {
         const std::int32_t resource_id, const std::uint32_t info_count)
         : uid_(uid)
         , rsc_id_(resource_id) {
+  NGAGE_COVERAGE_LOG();
         do_it(info_seri, info_count);
     }
 

@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -30,6 +31,7 @@
 
 namespace eka2l1 {
     std::string get_notifier_server_name_by_epocver(const epocver ver) {
+  NGAGE_COVERAGE_LOG();
         if (ver < epocver::epoc7) {
             return "Notifier";
         }
@@ -43,6 +45,7 @@ namespace eka2l1 {
     }
 
     epoc::notifier::plugin_base *notifier_server::get_plugin(const epoc::uid id) {
+  NGAGE_COVERAGE_LOG();
         auto result = std::lower_bound(plugins_.begin(), plugins_.end(), id, [](const epoc::notifier::plugin_instance &lhs, const epoc::uid rhs) {
             return lhs->unique_id() < rhs;
         });
@@ -55,6 +58,7 @@ namespace eka2l1 {
     }
 
     void notifier_server::connect(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         create_session<notifier_client_session>(&context);
         context.complete(epoc::error_none);
     }
@@ -62,9 +66,11 @@ namespace eka2l1 {
     notifier_client_session::notifier_client_session(service::typical_server *serv, const kernel::uid ss_id,
         epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void notifier_client_session::start_notifier(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::uid> plugin_uid = ctx->get_argument_value<epoc::uid>(0);
         if (!plugin_uid) {
             ctx->complete(epoc::error_argument);
@@ -98,6 +104,7 @@ namespace eka2l1 {
     }
 
     void notifier_client_session::info_print(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> to_display = ctx->get_argument_value<std::u16string>(0);
 
         if (!to_display.has_value()) {
@@ -111,6 +118,7 @@ namespace eka2l1 {
     }
 
     void notifier_client_session::notify(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> length_text_line = ctx->get_argument_value<std::uint32_t>(2);
         std::optional<std::uint32_t> length_two_buttons = ctx->get_argument_value<std::uint32_t>(3);
 
@@ -160,6 +168,7 @@ namespace eka2l1 {
     }
 
     void notifier_client_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx->msg->function) {
         case notifier_notify:
             notify(ctx);

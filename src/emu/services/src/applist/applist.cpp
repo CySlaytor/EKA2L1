@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2018 EKA2L1 Team
  * 
@@ -56,6 +57,7 @@ namespace eka2l1 {
     };
 
     static void serialize_mime_arrays(common::chunkyseri &seri) {
+  NGAGE_COVERAGE_LOG();
         utils::cardinality card(static_cast<std::uint32_t>(RECOG_MIME_TYPES.size()));
         card.serialize(seri);
 
@@ -69,6 +71,7 @@ namespace eka2l1 {
     } 
 
     static void populate_icon_sizes(common::chunkyseri &seri, apa_app_registry *reg) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t size = reg->app_icons.size();
         seri.absorb(size);
         for (const auto &icon : reg->app_icons) {
@@ -78,6 +81,7 @@ namespace eka2l1 {
     }
 
     const std::string get_app_list_server_name_by_epocver(const epocver ver) {
+  NGAGE_COVERAGE_LOG();
         if (ver < epocver::epoc81a) {
             return "AppListServer";
         }
@@ -93,15 +97,18 @@ namespace eka2l1 {
         , fbsserv(nullptr)
         , fsserv(nullptr)
         , loading_thread_pool_(std::thread::hardware_concurrency() <= 0 ? 4 : std::thread::hardware_concurrency()) {
+  NGAGE_COVERAGE_LOG();
     }
 
     applist_server::~applist_server() {
+  NGAGE_COVERAGE_LOG();
         io_system *io = sys->get_io_system();
         io->remove_drive_change_notify(drive_change_handle_);
     }
 
     bool applist_server::load_registry_oldarch(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
         const language ideal_lang) {
+  NGAGE_COVERAGE_LOG();
         symfile f = io->open_file(path, READ_MODE | BIN_MODE);
 
         if (!f) {
@@ -202,6 +209,7 @@ namespace eka2l1 {
 
     bool applist_server::load_registry(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
         const language ideal_lang) {
+  NGAGE_COVERAGE_LOG();
         // common::benchmarker marker(__FUNCTION__);
         const std::u16string nearest_path = utils::get_nearest_lang_file(io, path, ideal_lang, land_drive);
         symfile f = io->open_file(nearest_path, READ_MODE | BIN_MODE);
@@ -338,6 +346,7 @@ namespace eka2l1 {
     }
 
     bool applist_server::delete_registry(const std::u16string &rsc_path) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(list_access_mut_);
 
         auto result = std::find_if(regs.begin(), regs.end(), [rsc_path](const apa_app_registry &reg) {
@@ -353,12 +362,14 @@ namespace eka2l1 {
     }
 
     void applist_server::sort_registry_list() {
+  NGAGE_COVERAGE_LOG();
         std::sort(regs.begin(), regs.end(), [](const apa_app_registry &lhs, const apa_app_registry &rhs) {
             return lhs.mandatory_info.uid < rhs.mandatory_info.uid;
         });
     }
 
     void applist_server::remove_registries_on_drive(const drive_number drv) {
+  NGAGE_COVERAGE_LOG();
         common::erase_elements(regs, [drv](const apa_app_registry &reg) {
             return reg.land_drive == drv;
         });
@@ -369,6 +380,7 @@ namespace eka2l1 {
     static const char16_t *NEWARCH_REG_FILE_SEARCH_WILDCARD16 = u"*.r??";
 
     void applist_server::on_drive_change(void *userdata, drive_number drv, drive_action act) {
+  NGAGE_COVERAGE_LOG();
         io_system *io = reinterpret_cast<io_system *>(userdata);
         std::atomic_bool modified = false;
 
@@ -420,6 +432,7 @@ namespace eka2l1 {
 
     void applist_server::rescan_registries_on_drive_oldarch(eka2l1::io_system *io, const drive_number drv,
         std::vector<std::u16string> &register_file_paths) {
+  NGAGE_COVERAGE_LOG();
         const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\System\\Apps\\";
         auto reg_dir = io->open_dir(base_dir, {}, io_attrib_include_dir);
 
@@ -437,6 +450,7 @@ namespace eka2l1 {
 
     void applist_server::rescan_registries_on_drive_newarch(eka2l1::io_system *io, const drive_number drv,
         std::vector<std::u16string> &register_file_paths) {
+  NGAGE_COVERAGE_LOG();
         const std::u16string import_rsc_path = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\" + NEWARCH_REG_FILE_SEARCH_WILDCARD16;
         const std::u16string rom_rscs_path = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\apps\\" + NEWARCH_REG_FILE_SEARCH_WILDCARD16;
 
@@ -447,6 +461,7 @@ namespace eka2l1 {
 
     void applist_server::rescan_registries_on_drive_newarch_with_path(eka2l1::io_system *io, const drive_number drv, const std::u16string &path,
         std::vector<std::u16string> &results) {
+  NGAGE_COVERAGE_LOG();
         auto reg_dir = io->open_dir(path, {}, io_attrib_include_file);
         bool modded = false;
 
@@ -460,6 +475,7 @@ namespace eka2l1 {
     }
 
     bool applist_server::rescan_registries(eka2l1::io_system *io) {
+  NGAGE_COVERAGE_LOG();
         LOG_INFO(SERVICE_APPLIST, "Loading app registries");
 
         std::atomic_bool global_modified = false;
@@ -535,6 +551,7 @@ namespace eka2l1 {
     }
 
     int applist_server::legacy_level() {
+  NGAGE_COVERAGE_LOG();
         if (kern->get_epoc_version() < epocver::epoc7) {
             return APA_LEGACY_LEVEL_OLD;
         } else if (kern->get_epoc_version() < epocver::epoc81a) {
@@ -547,11 +564,13 @@ namespace eka2l1 {
     }
 
     void applist_server::connect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         create_session<applist_session>(&ctx);
         server::connect(ctx);
     }
 
     void applist_server::init() {
+  NGAGE_COVERAGE_LOG();
         fbsserv = reinterpret_cast<fbs_server *>(kern->get_by_name<service::server>(
             epoc::get_fbs_server_name_by_epocver(kern->get_epoc_version())));
 
@@ -564,6 +583,7 @@ namespace eka2l1 {
     }
 
     std::vector<apa_app_registry> &applist_server::get_registerations() {
+  NGAGE_COVERAGE_LOG();
         if (!(flags & AL_INITED)) {
             // Initialize
             init();
@@ -574,6 +594,7 @@ namespace eka2l1 {
     }
 
     apa_app_registry *applist_server::get_registration(const std::uint32_t uid) {
+  NGAGE_COVERAGE_LOG();
         std::unique_lock<std::mutex> guard(list_access_mut_);
 
         if (!(flags & AL_INITED)) {
@@ -597,6 +618,7 @@ namespace eka2l1 {
     }
 
     void applist_server::is_accepted_to_run(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         auto exe_name = ctx.get_argument_value<std::u16string>(0);
 
         if (!exe_name) {
@@ -609,6 +631,7 @@ namespace eka2l1 {
     }
 
     void applist_server::default_screen_number(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         const epoc::uid app_uid = *ctx.get_argument_value<epoc::uid>(0);
         apa_app_registry *reg = get_registration(app_uid);
 
@@ -621,6 +644,7 @@ namespace eka2l1 {
     }
 
     void applist_server::app_language(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_APPLIST, "AppList::AppLanguage stubbed to returns ELangEnglish");
 
         language default_lang = language::en;
@@ -630,6 +654,7 @@ namespace eka2l1 {
     }
 
     void applist_server::get_app_info(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         const epoc::uid app_uid = *ctx.get_argument_value<epoc::uid>(0);
         apa_app_registry *reg = get_registration(app_uid);
 
@@ -651,6 +676,7 @@ namespace eka2l1 {
     }
 
     void applist_server::get_app_icon_file_name(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         const epoc::uid app_uid = *ctx.get_argument_value<epoc::uid>(0);
         apa_app_registry *reg = get_registration(app_uid);
 
@@ -677,6 +703,7 @@ namespace eka2l1 {
     };
 
     void applist_server::get_app_icon(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(0);
         std::optional<std::int32_t> icon_size_width = std::nullopt;
         std::optional<std::int32_t> icon_size_height = std::nullopt;
@@ -736,6 +763,7 @@ namespace eka2l1 {
     }
 
     void applist_server::get_app_icon_sizes(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(0);
 
         if (!app_uid) {
@@ -768,6 +796,7 @@ namespace eka2l1 {
     }
 
     void applist_server::launch_app(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> cmd_line = ctx.get_argument_value<std::u16string>(0);
         if (!cmd_line) {
             LOG_ERROR(SERVICE_APPLIST, "Failed to launch a new app! Command line is not available.");
@@ -810,6 +839,7 @@ namespace eka2l1 {
     }
 
     void applist_server::is_program(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> path = ctx.get_argument_value<std::u16string>(0);
 
         if (!path.has_value()) {
@@ -829,6 +859,7 @@ namespace eka2l1 {
     }
 
     void applist_server::get_native_executable_name_if_non_native(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> path = ctx.get_argument_value<std::u16string>(1);
 
         if (!path.has_value()) {
@@ -856,6 +887,7 @@ namespace eka2l1 {
     }
 
     void applist_server::app_info_provided_by_reg_file(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(0);
         if (!app_uid.has_value()) {
             ctx.complete(epoc::error_argument);
@@ -875,6 +907,7 @@ namespace eka2l1 {
     }
 
     void applist_server::get_preferred_buf_size(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_APPLIST, "AppList::GetPreferredBufSize stubbed to 0");
 
         std::uint32_t buf_size = 0;
@@ -882,6 +915,7 @@ namespace eka2l1 {
     }
 
     void applist_server::get_app_for_document_impl(service::ipc_context &ctx, const std::u16string &path) {
+  NGAGE_COVERAGE_LOG();
         applist_app_for_document app;
         app.uid = 0;
         app.data_type.uid = 0;
@@ -910,6 +944,7 @@ namespace eka2l1 {
     }
 
     void applist_server::get_app_for_document_by_file_handle(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         session_ptr fs_target_session = ctx.sys->get_kernel_system()->get<service::session>(*(ctx.get_argument_value<std::int32_t>(2)));
         const std::uint32_t fs_file_handle = *(ctx.get_argument_value<std::uint32_t>(3));
         file *source_file = fsserv->get_file(fs_target_session->unique_id(), fs_file_handle);
@@ -923,6 +958,7 @@ namespace eka2l1 {
     }
 
     void applist_server::get_app_for_document(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> path = ctx.get_argument_value<std::u16string>(2);
         if (!path.has_value()) {
             ctx.complete(epoc::error_argument);
@@ -933,6 +969,7 @@ namespace eka2l1 {
     }
 
     std::string applist_server::recognize_data_impl(common::ro_stream &stream) {
+  NGAGE_COVERAGE_LOG();
         std::uint8_t magic4[4] = { 0, 0, 0, 0 };
 
         stream.seek(0, common::seek_where::beg);
@@ -959,6 +996,7 @@ namespace eka2l1 {
     }
 
     void applist_server::recognize_data_by_file_handle(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         session_ptr fs_target_session = ctx.sys->get_kernel_system()->get<service::session>(*(ctx.get_argument_value<std::int32_t>(1)));
         const std::uint32_t fs_file_handle = *(ctx.get_argument_value<std::uint32_t>(2));
         file *source_file = fsserv->get_file(fs_target_session->unique_id(), fs_file_handle);
@@ -988,6 +1026,7 @@ namespace eka2l1 {
     }
 
     void applist_server::get_supported_data_types_phase1(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
         serialize_mime_arrays(seri);
 
@@ -995,6 +1034,7 @@ namespace eka2l1 {
     }
 
     void applist_server::get_supported_data_types_phase2(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::uint8_t *data_ptr = ctx.get_descriptor_argument_ptr(0);
         std::size_t data_max_size = ctx.get_argument_max_data_size(0);
 
@@ -1019,6 +1059,7 @@ namespace eka2l1 {
     }
 
     void applist_server::get_capability(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         const epoc::uid app_uid = *ctx.get_argument_value<epoc::uid>(1);
         apa_app_registry *reg = get_registration(app_uid);
 
@@ -1032,6 +1073,7 @@ namespace eka2l1 {
     }
 
     void applist_server::get_app_executable_name_given_app_uid(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(2);
 
         if (!app_uid.has_value()) {
@@ -1065,9 +1107,11 @@ namespace eka2l1 {
     applist_session::applist_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver)
         : typical_session(svr, client_ss_uid, client_ver)
         , filter_method_(APP_FILTER_NONE) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void applist_session::get_filtered_apps_by_flags(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> screen_mode = ctx.get_argument_value<std::uint32_t>(0);
         std::optional<std::uint32_t> flags_mask = ctx.get_argument_value<std::uint32_t>(1);
         std::optional<std::uint32_t> flags_value = ctx.get_argument_value<std::uint32_t>(2);
@@ -1087,6 +1131,7 @@ namespace eka2l1 {
     }
 
     void applist_session::get_next_app(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         if (filter_method_ == APP_FILTER_NONE) {
             ctx.complete(epoc::error_not_ready);
             return;
@@ -1114,6 +1159,7 @@ namespace eka2l1 {
     }
 
     void applist_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const int llevel = server<applist_server>()->legacy_level();
         if (llevel == APA_LEGACY_LEVEL_OLD) {
             switch (ctx->msg->function) {
@@ -1267,6 +1313,7 @@ namespace eka2l1 {
     }
 
     bool apa_app_registry::supports_screen_mode(const int mode_num) {
+  NGAGE_COVERAGE_LOG();
         if (mode_num < 0) {
             return true;
         }
@@ -1285,6 +1332,7 @@ namespace eka2l1 {
     }
 
     void apa_app_registry::get_launch_parameter(std::u16string &native_executable_path, epoc::apa::command_line &args) {
+  NGAGE_COVERAGE_LOG();
         const std::u16string app_path = mandatory_info.app_path.to_std_string(nullptr);
 
         if (caps.flags & apa_capability::built_as_dll) {
@@ -1302,6 +1350,7 @@ namespace eka2l1 {
 
     bool applist_server::launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id,
                                     kernel::process *requester, const epoc::uid known_uid, std::function<void(kernel::process*)> app_exit_callback) {
+  NGAGE_COVERAGE_LOG();
         static constexpr std::size_t MINIMAL_LAUNCH_STACK_SIZE = 0x10000;
         static constexpr std::size_t MINIMAL_LAUNCH_STACK_SIZE_S3 = 0x80000;
 
@@ -1371,6 +1420,7 @@ namespace eka2l1 {
 
     bool applist_server::launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter, kernel::uid *thread_id,
                                     std::function<void(kernel::process*)> app_exit_callback) {
+  NGAGE_COVERAGE_LOG();
         // OPL game check
         io_system *io = sys->get_io_system();
         symfile app_file = io->open_file(registry.mandatory_info.app_path.to_std_string(nullptr), READ_MODE | BIN_MODE);
@@ -1420,6 +1470,7 @@ namespace eka2l1 {
     }
 
     std::optional<apa_app_masked_icon_bitmap> applist_server::get_icon(apa_app_registry &registry, const std::int8_t index) {
+  NGAGE_COVERAGE_LOG();
         epoc::bitwise_bitmap *real_bmp = nullptr;
         epoc::bitwise_bitmap *real_mask_bmp = nullptr;
 
@@ -1445,6 +1496,7 @@ namespace eka2l1 {
     }
 
     void applist_server::add_app_uid_to_host_launch_name(const epoc::uid app_uid, const std::u16string &host_launch_name) {
+  NGAGE_COVERAGE_LOG();
         uids_app_to_executable.emplace(app_uid, host_launch_name);
     }
 }

@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -29,10 +30,12 @@ namespace eka2l1::epoc::msv {
     static const std::uint32_t STANDARD_HEADER_UID[4] = { STORE_FILE_UID, STORE_FILE_UID, 0, 0x008D8E4B };
 
     store::store() {
+  NGAGE_COVERAGE_LOG();
 
     }
 
     bool store::read(common::ro_stream &stream) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t uid_check[4] = { 0, 0, 0, 0 };
         if (stream.read(uid_check, 4 * sizeof(std::uint32_t)) != 4 * sizeof(std::uint32_t)) {
             return false;
@@ -67,6 +70,7 @@ namespace eka2l1::epoc::msv {
     }
 
     bool store::write(common::wo_stream &stream) {
+  NGAGE_COVERAGE_LOG();
         if (stream.write(STANDARD_HEADER_UID, 4 * sizeof(std::uint32_t)) != 4 * sizeof(std::uint32_t)) {
             return false;
         }
@@ -97,10 +101,12 @@ namespace eka2l1::epoc::msv {
     }
 
     store_buffer &store::buffer_for(const std::uint32_t uid) {
+  NGAGE_COVERAGE_LOG();
         return stores_[uid];
     }
 
     bool store::buffer_exists(const std::uint32_t uid) {
+  NGAGE_COVERAGE_LOG();
         return (stores_.find(uid) != stores_.end());
     }
 }

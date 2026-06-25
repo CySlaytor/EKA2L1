@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -48,6 +49,7 @@ namespace eka2l1 {
     static const std::u16string DEFAULT_MSG_DATA_DIR_OLD = u"C:\\System\\Mail\\";
 
     std::string get_msv_server_name_by_epocver(const epocver ver) {
+  NGAGE_COVERAGE_LOG();
         if (ver < epocver::epoc81a) {
             return "MsvServer";
         }
@@ -63,6 +65,7 @@ namespace eka2l1 {
     }
 
     void msv_server::install_rom_mtm_modules() {
+  NGAGE_COVERAGE_LOG();
         io_system *io = sys->get_io_system();
         std::u16string DEFAULT_MSG_MTM_FILE_DIR;
         if (sys->get_symbian_version_use() <= epocver::eka2) {
@@ -97,16 +100,19 @@ namespace eka2l1 {
     }
     
     io_system *msv_server::get_io_system() {
+  NGAGE_COVERAGE_LOG();
         return sys->get_io_system();
     }
 
     static constexpr std::uint32_t SMS_SETTINGS_STORE_UID = 0x1000996E;
 
     void msv_server::init_sms_settings() {
+  NGAGE_COVERAGE_LOG();
         // Stubbed out: SMS module purged
     }
 
     void msv_server::init() {
+  NGAGE_COVERAGE_LOG();
         // Instantiate the message folder
         device_manager *mngr = sys->get_device_manager();
         message_folder_ = eka2l1::add_path(kern->is_eka1() ? DEFAULT_MSG_DATA_DIR_OLD : DEFAULT_MSG_DATA_DIR,
@@ -139,6 +145,7 @@ namespace eka2l1 {
     }
 
     void msv_server::connect(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         if (!inited_) {
             init();
         }
@@ -156,6 +163,7 @@ namespace eka2l1 {
     }
 
     void msv_server::queue(msv_event_data &evt) {
+  NGAGE_COVERAGE_LOG();
         // Split to multiple event in case too much
         std::vector<msv_event_data> reports;
 
@@ -188,6 +196,7 @@ namespace eka2l1 {
 
     // When using move to change parent, you are guranteed that your store is also gonna be moved
     bool msv_server::move_entry(const std::uint32_t id, const std::uint32_t new_parent_id) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t current_own_service = 0;
         std::uint32_t new_own_service = 0;
 
@@ -237,10 +246,12 @@ namespace eka2l1 {
     }
 
     void msv_server::install_factory(std::unique_ptr<epoc::msv::operation_factory> &factory) {
+  NGAGE_COVERAGE_LOG();
         factories_.push_back(std::move(factory));
     }
     
     epoc::msv::operation_factory *msv_server::get_factory(const std::uint32_t mtm_uid) {
+  NGAGE_COVERAGE_LOG();
         for (std::size_t i = 0; i < factories_.size(); i++) {
             if (factories_[i]->mtm_uid() == mtm_uid) {
                 return factories_[i].get();
@@ -251,6 +262,7 @@ namespace eka2l1 {
     }
 
     static void pad_out_data(common::chunkyseri &seri) {
+  NGAGE_COVERAGE_LOG();
         std::uint8_t padding[3];
 
         // Pad out
@@ -260,6 +272,7 @@ namespace eka2l1 {
     }
 
     void msv_server::absorb_entry_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent) {
+  NGAGE_COVERAGE_LOG();
         epoc::msv::entry_data data_str;
         if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
             data_str.data_ = ent.data_;
@@ -314,6 +327,7 @@ namespace eka2l1 {
     }
 
     void msv_server::absorb_entry_and_owning_service_id_to_buffer(common::chunkyseri &seri, epoc::msv::entry &ent, std::uint32_t &owning_service) {
+  NGAGE_COVERAGE_LOG();
         absorb_entry_to_buffer(seri, ent);
         seri.absorb(owning_service);
     }
@@ -323,9 +337,11 @@ namespace eka2l1 {
         : service::typical_session(serv, ss_id, client_version)
         , flags_(0)
         , nof_sequence_(0) {
+  NGAGE_COVERAGE_LOG();
     }
 
     static void pack_change_buffer(epoc::des8 *buf, kernel::process *pr, const msv_event_data &data) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t *buffer_raw = reinterpret_cast<std::uint32_t *>(buf->get_pointer_raw(pr));
 
         if (!buffer_raw) {
@@ -353,6 +369,7 @@ namespace eka2l1 {
     }
 
     bool msv_client_session::listen(epoc::notify_info &info, epoc::des8 *change, epoc::des8 *seq) {
+  NGAGE_COVERAGE_LOG();
         if (!msv_info_.empty()) {
             return false;
         }
@@ -382,6 +399,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::queue(msv_event_data evt) {
+  NGAGE_COVERAGE_LOG();
         nof_sequence_++;
         std::string nof_sequence_data(reinterpret_cast<const char *>(&nof_sequence_), sizeof(std::uint32_t));
 
@@ -400,6 +418,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx->msg->function) {
         case msv_get_entry:
             get_entry(ctx);
@@ -550,6 +569,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::notify_session_event(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         kernel::process *own_pr = ctx->msg->own_thr->owning_process();
         epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
 
@@ -564,6 +584,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::cancel_notify_session_event(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (!msv_info_.empty()) {
             msv_info_.complete(epoc::error_cancel);
         }
@@ -572,6 +593,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::get_message_directory(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const std::u16string folder = server<msv_server>()->message_folder();
 
         ctx->write_arg(0, folder);
@@ -579,6 +601,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::get_message_drive(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const std::u16string folder = server<msv_server>()->message_folder();
         const drive_number drv = char16_to_drive(folder[0]);
 
@@ -586,6 +609,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::set_receive_entry_events(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::int32_t> receive = ctx->get_argument_value<std::int32_t>(0);
 
         if (!receive) {
@@ -604,6 +628,7 @@ namespace eka2l1 {
     
     void absorb_command_data(common::chunkyseri &seri, std::vector<epoc::msv::msv_id> &ids, std::uint32_t &param1,
         std::uint32_t &param2) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t count = static_cast<std::uint32_t>(ids.size());
         seri.absorb(count);
 
@@ -619,6 +644,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::get_entry(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         epoc::msv::entry_indexer *indexer = server<msv_server>()->indexer_.get();
         std::optional<epoc::uid> id = ctx->get_argument_value<epoc::uid>(0);
 
@@ -678,6 +704,7 @@ namespace eka2l1 {
     };
 
     void msv_client_session::get_children(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<children_details> details = ctx->get_argument_data_from_descriptor<children_details>(0);
 
         if (!details) {
@@ -740,11 +767,13 @@ namespace eka2l1 {
     }
 
     void msv_client_session::get_notify_sequence(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->write_data_to_descriptor_argument<std::uint32_t>(0, nof_sequence_);
         ctx->complete(epoc::error_none);
     }
 
     void msv_client_session::ref_mtm_group(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::uid> uid = ctx->get_argument_value<epoc::uid>(0);
 
         if (!uid.value()) {
@@ -764,6 +793,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::unref_mtm_group(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::uid> uid = ctx->get_argument_value<epoc::uid>(0);
 
         if (!uid.value()) {
@@ -788,11 +818,13 @@ namespace eka2l1 {
     }
 
     void msv_client_session::set_as_observer_only(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         flags_ |= FLAG_OBSERVER_ONLY;
         ctx->complete(epoc::error_none);
     }
 
     void msv_client_session::fill_registered_mtm_dll_array(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> mtm_uid = ctx->get_argument_value<std::uint32_t>(0);
 
         if (!mtm_uid) {
@@ -876,6 +908,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::get_mtm_path(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::uid> uid1 = ctx->get_argument_value<epoc::uid>(0);
         std::optional<epoc::uid> uid2 = ctx->get_argument_value<epoc::uid>(1);
         std::optional<epoc::uid> uid3 = ctx->get_argument_value<epoc::uid>(2);
@@ -906,6 +939,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::set_mtm_path(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::uid> uid1 = ctx->get_argument_value<epoc::uid>(0);
         std::optional<epoc::uid> uid2 = ctx->get_argument_value<epoc::uid>(1);
         std::optional<epoc::uid> uid3 = ctx->get_argument_value<epoc::uid>(2);
@@ -932,6 +966,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::read_store(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> store_id = ctx->get_argument_value<std::uint32_t>(0);
         if (!store_id.has_value()) {
             ctx->complete(epoc::error_argument);
@@ -957,6 +992,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::lock_store(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> store_id = ctx->get_argument_value<std::uint32_t>(0);
         if (!store_id.has_value()) {
             ctx->complete(epoc::error_argument);
@@ -982,6 +1018,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::release_store(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> store_id = ctx->get_argument_value<std::uint32_t>(0);
         if (!store_id.has_value()) {
             ctx->complete(epoc::error_argument);
@@ -1008,6 +1045,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::dec_store_read_count(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> store_id = ctx->get_argument_value<std::uint32_t>(0);
         if (!store_id.has_value()) {
             ctx->complete(epoc::error_argument);
@@ -1034,10 +1072,12 @@ namespace eka2l1 {
     }
 
     void msv_client_session::will_you_take_more_work(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->complete(epoc::error_none);
     }
 
     void msv_client_session::operation_data(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
         std::uint8_t *operation_buffer_ptr = ctx->get_descriptor_argument_ptr(1);
         std::size_t operation_buffer_size = ctx->get_argument_data_size(1);
@@ -1065,6 +1105,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::command_data(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
 
         std::uint8_t *operation_buffer_ptr = ctx->get_descriptor_argument_ptr(1);
@@ -1100,6 +1141,7 @@ namespace eka2l1 {
     }
 
     bool msv_client_session::claim_operation_buffer(const std::uint32_t operation_id, epoc::msv::operation_buffer &buffer) {
+  NGAGE_COVERAGE_LOG();
         auto ite = operation_buffers_.find(operation_id);
         if (ite != operation_buffers_.end()) {
             buffer = std::move(ite->second);
@@ -1112,6 +1154,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::create_entry(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
         std::optional<std::uint32_t> process_id = ctx->get_argument_value<std::uint32_t>(1);
 
@@ -1139,6 +1182,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::change_entry(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
         std::optional<std::uint32_t> process_id = ctx->get_argument_value<std::uint32_t>(1);
 
@@ -1166,6 +1210,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::move_entries(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
 
         epoc::msv::operation_buffer buffer;
@@ -1186,6 +1231,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::operation_info(service::ipc_context *ctx, const bool is_complete, const bool is_system) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
         
         if (!operation_id.has_value()) {
@@ -1242,6 +1288,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::transfer_mtm_command(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
 
         // As reviewed in source code, the first entry will indicates which MTM DLL/ factory will be used
@@ -1315,6 +1362,7 @@ namespace eka2l1 {
     }
 
     fs_server_client *msv_client_session::make_new_fs_client(service::session *&ss) {
+  NGAGE_COVERAGE_LOG();
         msv_server *msver = server<msv_server>();
         kernel_system *kern = msver->get_kernel_object_owner();
 
@@ -1336,6 +1384,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::open_file_store_for_read(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         msv_server *msver = server<msv_server>();
         kernel_system *kern = msver->get_kernel_object_owner();
 
@@ -1391,6 +1440,7 @@ namespace eka2l1 {
     static constexpr const char16_t *TEMP_EXT_STR = u".new";
 
     void msv_client_session::open_temp_file_store(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         msv_server *msver = server<msv_server>();
         kernel_system *kern = msver->get_kernel_object_owner();
 
@@ -1446,6 +1496,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::replace_file_store(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         msv_server *msver = server<msv_server>();
 
         std::optional<std::uint32_t> id = ctx->get_argument_value<std::uint32_t>(0);
@@ -1479,6 +1530,7 @@ namespace eka2l1 {
     }
 
     static void absorb_msv_capabilities(common::chunkyseri &seri, epoc::capability_set &set) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t version = 1;
         seri.absorb(version);
 
@@ -1487,6 +1539,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::required_capabilities(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         // SendAs server use this to verify if the sender has right permission to send without
         // user consent backgroundly. If this capabilities check fails, it will use Notifier to show
         // a dialogue asking user to confirm the send.
@@ -1509,6 +1562,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::file_store_exists(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         msv_server *msver = server<msv_server>();
 
         std::optional<std::uint32_t> id = ctx->get_argument_value<std::uint32_t>(0);
@@ -1537,6 +1591,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::operation_mtm(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> id1 = ctx->get_argument_value<std::uint32_t>(0);
         std::optional<std::uint32_t> id2 = ctx->get_argument_value<std::uint32_t>(1);
 
@@ -1620,6 +1675,7 @@ namespace eka2l1 {
     }
 
     void msv_client_session::cancel_operation(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> operation_id = ctx->get_argument_value<std::uint32_t>(0);
         
         if (!operation_id.has_value()) {

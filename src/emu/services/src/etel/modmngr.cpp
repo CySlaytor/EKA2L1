@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team.
  * 
@@ -31,9 +32,11 @@
 
 namespace eka2l1::epoc::etel {
     module_manager::module_manager() {
+  NGAGE_COVERAGE_LOG();
     }
 
     bool module_manager::load_tsy(kernel_system *kern, io_system *io, const kernel::uid borrowed_session, const std::string &module_name) {
+  NGAGE_COVERAGE_LOG();
         const std::string module_lowercased = common::lowercase_string(eka2l1::replace_extension(eka2l1::filename(module_name), ""));
         auto find_result = std::find_if(loaded_.begin(), loaded_.end(), [module_lowercased](const tsy_module_info &info) {
             return info.name_ == module_lowercased;
@@ -108,6 +111,7 @@ namespace eka2l1::epoc::etel {
     }
 
     bool module_manager::close_tsy(io_system *io, const kernel::uid borrowed, const std::string &module_name) {
+  NGAGE_COVERAGE_LOG();
         const std::string module_lowercased = common::lowercase_string(eka2l1::replace_extension(eka2l1::filename(module_name), ""));
 
         auto name_res = std::find_if(loaded_.begin(), loaded_.end(), [module_lowercased](const tsy_module_info &info) {
@@ -143,6 +147,7 @@ namespace eka2l1::epoc::etel {
     }
 
     void module_manager::unload_from_sessions(io_system *io, const kernel::uid borrowed_session) {
+  NGAGE_COVERAGE_LOG();
         for (std::size_t i = 0; i < loaded_.size(); i++) {
             if (std::binary_search(loaded_[i].used_sessions_.begin(), loaded_[i].used_sessions_.end(), borrowed_session)) {
                 close_tsy(io, borrowed_session, loaded_[i].name_);
@@ -151,6 +156,7 @@ namespace eka2l1::epoc::etel {
     }
 
     std::optional<std::uint32_t> module_manager::get_entry_real_index(const std::uint32_t respective_index, const etel_entry_type type) {
+  NGAGE_COVERAGE_LOG();
         std::int32_t i = -1;
 
         while ((i != respective_index) && ((i < 0) || ((i < entries_.size()) && entries_[i].entity_->type() != type)))
@@ -164,6 +170,7 @@ namespace eka2l1::epoc::etel {
     }
 
     bool module_manager::get_entry(const std::uint32_t real_index, etel_module_entry **entry) {
+  NGAGE_COVERAGE_LOG();
         if (real_index >= entries_.size()) {
             return false;
         }
@@ -173,6 +180,7 @@ namespace eka2l1::epoc::etel {
     }
 
     bool module_manager::get_entry_by_name(const std::string &name, etel_module_entry **entry) {
+  NGAGE_COVERAGE_LOG();
         auto result = std::find_if(entries_.begin(), entries_.end(), [name](etel_module_entry &search_entry) {
             if (search_entry.entity_->type() == etel_entry_phone) {
                 etel_phone &phone = static_cast<etel_phone &>(*search_entry.entity_);
@@ -191,6 +199,7 @@ namespace eka2l1::epoc::etel {
     }
 
     std::size_t module_manager::total_entries(const etel_entry_type type) const {
+  NGAGE_COVERAGE_LOG();
         std::size_t total = 0;
 
         for (std::size_t i = 0; i < entries_.size(); i++) {

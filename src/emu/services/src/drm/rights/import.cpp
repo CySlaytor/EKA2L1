@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2022 EKA2L1 Team.
  * 
@@ -26,6 +27,7 @@
 
 namespace eka2l1::epoc::drm {
     std::optional<rights_object> parse_dr_file(pugi::xml_document &doc) {
+  NGAGE_COVERAGE_LOG();
         rights_object final_result;
         final_result.common_data_.content_hash_.resize(20, 0);
 

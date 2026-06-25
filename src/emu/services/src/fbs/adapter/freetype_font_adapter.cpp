@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
 * Copyright (c) 2019 EKA2L1 Team.
 *
@@ -30,6 +31,7 @@ namespace eka2l1::epoc::adapter {
         FT_Library lib_{};
 
         explicit freetype_lib_raii() {
+  NGAGE_COVERAGE_LOG();
             auto err = FT_Init_FreeType(&lib_);
             if (err) {
                 LOG_ERROR(SERVICE_FBS, "Failed to initialize FreeType library, error: {}", FT_Error_String(err));
@@ -37,6 +39,7 @@ namespace eka2l1::epoc::adapter {
         }
 
         ~freetype_lib_raii() {
+  NGAGE_COVERAGE_LOG();
             FT_Done_FreeType(lib_);
         }
     };
@@ -49,6 +52,7 @@ namespace eka2l1::epoc::adapter {
     // Symbian Source: https://github.com/SymbianSource/oss.FCL.sf.os.textandloc/blob/59666d6704fee305b0fdd74974f7b4f42659c6a6/fontservices/freetypefontrasteriser/src/FTRAST2.CPP#L934
     static int derive_design_height_from_max_height(const FT_Face& aFace, int aMaxHeightInPixel)
     {
+  NGAGE_COVERAGE_LOG();
         const int boundingBoxHeightInFontUnit = aFace->bbox.yMax - aFace->bbox.yMin;
         int designHeightInPixels = ( ( aMaxHeightInPixel *
                                         aFace->units_per_EM ) / boundingBoxHeightInFontUnit );
@@ -75,6 +79,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     inline float ft_convention_to_float(FT_Pos val) {
+  NGAGE_COVERAGE_LOG();
         if (0 > val) {
             val = static_cast<FT_Pos>(-val);
         }
@@ -83,16 +88,19 @@ namespace eka2l1::epoc::adapter {
     }
 
     inline short ft_convention_to_int_pixel(FT_Pos val) {
+  NGAGE_COVERAGE_LOG();
         return static_cast<short>((val + 32) >> 6);
     }
 
     FT_Library get_ft_lib() {
+  NGAGE_COVERAGE_LOG();
         return ft_lib_raii_->lib_;
     }
 
     freetype_font_adapter::freetype_font_adapter(std::vector<std::uint8_t> &data)
         : data_(data)
         , is_valid_(false) {
+  NGAGE_COVERAGE_LOG();
         if (!ft_lib_raii_) {
             ft_lib_raii_ = std::make_unique<freetype_lib_raii>();
         }
@@ -124,6 +132,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     bool freetype_font_adapter::set_font_size(const std::size_t index, const std::uint32_t size) {
+  NGAGE_COVERAGE_LOG();
         if (index >= faces_.size()) {
             return false;
         }
@@ -145,12 +154,14 @@ namespace eka2l1::epoc::adapter {
     }
 
     freetype_font_adapter::~freetype_font_adapter() {
+  NGAGE_COVERAGE_LOG();
         for (auto face : faces_) {
             FT_Done_Face(face);
         }
     }
 
     std::uint32_t freetype_font_adapter::line_gap(const std::size_t idx, const std::uint32_t metric_identifier) {
+  NGAGE_COVERAGE_LOG();
         if (idx >= faces_.size()) {
             return 0;
         }
@@ -163,6 +174,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     bool freetype_font_adapter::get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) {
+  NGAGE_COVERAGE_LOG();
         if (idx >= faces_.size()) {
             return false;
         }
@@ -215,6 +227,7 @@ namespace eka2l1::epoc::adapter {
     std::uint8_t *freetype_font_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier,
         int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type,
         open_font_character_metric &character_metric) {
+  NGAGE_COVERAGE_LOG();
         if (idx >= faces_.size()) {
             return nullptr;
         }
@@ -269,9 +282,11 @@ namespace eka2l1::epoc::adapter {
     }
 
     void freetype_font_adapter::free_glyph_bitmap(std::uint8_t *data) {
+  NGAGE_COVERAGE_LOG();
     }
 
     std::int32_t freetype_font_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
+  NGAGE_COVERAGE_LOG();
         auto pack_state = std::make_unique<atlas_pack_state>();
 
         pack_state->atlas_base_ = atlas_ptr;
@@ -287,6 +302,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     bool freetype_font_adapter::get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point, const char16_t num_code, const std::uint32_t metric_identifier, character_info *info) {
+  NGAGE_COVERAGE_LOG();
         auto pack_state = pack_states_.get(handle);
 
         if (!pack_state) {
@@ -385,10 +401,12 @@ namespace eka2l1::epoc::adapter {
     }
 
     void freetype_font_adapter::end_get_atlas(const std::int32_t handle) {
+  NGAGE_COVERAGE_LOG();
         pack_states_.remove(handle);
     }
 
     bool freetype_font_adapter::does_glyph_exist(std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier) {
+  NGAGE_COVERAGE_LOG();
         if (idx >= faces_.size()) {
             return false;
         }
@@ -403,10 +421,12 @@ namespace eka2l1::epoc::adapter {
     }
 
     std::size_t freetype_font_adapter::count() {
+  NGAGE_COVERAGE_LOG();
         return faces_.size();
     }
 
     bool freetype_font_adapter::has_character(const std::size_t face_index, const std::int32_t codepoint, const std::uint32_t metric_identifier) {
+  NGAGE_COVERAGE_LOG();
         if (face_index >= faces_.size()) {
             return false;
         }
@@ -418,6 +438,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     bool freetype_font_adapter::get_table_content(const std::size_t face_index, const std::uint32_t tag4, std::uint8_t *dest, uint32_t &dest_size) {
+  NGAGE_COVERAGE_LOG();
         auto face = faces_[face_index];
 
         FT_ULong dest_size_temp = !dest ? 0 : dest_size;
@@ -435,6 +456,7 @@ namespace eka2l1::epoc::adapter {
 
     std::optional<open_font_metrics> freetype_font_adapter::get_nearest_supported_metric(const std::size_t face_index, const std::uint16_t targeted_font_size, std::uint32_t *metric_identifier,
         bool is_design_font_size) {
+  NGAGE_COVERAGE_LOG();
         if (face_index >= faces_.size()) {
             return std::nullopt;
         }
@@ -467,6 +489,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     std::uint32_t freetype_font_adapter::get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint32_t metric_identifier, const bool vertical) {
+  NGAGE_COVERAGE_LOG();
         auto face = faces_[face_index];
         if (!face) {
             return 0;

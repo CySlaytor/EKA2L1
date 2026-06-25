@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2021 EKA2L1 Team.
  * 
@@ -24,6 +25,7 @@ namespace eka2l1::epoc::drm {
     static constexpr std::uint32_t SYNC_MARK = 0xAFCE;
 
     void rights_constraint::absorb(common::chunkyseri &seri, std::uint32_t version) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t sync_mark_temp = 0;
         if ((version >= 1) || (seri.get_seri_mode() == common::SERI_MODE_READ)) {
             sync_mark_temp = SYNC_MARK;
@@ -75,7 +77,8 @@ namespace eka2l1::epoc::drm {
         }
     }
 
-    void rights_permission::absorb(common::chunkyseri &seri, std::uint32_t version) { 
+    void rights_permission::absorb(common::chunkyseri &seri, std::uint32_t version) {
+  NGAGE_COVERAGE_LOG(); 
         std::uint32_t possible_sync_mark = 0;
         if ((version >= 1) || (seri.get_seri_mode() == common::SERI_MODE_READ)) {
             possible_sync_mark = SYNC_MARK;
@@ -119,6 +122,7 @@ namespace eka2l1::epoc::drm {
     }
 
     rights_constraint *rights_permission::get_constraint_from_intent(const rights_intent intent) {
+  NGAGE_COVERAGE_LOG();
         switch (intent) {
         case rights_intent_play:
             if (available_rights_ & rights_type_play)
@@ -152,6 +156,7 @@ namespace eka2l1::epoc::drm {
     }
 
     const bool rights_permission::software_constrained() const {
+  NGAGE_COVERAGE_LOG();
         if ((available_rights_ & rights_type_top_level) && (top_level_constraint_.active_constraints_ & (rights_constraint_software | rights_constraint_vendor))) {
             return true;
         }

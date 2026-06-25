@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2021 EKA2L1 Team
  * 
@@ -27,22 +28,27 @@
 namespace eka2l1 {
     accessory_server::accessory_server(eka2l1::system *sys)
         : service::typical_server(sys, "!AccServer") {
+  NGAGE_COVERAGE_LOG();
     }
 
     void accessory_server::connect(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         create_session<accessory_session>(&context);
         context.complete(epoc::error_none);
     }
 
     accessory_subsession::accessory_subsession(accessory_server *svr)
         : serv_(svr) {
+  NGAGE_COVERAGE_LOG();
     }
 
     accessory_single_connection_subsession::accessory_single_connection_subsession(accessory_server *svr)
         : accessory_subsession(svr) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void accessory_single_connection_subsession::get_accessory_connection_status(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         // NOTE: The third argument named flags is not considered here. Check again if troubles rise.
         LOG_TRACE(SERVICE_ACCESSORY, "GetAccessoryConnectionStatus stubbed to all not available");
 
@@ -53,16 +59,19 @@ namespace eka2l1 {
     }
 
     void accessory_single_connection_subsession::notify_new_accessory_connected(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_ACCESSORY, "Notify new accessory connect stubbed (missing arugments)");
         accessory_connected_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
 
     void accessory_single_connection_subsession::cancel_notify_new_accessory_connected(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         accessory_connected_nof_.complete(epoc::error_cancel);
         ctx->complete(epoc::error_none);
     }
 
     bool accessory_single_connection_subsession::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = serv_->get_kernel_object_owner();
 
         if (kern->get_epoc_version() <= epocver::epoc93fp2) {
@@ -91,9 +100,11 @@ namespace eka2l1 {
     accessory_session::accessory_session(service::typical_server *serv, const kernel::uid ss_id,
         epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void accessory_session::create_accessory_single_connection_subsession(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         accessory_subsession_instance inst = std::make_unique<accessory_single_connection_subsession>(server<accessory_server>());
         const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(inst));
 
@@ -102,6 +113,7 @@ namespace eka2l1 {
     }
 
     void accessory_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = server<accessory_server>()->get_kernel_object_owner();
 
         if (kern->get_epoc_version() <= epocver::epoc93fp2) {

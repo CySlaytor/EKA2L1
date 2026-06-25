@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2018 EKA2L1 Team
  * 
@@ -29,6 +30,7 @@
 
 namespace eka2l1 {
     std::string debug_preferences::to_buf() {
+  NGAGE_COVERAGE_LOG();
         // Write a dummy version
         std::string buf;
         buf.resize(3);
@@ -43,6 +45,7 @@ namespace eka2l1 {
     }
 
     static const std::string get_eik_app_ui_server_name_by_epocver(const epocver the_ver) {
+  NGAGE_COVERAGE_LOG();
         if (the_ver < epocver::eka2) {
             return "EikAppUiServer";
         }
@@ -56,6 +59,7 @@ namespace eka2l1 {
     }
 
     void eikappui_server::connect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         if (!cap_server_) {
             cap_server_ = reinterpret_cast<oom_ui_app_server *>(kern->get_by_name<service::server>(OOM_APP_UI_SERVER_NAME));
         }
@@ -65,12 +69,14 @@ namespace eka2l1 {
     }
 
     void eikappui_server::disconnect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         remove_session(ctx.msg->msg_session->unique_id());
         typical_server::disconnect(ctx);
     }
 
     // TODO: Make a resource reader and read from the config resource file
     void eikappui_server::get_debug_preferences(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         debug_preferences preferences;
         LOG_TRACE(SERVICE_UI, "GetDebugPreferences stubbed");
 
@@ -91,16 +97,19 @@ namespace eka2l1 {
     eikappui_session::eikappui_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(svr, client_ss_uid, client_version)
         , cap_session_(nullptr) {
+  NGAGE_COVERAGE_LOG();
         eikappui_server *parent = reinterpret_cast<eikappui_server *>(svr);
         cap_session_ = parent->cap_server_->create_session_impl<oom_ui_app_session>(client_ss_uid, client_version, true);
     }
 
     eikappui_session::~eikappui_session() {
+  NGAGE_COVERAGE_LOG();
         eikappui_server *serv = server<eikappui_server>();
         serv->cap_server_->remove_session(client_ss_uid_);
     }
 
     void eikappui_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (ctx->msg->function >= eik_app_ui_range_sgc) {
             // Redirect to cap session
             ctx->msg->function = ctx->msg->function - eik_app_ui_range_sgc + akn_eik_app_ui_set_sgc_params;

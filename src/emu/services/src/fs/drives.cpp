@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -31,6 +32,7 @@ namespace eka2l1 {
     void fill_drive_info(epoc::fs::drive_info_v1 *info, eka2l1::drive *io_drive, const epoc::version fs_ver);
 
     std::unique_ptr<epoc::fs::drive_info_v1> get_drive_info_struct(const epoc::version fs_version, std::uint32_t &struct_size) {
+  NGAGE_COVERAGE_LOG();
         if (fs_version.major >= 2) {
             struct_size = sizeof(epoc::fs::drive_info_v2);
             return std::make_unique<epoc::fs::drive_info_v2>();
@@ -41,6 +43,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::file_drive(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle_res) {
@@ -76,6 +79,7 @@ namespace eka2l1 {
     }
 
     void fill_drive_info(epoc::fs::drive_info_v1 *info, eka2l1::drive *io_drive, const epoc::version ver) {
+  NGAGE_COVERAGE_LOG();
         info->drive_att = 0;
         info->media_att = 0;
 
@@ -135,6 +139,7 @@ namespace eka2l1 {
 
     /* Simple for now only, in the future this should be more advance. */
     void fs_server_client::drive(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         drive_number drv = static_cast<drive_number>(*ctx->get_argument_value<std::int32_t>(1));
 
         std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(
@@ -153,6 +158,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::drive_list(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = ctx->sys->get_kernel_system();
         std::optional<std::int32_t> flags = ctx->get_argument_value<std::int32_t>(1);
 
@@ -228,6 +234,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::volume(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         drive_number drv = static_cast<drive_number>(*ctx->get_argument_value<std::int32_t>(1));
 
         if (static_cast<std::uint32_t>(drv) == DEFAULT_DRIVE_NUM) {
@@ -265,6 +272,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::query_drive_info_ext(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         drive_number drv = static_cast<drive_number>(*ctx->get_argument_value<std::int32_t>(0));
         std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(drv);
 

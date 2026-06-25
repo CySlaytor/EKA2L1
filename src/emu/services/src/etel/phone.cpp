@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team.
  * 
@@ -32,14 +33,17 @@ namespace eka2l1 {
     etel_phone_subsession::etel_phone_subsession(etel_session *session, etel_phone *phone, const etel_legacy_level lvl)
         : etel_subsession(session, lvl)
         , phone_(phone) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void etel_phone_subsession::get_status(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->write_data_to_descriptor_argument<epoc::etel_phone_status>(0, phone_->status_);
         ctx->complete(epoc::error_none);
     }
 
     void etel_phone_subsession::init(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (!phone_->init()) {
             ctx->complete(epoc::error_general);
             return;
@@ -49,12 +53,14 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::enumerate_lines(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const std::uint32_t total_line = static_cast<std::uint32_t>(phone_->lines_.size());
         ctx->write_data_to_descriptor_argument<std::uint32_t>(0, total_line);
         ctx->complete(epoc::error_none);
     }
 
     void etel_phone_subsession::get_line_info(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         struct line_info_package {
             std::int32_t index_;
             epoc::etel_line_info_from_phone info_;
@@ -83,6 +89,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_identity_caps(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_ETEL, "Get identity caps hardcoded");
 
         const std::uint32_t caps = epoc::etel_mobile_phone_identity_cap_get_manufacturer
@@ -96,6 +103,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_indicator_caps(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_ETEL, "Get indicator caps hardcoded");
 
         const std::uint32_t action_caps = epoc::etel_mobile_phone_indicator_cap_get;
@@ -110,6 +118,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_indicator(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_ETEL, "Get indicator hardcoded");
         const std::uint32_t indicator = epoc::etel_mobile_phone_indicator_network_avail;
 
@@ -118,6 +127,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_network_caps(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_ETEL, "Get network caps hardcoded");
 
         const std::uint32_t network_caps = epoc::etel_mobile_phone_network_cap_get_current_network
@@ -129,6 +139,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_network_registration_status(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_ETEL, "Get network registration status hardcoded");
         const std::uint32_t network_registration_status = epoc::etel_mobile_phone_registered_on_home_network;
 
@@ -137,6 +148,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_home_network(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_ETEL, "Get home network hardcoded");
         std::optional<epoc::etel_phone_network_info> network_info = ctx->get_argument_data_from_descriptor<epoc::etel_phone_network_info>(0);
 
@@ -152,6 +164,7 @@ namespace eka2l1 {
     static const std::u16string EXAMPLE_VALID_REVISION = u"1.0.0";
 
     void etel_phone_subsession::get_phone_id(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         epoc::etel_phone_id_v0 phoneid;
 
         device_manager *dmngr = ctx->sys->get_device_manager();
@@ -178,6 +191,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_subscriber_id(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         config::state *conf_state = ctx->sys->get_config();
 
         if (legacy_level_ <= ETEL_LEGACY_LEVEL_TRANSITION) {
@@ -195,6 +209,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_current_network(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_ETEL, "Get current network hardcoded");
         std::optional<epoc::etel_phone_network_info> network_info = ctx->get_argument_data_from_descriptor<epoc::etel_phone_network_info>(0);
         epoc::etel_phone_location_area *phone_location_area = reinterpret_cast<epoc::etel_phone_location_area *>(ctx->get_descriptor_argument_ptr(2));
@@ -208,6 +223,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_current_network_info_old(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_ETEL, "Get current network hardcoded");
         std::optional<epoc::etel_old_phone_network_info> network_info = ctx->get_argument_data_from_descriptor<epoc::etel_old_phone_network_info>(0);
 
@@ -218,6 +234,7 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_signal_strength(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::int32_t *signal_strength_ptr = reinterpret_cast<std::int32_t *>(ctx->get_descriptor_argument_ptr(0));
         std::int32_t *bar_ptr = reinterpret_cast<std::int32_t *>(ctx->get_descriptor_argument_ptr(2));
 
@@ -227,39 +244,47 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::notify_network_registration_status_change(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         network_registration_status_change_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
 
     void etel_phone_subsession::notify_signal_strength_change(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         signal_strength_change_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
 
     void etel_phone_subsession::notify_current_network_change(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         current_network_change_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
 
     void etel_phone_subsession::notify_indicator_change(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         indicator_change_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
 
     void etel_phone_subsession::cancel_indicator_change(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         indicator_change_nof_.complete(epoc::error_cancel);
         ctx->complete(epoc::error_none);
     }
 
     void etel_phone_subsession::get_current_network_cancel(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_ETEL, "Get current network cancel stubbed");
 
         ctx->complete(epoc::error_none);
     }
 
     void etel_phone_subsession::get_network_registration_status_cancel(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_ETEL, "Get network registration status cancel stubbed");
 
         ctx->complete(epoc::error_none);
     }
 
     void etel_phone_subsession::get_battery_info(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::etel_battery_info_v1> battery_info = ctx->get_argument_data_from_descriptor<epoc::etel_battery_info_v1>(0);
         if (!battery_info.has_value()) {
             ctx->complete(epoc::error_argument);
@@ -273,15 +298,18 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::notify_battery_info(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         battery_info_change_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
     
     void etel_phone_subsession::notify_battery_info_cancel(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         battery_info_change_nof_.complete(epoc::error_cancel);
         ctx->complete(epoc::error_none);
     }
 
     void etel_phone_subsession::dispatch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (legacy_level_ == ETEL_LEGACY_LEVEL_LEGACY) {
             switch (ctx->msg->function) {
             case epoc::etel_old_phone_get_status:
@@ -453,15 +481,18 @@ namespace eka2l1 {
 
     etel_phone::etel_phone(const epoc::etel_phone_info &info)
         : info_(info) {
+  NGAGE_COVERAGE_LOG();
         // Initialize default mode
         status_.detect_ = epoc::etel_modem_detect_not_present;
         status_.mode_ = epoc::etel_phone_mode_idle;
     }
 
     etel_phone::~etel_phone() {
+  NGAGE_COVERAGE_LOG();
     }
 
     bool etel_phone::init() {
+  NGAGE_COVERAGE_LOG();
         status_.detect_ = epoc::etel_modem_detect_present;
 
         network_info_.mode_ = epoc::etel_mobile_phone_network_mode_gsm;

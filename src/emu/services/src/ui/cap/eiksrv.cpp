@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -35,11 +36,13 @@ namespace eka2l1::epoc::cap {
         : strength_(BATTERY_LEVEL_MAX)
         , charging_(0)
         , icon_state_(0) {
+  NGAGE_COVERAGE_LOG();
     }
 
     akn_signal_state::akn_signal_state()
         : strength_(SIGNAL_LEVEL_MAX)
         , icon_state_(GPRS_SIGNAL_ICON) {
+  NGAGE_COVERAGE_LOG();
     }
 
     akn_indicator_state::akn_indicator_state()
@@ -47,26 +50,31 @@ namespace eka2l1::epoc::cap {
         , incall_bubble_allow_in_usual_(0)
         , incall_bubble_allow_in_idle_(0)
         , incall_bubble_disabled_(0) {
+  NGAGE_COVERAGE_LOG();
         std::fill(visible_indicators_, visible_indicators_ + MAX_VISIBLE_INDICATORS, 0);
         std::fill(visibile_indicator_states_, visibile_indicator_states_ + MAX_VISIBLE_INDICATORS, 0);
     }
 
     akn_status_pane_data::akn_status_pane_data()
         : foreground_subscriber_id_(0) {
+  NGAGE_COVERAGE_LOG();
     }
 
     static void battery_strength_change_callback(void *data, service::property *prop) {
+  NGAGE_COVERAGE_LOG();
         eik_status_pane_maintainer *maintainer = reinterpret_cast<eik_status_pane_maintainer *>(data);
         maintainer->set_battery_level(prop->get_int());
     }
 
     static void battery_charge_status_change_callback(void *data, service::property *prop) {
+  NGAGE_COVERAGE_LOG();
         eik_status_pane_maintainer *maintainer = reinterpret_cast<eik_status_pane_maintainer *>(data);
         maintainer->set_battery_charging(prop->get_int());
     }
 
     eik_status_pane_maintainer::eik_status_pane_maintainer(kernel_system *kern)
         : prop_(nullptr) {
+  NGAGE_COVERAGE_LOG();
         prop_ = kern->create<service::property>();
         prop_->define(service::property_type::bin_data, sizeof(akn_status_pane_data));
 
@@ -92,10 +100,12 @@ namespace eka2l1::epoc::cap {
     }
 
     void eik_status_pane_maintainer::publish_data() {
+  NGAGE_COVERAGE_LOG();
         prop_->set<akn_status_pane_data>(local_data_);
     }
 
     bool eik_status_pane_maintainer::set_battery_level(const std::int32_t level) {
+  NGAGE_COVERAGE_LOG();
         if (level < BATTERY_LEVEL_MIN || level > BATTERY_LEVEL_MAX) {
             return false;
         }
@@ -107,11 +117,13 @@ namespace eka2l1::epoc::cap {
     }
 
     void eik_status_pane_maintainer::set_battery_charging(const bool is_charging) {
+  NGAGE_COVERAGE_LOG();
         local_data_.battery_.charging_ = is_charging;
         publish_data();
     }
 
     bool eik_status_pane_maintainer::set_signal_level(const std::int32_t level) {
+  NGAGE_COVERAGE_LOG();
         if (level < SIGNAL_LEVEL_MIN || level > SIGNAL_LEVEL_MAX) {
             return false;
         }
@@ -123,33 +135,40 @@ namespace eka2l1::epoc::cap {
     }
 
     void eik_status_pane_maintainer::set_signal_icon(const std::int32_t icon) {
+  NGAGE_COVERAGE_LOG();
         local_data_.signal_.icon_state_ = icon;
         publish_data();
     }
 
     std::int32_t eik_status_pane_maintainer::get_battery_level() const {
+  NGAGE_COVERAGE_LOG();
         return local_data_.battery_.strength_;
     }
 
     bool eik_status_pane_maintainer::get_battery_charging() const {
+  NGAGE_COVERAGE_LOG();
         return local_data_.battery_.charging_;
     }
 
     std::int32_t eik_status_pane_maintainer::get_signal_level() const {
+  NGAGE_COVERAGE_LOG();
         return local_data_.signal_.strength_;
     }
 
     eik_server::eik_server(kernel_system *kern)
         : status_pane_maintainer_(kern)
         , flags_(0) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void eik_server::init(kernel_system *kern) {
+  NGAGE_COVERAGE_LOG();
         winserv_ = reinterpret_cast<window_server *>(kern->get_by_name<service::server>(eka2l1::get_winserv_name_by_epocver(
             kern->get_epoc_version())));
     }
 
     void eik_server::key_block_mode(const bool is_on) {
+  NGAGE_COVERAGE_LOG();
         flags_ &= ~FLAG_KEY_BLOCK_MODE;
 
         if (is_on) {
@@ -160,6 +179,7 @@ namespace eka2l1::epoc::cap {
     }
 
     const bool eik_server::key_block_mode() const {
+  NGAGE_COVERAGE_LOG();
         return static_cast<bool>(flags_ & FLAG_KEY_BLOCK_MODE);
     }
 }

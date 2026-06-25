@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2021 EKA2L1 Team.
  * 
@@ -37,6 +38,7 @@ namespace eka2l1::epoc::drm {
         , get_encrypt_key_stmt_(nullptr)
         , get_cid_exist_full_stmt_(nullptr)
         , db_path_(database_path) {
+  NGAGE_COVERAGE_LOG();
         int result = sqlite3_open16(database_path.data(), &database_);
         if (result != SQLITE_OK) {
             LOG_ERROR(SERVICE_DRMSYS, "Fail to open DRM database!");
@@ -144,10 +146,12 @@ namespace eka2l1::epoc::drm {
     }
 
     rights_database::~rights_database() {
+  NGAGE_COVERAGE_LOG();
         reset();
     }
 
     void rights_database::reset() {
+  NGAGE_COVERAGE_LOG();
         if (get_cid_exist_stmt_) {
             sqlite3_finalize(get_cid_exist_stmt_);
             get_cid_exist_stmt_ = nullptr;
@@ -205,6 +209,7 @@ namespace eka2l1::epoc::drm {
     }
 
     void rights_database::flush() {
+  NGAGE_COVERAGE_LOG();
         reset();
 
         // Reopen the database. Previous reset will save the database to disk
@@ -216,6 +221,7 @@ namespace eka2l1::epoc::drm {
     }
 
     int rights_database::add_constraint(const rights_constraint &constraint, const int perm_id) {
+  NGAGE_COVERAGE_LOG();
         // Try add constraint now
         if (!add_constraint_info_stmt_) {
             static const char *ADD_CONSTRAINT_STMT_STRING = "INSERT INTO ConstraintInfo (permissionId, startTime, endTime, intervalStart, interval, counter,"
@@ -264,6 +270,7 @@ namespace eka2l1::epoc::drm {
     }
 
     int rights_database::get_entry_id(const std::string &content_id) {
+  NGAGE_COVERAGE_LOG();
         // If the CID already exists, just forget it
         if (!get_cid_exist_stmt_) {
             static const char *get_cid_EXIST_STMT_STRING = "SELECT id FROM RightInfo WHERE contentId=:targetContentId COLLATE NOCASE";
@@ -287,6 +294,7 @@ namespace eka2l1::epoc::drm {
     }
 
     bool rights_database::add_or_update_record(rights_object &obj) {
+  NGAGE_COVERAGE_LOG();
         if (obj.common_data_.content_id_.empty()) {
             LOG_ERROR(SERVICE_DRMSYS, "Try to add a right object that has no content ID!");
             return false;
@@ -485,6 +493,7 @@ namespace eka2l1::epoc::drm {
     }
 
     bool rights_database::get_record(const std::string &content_id, rights_object &result) {
+  NGAGE_COVERAGE_LOG();
         if (!get_cid_exist_full_stmt_) {
             static const char *GET_CID_EXIST_FULL_STMT_STRING = "SELECT * FROM RightInfo WHERE contentId=:targetContentId COLLATE NOCASE";
             if (sqlite3_prepare(database_, GET_CID_EXIST_FULL_STMT_STRING, -1, &get_cid_exist_full_stmt_, nullptr) != SQLITE_OK) {
@@ -521,6 +530,7 @@ namespace eka2l1::epoc::drm {
     }
 
     bool rights_database::get_encryption_key(const std::string &content_id, std::string &output_key) {
+  NGAGE_COVERAGE_LOG();
         if (!get_encrypt_key_stmt_) {
             static const char *GET_ENCRYPT_KEY_STMT_STRING = "SELECT encryptKey FROM RightInfo WHERE contentId=:targetContentId COLLATE NOCASE";
             if (sqlite3_prepare(database_, GET_ENCRYPT_KEY_STMT_STRING, -1, &get_encrypt_key_stmt_, nullptr) != SQLITE_OK) {
@@ -544,6 +554,7 @@ namespace eka2l1::epoc::drm {
     }
 
     bool rights_database::get_constraint(const int constraint_id, rights_constraint &result) {
+  NGAGE_COVERAGE_LOG();
         if (!query_constraint_stmt_) {
             static const char *QUERY_CONSTRAINT_STMT_STRING = "SELECT * FROM ConstraintInfo WHERE id=:targetId";
             if (sqlite3_prepare(database_, QUERY_CONSTRAINT_STMT_STRING, -1, &query_constraint_stmt_, nullptr) != SQLITE_OK) {
@@ -595,6 +606,7 @@ namespace eka2l1::epoc::drm {
     }
 
     bool rights_database::get_permission_list(const int rights_id, std::vector<rights_permission> &permissions) {
+  NGAGE_COVERAGE_LOG();
         if (!query_perms_stmt_) {
             static const char *QUERY_PERMISSION_ENTRIES_STMT_STRING = "SELECT * FROM PermissionInfo WHERE rightsId=:targetRightsId";
             if (sqlite3_prepare(database_, QUERY_PERMISSION_ENTRIES_STMT_STRING, -1, &query_perms_stmt_, nullptr) != SQLITE_OK) {
@@ -681,6 +693,7 @@ namespace eka2l1::epoc::drm {
     }
 
     bool rights_database::get_permission_list(const std::string &content_id, std::vector<rights_permission> &permissions) {
+  NGAGE_COVERAGE_LOG();
         int rights_id = get_entry_id(content_id);
         if (rights_id < 0) {
             return false;

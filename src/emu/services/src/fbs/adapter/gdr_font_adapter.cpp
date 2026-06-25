@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team.
  * 
@@ -26,16 +27,19 @@
 
 namespace eka2l1::epoc::adapter {
     static bool is_gdr_pack_context_free(gdr_font_atlas_pack_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         return (ctx.pack_dest_ == nullptr);
     }
 
     static void free_gdr_pack_context(gdr_font_atlas_pack_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx.pack_nodes_.clear();
         ctx.pack_context_.reset();
         ctx.pack_dest_ = nullptr;
     }
 
     static open_font_metrics build_of_metrics_from_font_bitmap(const loader::gdr::font_bitmap *target_bitmap) {
+  NGAGE_COVERAGE_LOG();
         open_font_metrics metrics;
 
         metrics.max_height = 0;
@@ -57,6 +61,7 @@ namespace eka2l1::epoc::adapter {
 
     gdr_font_file_adapter::gdr_font_file_adapter(std::vector<std::uint8_t> &data)
         : pack_contexts_(is_gdr_pack_context_free, free_gdr_pack_context) {
+  NGAGE_COVERAGE_LOG();
         // Instantiate a read-only buffer stream
         buf_stream_ = std::make_unique<common::ro_buf_stream>(&data[0], data.size());
 
@@ -69,17 +74,20 @@ namespace eka2l1::epoc::adapter {
     }
 
     gdr_font_file_adapter::~gdr_font_file_adapter() {
+  NGAGE_COVERAGE_LOG();
         for (auto &alloc : dynamic_alloc_list_) {
             delete alloc;
         }
     }
 
     std::size_t gdr_font_file_adapter::count() {
+  NGAGE_COVERAGE_LOG();
         return store_.typefaces_.size();
     }
 
     std::optional<open_font_metrics> gdr_font_file_adapter::get_metric_with_uid(const std::size_t face_index, const std::uint32_t uid,
         std::uint32_t *metric_identifier) {
+  NGAGE_COVERAGE_LOG();
         if (face_index >= store_.typefaces_.size()) {
             return std::nullopt;
         }
@@ -99,6 +107,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     bool gdr_font_file_adapter::get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) {
+  NGAGE_COVERAGE_LOG();
         // Look for the index of the typeface
         if (!is_valid() || (idx >= store_.typefaces_.size())) {
             return false;
@@ -130,6 +139,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     const loader::gdr::character *gdr_font_file_adapter::get_character(const std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier) {
+  NGAGE_COVERAGE_LOG();
         if (!is_valid() || (idx >= store_.typefaces_.size())) {
             return nullptr;
         }
@@ -151,12 +161,14 @@ namespace eka2l1::epoc::adapter {
     }
 
     bool gdr_font_file_adapter::does_glyph_exist(std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier) {
+  NGAGE_COVERAGE_LOG();
         return get_character(idx, code, 0);
     }
 
     std::uint8_t *gdr_font_file_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier,
         int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type,
         open_font_character_metric &character_metric) {
+  NGAGE_COVERAGE_LOG();
         const loader::gdr::character *the_char = get_character(idx, code, metric_identifier);
 
         if (!the_char) {
@@ -288,6 +300,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     void gdr_font_file_adapter::free_glyph_bitmap(std::uint8_t *data) {
+  NGAGE_COVERAGE_LOG();
         auto store_result = std::find(dynamic_alloc_list_.begin(), dynamic_alloc_list_.end(), reinterpret_cast<std::uint32_t *>(data));
 
         if (store_result != dynamic_alloc_list_.end()) {
@@ -297,6 +310,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     std::int32_t gdr_font_file_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
+  NGAGE_COVERAGE_LOG();
         gdr_font_atlas_pack_context context;
         context.pack_context_ = std::make_unique<stbrp_context>();
         context.pack_nodes_.resize(atlas_size.y);
@@ -309,11 +323,13 @@ namespace eka2l1::epoc::adapter {
     }
 
     static float calculate_scale_factor_of_font(const int target_size, const int font_general_height, const int char_height) {
+  NGAGE_COVERAGE_LOG();
         return static_cast<float>(target_size) / ((char_height == 0) ? static_cast<float>(font_general_height) : static_cast<float>(char_height));
     }
 
     bool gdr_font_file_adapter::get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point, const char16_t num_code,
         const std::uint32_t metric_identifier, character_info *info) {
+  NGAGE_COVERAGE_LOG();
         gdr_font_atlas_pack_context *context = pack_contexts_.get(handle);
 
         if (!context) {
@@ -396,14 +412,17 @@ namespace eka2l1::epoc::adapter {
     }
 
     void gdr_font_file_adapter::end_get_atlas(const std::int32_t handle) {
+  NGAGE_COVERAGE_LOG();
         pack_contexts_.remove(handle);
     }
     
     bool gdr_font_file_adapter::has_character(const std::size_t face_index, const std::int32_t codepoint, const std::uint32_t metric_identifier) {
+  NGAGE_COVERAGE_LOG();
         return (get_character(face_index, codepoint, metric_identifier) != nullptr);
     }
 
     std::uint32_t gdr_font_file_adapter::get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint32_t metric_identifier, const bool vertical) {
+  NGAGE_COVERAGE_LOG();
         const loader::gdr::character *the_char = get_character(face_index, codepoint, metric_identifier);
         if (!the_char) {
             return 0xFFFFFFFF;
@@ -419,6 +438,7 @@ namespace eka2l1::epoc::adapter {
 
     std::optional<open_font_metrics> gdr_font_file_adapter::get_nearest_supported_metric(const std::size_t face_index, const std::uint16_t targeted_font_size,
         std::uint32_t *metric_identifier, bool is_design_font_size) {
+  NGAGE_COVERAGE_LOG();
         if ((face_index >= store_.typefaces_.size()) || !is_valid()) {
             LOG_ERROR(SERVICE_FBS, "The font is not ready or the face index is out of bounds!");
             return std::nullopt;

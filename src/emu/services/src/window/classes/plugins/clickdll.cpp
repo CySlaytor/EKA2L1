@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -28,6 +29,7 @@
 
 namespace eka2l1::epoc {
     bool click_dll::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_click_op op = static_cast<decltype(op)>(cmd.header.op);
         bool quit = false;
 

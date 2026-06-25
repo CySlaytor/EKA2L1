@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  *
@@ -44,11 +45,13 @@
 namespace eka2l1 {
     namespace epoc {
         bool does_client_use_pointer_instead_of_offset(fbscli *cli) {
+  NGAGE_COVERAGE_LOG();
             const epocver current_sys_ver = cli->server<fbs_server>()->get_system()->get_symbian_version_use();
             return (cli->client_version().build <= epoc::RETURN_POINTER_NOT_OFFSET_BUILD_LIMIT) && (current_sys_ver < epocver::epoc95);
         }
 
         std::string get_fbs_server_name_by_epocver(const epocver ver) {
+  NGAGE_COVERAGE_LOG();
             if (ver < epocver::epoc81a) {
                 return "Fontbitmapserver";
             }
@@ -57,6 +60,7 @@ namespace eka2l1 {
         }
 
         void query_fbs_feature_support(fbs_server *fbss, bool &support_current_display_mode, bool &support_dirty_bitmap) {
+  NGAGE_COVERAGE_LOG();
             support_dirty_bitmap = true;
 
             if (fbss->legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
@@ -74,6 +78,7 @@ namespace eka2l1 {
     }
 
     fbscli::~fbscli() {
+  NGAGE_COVERAGE_LOG();
         if (server<fbs_server>()->compressor && !dirty_nof_.empty()) {
             server<fbs_server>()->compressor->cancel(dirty_nof_);
         }
@@ -90,6 +95,7 @@ namespace eka2l1 {
     }
 
     void fbscli::set_pixel_size_in_twips(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         server<fbs_server>()->set_pixel_size_in_twips({ ctx->get_argument_value<std::int32_t>(0).value(),
             ctx->get_argument_value<std::int32_t>(1).value() });
 
@@ -97,6 +103,7 @@ namespace eka2l1 {
     }
 
     void fbscli::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (ctx->sys->get_symbian_version_use() < epocver::eka2) {
             switch (ctx->msg->function) {
             case fbs_set_pixel_size_in_twips + 1:
@@ -298,11 +305,13 @@ namespace eka2l1 {
     }
 
     static void compressor_thread_func(compress_queue *queue) {
+  NGAGE_COVERAGE_LOG();
         common::set_thread_name("FBS Server compressor thread");
         queue->run();
     }
 
     int fbs_server::legacy_level() const {
+  NGAGE_COVERAGE_LOG();
         if (kern->get_epoc_version() <= epocver::epoc6) {
             return FBS_LEGACY_LEVEL_S60V1;
         }
@@ -327,6 +336,7 @@ namespace eka2l1 {
     }
 
     void fbs_server::initialize_server() {
+  NGAGE_COVERAGE_LOG();
         shared_chunk = kern->create_and_add<kernel::chunk>(
                                kernel::owner_type::kernel,
                                kern->get_memory_system(),
@@ -403,6 +413,7 @@ namespace eka2l1 {
     }
 
     void fbs_server::connect(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         if (!shared_chunk && !large_chunk) {
             initialize_server();
         }
@@ -412,10 +423,12 @@ namespace eka2l1 {
     }
 
     service::uid fbs_server::init() {
+  NGAGE_COVERAGE_LOG();
         return ++connection_id_counter;
     }
 
     void *fbs_server::allocate_general_data_impl(const std::size_t s) {
+  NGAGE_COVERAGE_LOG();
         if (!shared_chunk || !shared_chunk_allocator) {
             LOG_CRITICAL(SERVICE_FBS, "FBS server hasn't initialized yet");
             return nullptr;
@@ -425,6 +438,7 @@ namespace eka2l1 {
     }
 
     bool fbs_server::free_general_data_impl(const void *ptr) {
+  NGAGE_COVERAGE_LOG();
         if (!shared_chunk || !shared_chunk_allocator) {
             LOG_CRITICAL(SERVICE_FBS, "FBS server hasn't initialized yet");
             return false;
@@ -434,6 +448,7 @@ namespace eka2l1 {
     }
 
     void *fbs_server::allocate_large_data(const std::size_t s) {
+  NGAGE_COVERAGE_LOG();
         if (!large_chunk || !large_chunk_allocator) {
             LOG_CRITICAL(SERVICE_FBS, "FBS server hasn't initialized yet");
             return nullptr;
@@ -443,6 +458,7 @@ namespace eka2l1 {
     }
 
     bool fbs_server::free_large_data(const void *ptr) {
+  NGAGE_COVERAGE_LOG();
         if (!large_chunk || !large_chunk_allocator) {
             LOG_CRITICAL(SERVICE_FBS, "FBS server hasn't initialized yet");
             return false;
@@ -452,6 +468,7 @@ namespace eka2l1 {
     }
 
     fbs_server::~fbs_server() {
+  NGAGE_COVERAGE_LOG();
         if (compressor) {
             compressor->abort();
             compressor_thread->join();
@@ -474,10 +491,12 @@ namespace eka2l1 {
     }
 
     drivers::graphics_driver *fbs_server::get_graphics_driver() {
+  NGAGE_COVERAGE_LOG();
         return sys->get_graphics_driver();
     }
 
     bool fbs_server::is_heap_busy() {
+  NGAGE_COVERAGE_LOG();
         if (!large_bitmap_access_mutex) {
             return false;
         }
@@ -486,6 +505,7 @@ namespace eka2l1 {
     }
 
     void fbs_server::spin_wait_heap(const std::uint32_t max_times) {
+  NGAGE_COVERAGE_LOG();
         if (!large_bitmap_access_mutex) {
             return;
         }
@@ -503,6 +523,7 @@ namespace eka2l1 {
         : service::typical_session(serv, ss_id, client_version)
         , glyph_info_for_legacy_return_(nullptr)
         , glyph_info_for_legacy_return_addr_(0) {
+  NGAGE_COVERAGE_LOG();
         fbs_server *fbss = reinterpret_cast<fbs_server *>(serv);
         epoc::query_fbs_feature_support(fbss, support_current_display_mode, support_dirty_bitmap);
 

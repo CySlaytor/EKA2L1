@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -26,9 +27,11 @@
 namespace eka2l1 {
     connmonitor_server::connmonitor_server(eka2l1::system *sys)
         : service::typical_server(sys, "!ConnectionMonitorServer") {
+  NGAGE_COVERAGE_LOG();
     }
 
     void connmonitor_server::connect(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         create_session<connmonitor_client_session>(&context);
         context.complete(epoc::error_none);
     }
@@ -36,9 +39,11 @@ namespace eka2l1 {
     connmonitor_client_session::connmonitor_client_session(service::typical_server *serv, const kernel::uid ss_id,
         epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void connmonitor_client_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx->msg->function) {
         case connmonitor_get_connection_count: {
             get_connection_count(ctx);
@@ -83,6 +88,7 @@ namespace eka2l1 {
     }
 
     void connmonitor_client_session::get_connection_count(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t connection_count = 1;
 
         ctx->write_data_to_descriptor_argument(0, connection_count);
@@ -90,10 +96,12 @@ namespace eka2l1 {
     }
 
     void connmonitor_client_session::receive_event(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         nof_info = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
 
     void connmonitor_client_session::get_connection_info(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t index = *(ctx->get_argument_value<std::uint32_t>(0));
         std::uint32_t *connection_id_ptr = reinterpret_cast<std::uint32_t *>(ctx->get_descriptor_argument_ptr(1));
         std::uint32_t *subconnection_count_ptr = reinterpret_cast<std::uint32_t *>(ctx->get_descriptor_argument_ptr(2));
@@ -105,6 +113,7 @@ namespace eka2l1 {
     }
 
     void connmonitor_client_session::get_int_attribute(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t connection_id = *(ctx->get_argument_value<std::uint32_t>(0));
         std::uint32_t subconnection_id = *(ctx->get_argument_value<std::uint32_t>(1));
         std::uint32_t attribute = *(ctx->get_argument_value<std::uint32_t>(2));
@@ -115,6 +124,7 @@ namespace eka2l1 {
     }
 
     void connmonitor_client_session::get_uint_attribute(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t connection_id = *(ctx->get_argument_value<std::uint32_t>(0));
         std::uint32_t subconnection_id = *(ctx->get_argument_value<std::uint32_t>(1));
         std::uint32_t attribute = *(ctx->get_argument_value<std::uint32_t>(2));
@@ -125,11 +135,13 @@ namespace eka2l1 {
     }
 
     void connmonitor_client_session::cancel_async_request(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         // Stubbed
         ctx->complete(epoc::error_none);
     }
 
     void connmonitor_client_session::cancel_receive_event(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         nof_info.complete(epoc::error_cancel);
         ctx->complete(epoc::error_none);
     }

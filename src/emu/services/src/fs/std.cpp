@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -24,6 +25,7 @@
 
 namespace eka2l1::epoc::fs {
     std::string get_server_name_through_epocver(const epocver ver) {
+  NGAGE_COVERAGE_LOG();
         if (ver < epocver::eka2) {
             return "FileServer";
         }
@@ -32,6 +34,7 @@ namespace eka2l1::epoc::fs {
     }
 
     std::uint32_t build_attribute_from_entry_info(entry_info &info) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t attrib = epoc::fs::entry_att_normal;
 
         if (info.has_raw_attribute) {
@@ -68,6 +71,7 @@ namespace eka2l1::epoc::fs {
     }
 
     void build_symbian_entry_from_emulator_entry(io_system *io, entry_info &info, epoc::fs::entry &sym_entry) {
+  NGAGE_COVERAGE_LOG();
         sym_entry.size = static_cast<std::uint32_t>(info.size);
         sym_entry.size_high = static_cast<std::uint32_t>(info.size >> 32);
 

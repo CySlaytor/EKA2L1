@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team.
  * 
@@ -25,11 +26,13 @@
 
 namespace eka2l1::epoc::adapter {
     static void free_stb_pack_context(std::unique_ptr<stbtt_pack_context> &ctx) {
+  NGAGE_COVERAGE_LOG();
         stbtt_PackEnd(ctx.get());
         ctx.reset();
     }
 
     static bool is_stb_pack_context_free(std::unique_ptr<stbtt_pack_context> &ctx) {
+  NGAGE_COVERAGE_LOG();
         return (ctx == nullptr);
     }
 
@@ -37,6 +40,7 @@ namespace eka2l1::epoc::adapter {
         : data_(data_)
         , flags_(0)
         , contexts_(is_stb_pack_context_free, free_stb_pack_context) {
+  NGAGE_COVERAGE_LOG();
         count_ = stbtt_GetNumberOfFonts(&data_[0]);
 
         if (count_ > 0) {
@@ -45,10 +49,12 @@ namespace eka2l1::epoc::adapter {
     }
 
     std::size_t stb_font_file_adapter::count() {
+  NGAGE_COVERAGE_LOG();
         return count_;
     }
 
     stbtt_fontinfo *stb_font_file_adapter::get_or_create_info(const int idx, int *off) {
+  NGAGE_COVERAGE_LOG();
         if (idx >= count_) {
             return nullptr;
         }
@@ -68,6 +74,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     bool stb_font_file_adapter::get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) {
+  NGAGE_COVERAGE_LOG();
         int off = 0;
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
 
@@ -147,6 +154,7 @@ namespace eka2l1::epoc::adapter {
 
     std::optional<open_font_metrics> stb_font_file_adapter::get_nearest_supported_metric(const std::size_t idx, const std::uint16_t target_font_size, std::uint32_t *metric_identifier,
         bool is_design_font_size) {
+  NGAGE_COVERAGE_LOG();
         int off = 0;
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
 
@@ -182,6 +190,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     bool stb_font_file_adapter::does_glyph_exist(const size_t idx, const uint32_t code, const std::uint32_t metric_identifier) {
+  NGAGE_COVERAGE_LOG();
         int off = 0;
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(idx), &off);
         if (!info) {
@@ -196,6 +205,7 @@ namespace eka2l1::epoc::adapter {
     std::uint8_t *stb_font_file_adapter::get_glyph_bitmap(const std::size_t idx, std::uint32_t code, const std::uint32_t metric_identifier,
         int *rasterized_width, int *rasterized_height, std::uint32_t &total_size, epoc::glyph_bitmap_type *bmp_type,
         open_font_character_metric &character_metric) {
+  NGAGE_COVERAGE_LOG();
         bool get_codepoint = true;
         const std::uint32_t font_size = metric_identifier;
 
@@ -281,6 +291,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     std::uint32_t stb_font_file_adapter::line_gap(const std::size_t idx, const std::uint32_t metric_identifier) {
+  NGAGE_COVERAGE_LOG();
         int ascent, descent, linegap = 0;
         int off = 0;
 
@@ -292,10 +303,12 @@ namespace eka2l1::epoc::adapter {
     }
 
     void stb_font_file_adapter::free_glyph_bitmap(std::uint8_t *data) {
+  NGAGE_COVERAGE_LOG();
         stbtt_FreeBitmap(data, nullptr);
     }
 
     std::int32_t stb_font_file_adapter::begin_get_atlas(std::uint8_t *atlas_ptr, const eka2l1::vec2 atlas_size) {
+  NGAGE_COVERAGE_LOG();
         std::unique_ptr<stbtt_pack_context> context = std::make_unique<stbtt_pack_context>();
         if (stbtt_PackBegin(context.get(), atlas_ptr, atlas_size.x, atlas_size.y, 0, 1, nullptr) == 0) {
             return -1;
@@ -305,11 +318,13 @@ namespace eka2l1::epoc::adapter {
     }
 
     void stb_font_file_adapter::end_get_atlas(const std::int32_t handle) {
+  NGAGE_COVERAGE_LOG();
         contexts_.remove(static_cast<std::size_t>(handle));
     }
 
     bool stb_font_file_adapter::get_glyph_atlas(const std::int32_t handle, const std::size_t idx, const char16_t start_code, int *unicode_point,
         const char16_t num_code, const std::uint32_t font_size, character_info *info) {
+  NGAGE_COVERAGE_LOG();
         auto character_infos = std::make_unique<stbtt_packedchar[]>(num_code);
         std::unique_ptr<stbtt_pack_context> *context_ptr = contexts_.get(handle);
 
@@ -339,6 +354,7 @@ namespace eka2l1::epoc::adapter {
     }
 
     bool stb_font_file_adapter::has_character(const std::size_t face_index, const std::int32_t codepoint, const std::uint32_t font_size) {
+  NGAGE_COVERAGE_LOG();
         int off = 0;
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(face_index), &off);
 
@@ -350,6 +366,7 @@ namespace eka2l1::epoc::adapter {
     }
     
     std::uint32_t stb_font_file_adapter::get_glyph_advance(const std::size_t face_index, const std::uint32_t codepoint, const std::uint32_t font_size, const bool vertical) {
+  NGAGE_COVERAGE_LOG();
         int off = 0;
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(face_index), &off);
 
@@ -369,6 +386,7 @@ namespace eka2l1::epoc::adapter {
 
     // Forked from original stbtt
     static std::pair<stbtt_uint32, stbtt_uint32> stbtt__find_table_with_len(stbtt_uint8 *data, stbtt_uint32 fontstart, stbtt_uint32 tag) {
+  NGAGE_COVERAGE_LOG();
         stbtt_int32 num_tables = ttUSHORT(data+fontstart+4);
         stbtt_uint32 tabledir = fontstart + 12;
         stbtt_int32 i;
@@ -382,6 +400,7 @@ namespace eka2l1::epoc::adapter {
 
     bool stb_font_file_adapter::get_table_content(const std::size_t face_index, const std::uint32_t tag4, std::uint8_t *dest,
         std::uint32_t &dest_size) {
+  NGAGE_COVERAGE_LOG();
         int off = 0;
         stbtt_fontinfo *info = get_or_create_info(static_cast<int>(face_index), &off);
 

@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -28,9 +29,11 @@ namespace eka2l1 {
         : name_(name)
         , related_(related)
         , parse_(parse) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void file_parser::parse(std::u16string default_path) {
+  NGAGE_COVERAGE_LOG();
         memset(parse_.fields, 0, sizeof(parse_.fields));
 
         std::u16string lex[3];
@@ -59,6 +62,7 @@ namespace eka2l1 {
     }
 
     void file_parser::parse_part(std::uint32_t type, std::u16string name) {
+  NGAGE_COVERAGE_LOG();
         switch (type) {
         case file_parse_type::file_parse_drive:
             parse_drive(name);
@@ -82,6 +86,7 @@ namespace eka2l1 {
     }
 
     void file_parser::parse_drive(std::u16string name) {
+  NGAGE_COVERAGE_LOG();
         if (name.length() < 2 || name.at(1) != ':') {
             return;
         }
@@ -92,6 +97,7 @@ namespace eka2l1 {
     }
 
     void file_parser::parse_path(std::u16string name) {
+  NGAGE_COVERAGE_LOG();
         std::size_t pos_start = name.find('\\');
         if (pos_start == std::string::npos) {
             return;
@@ -108,6 +114,7 @@ namespace eka2l1 {
     }
 
     void file_parser::parse_name(std::u16string name) {
+  NGAGE_COVERAGE_LOG();
         std::u16string fname = eka2l1::filename(name, true);
         std::size_t pos_end = fname.find_last_of('.');
         if (pos_end != std::string::npos) {
@@ -131,6 +138,7 @@ namespace eka2l1 {
     }
 
     void file_parser::parse_ext(std::u16string name) {
+  NGAGE_COVERAGE_LOG();
         std::u16string ext = eka2l1::path_extension(name);
         if (ext.length() == 0) {
             return;
@@ -150,6 +158,7 @@ namespace eka2l1 {
     }
 
     file_parse file_parser::get_result() {
+  NGAGE_COVERAGE_LOG();
         return parse_;
     }
 

@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -28,14 +29,17 @@ namespace eka2l1::epoc {
     }
 
     bool chunk_allocator::expand(std::size_t target) {
+  NGAGE_COVERAGE_LOG();
         return target_chunk->adjust(common::min<std::size_t>(target_chunk->max_size(), target));
     }
 
     address chunk_allocator::to_address(const void *addr, kernel::process *pr) {
+  NGAGE_COVERAGE_LOG();
         return static_cast<address>(reinterpret_cast<const std::uint8_t *>(addr) - reinterpret_cast<const std::uint8_t *>(target_chunk->host_base())) + target_chunk->base(pr).ptr_address();
     }
 
     void *chunk_allocator::to_pointer(const address addr, kernel::process *pr) {
+  NGAGE_COVERAGE_LOG();
         return reinterpret_cast<std::uint8_t *>(target_chunk->host_base()) + (addr - target_chunk->base(pr).ptr_address());
     }
 }

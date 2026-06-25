@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -28,18 +29,21 @@ namespace eka2l1::epoc {
         : window_client_obj(client, nullptr)
         , bitmap_(bmp)
         , parent_(parent) {
+  NGAGE_COVERAGE_LOG();
         if (parent_) {
             parent_->ref();
         }
     }
 
     wsbitmap::~wsbitmap() {
+  NGAGE_COVERAGE_LOG();
         if (parent_) {
             parent_->deref();
         }
     }
 
     fbsbitmap *wsbitmap::get_and_update_parent() {
+  NGAGE_COVERAGE_LOG();
         fbsbitmap *previous_parent = parent_;
         fbsbitmap *clean = previous_parent->final_clean();
 
@@ -54,6 +58,7 @@ namespace eka2l1::epoc {
     }
 
     bool wsbitmap::execute_command(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         bool quit = false;
 
         if (cmd.header.op == 0) {

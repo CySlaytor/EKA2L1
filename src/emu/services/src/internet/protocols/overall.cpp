@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2021 EKA2L1 Team
  * 
@@ -33,6 +34,7 @@ namespace eka2l1::epoc::internet {
         : socket::protocol(oldarch)
         , looper_(libuv::default_looper)
         , kern_(kern) {
+  NGAGE_COVERAGE_LOG();
 #if EKA2L1_PLATFORM(WIN32)
         WSADATA init_data;
         WSAStartup(MAKEWORD(2, 0), &init_data);
@@ -40,6 +42,7 @@ namespace eka2l1::epoc::internet {
     }
 
     void add_internet_stack_protocols(socket_server *sock, const bool oldarch) {
+  NGAGE_COVERAGE_LOG();
         std::unique_ptr<epoc::socket::protocol> inet_br_pr = std::make_unique<inet_bridged_protocol>(
             sock->get_kernel_object_owner(), oldarch);
 

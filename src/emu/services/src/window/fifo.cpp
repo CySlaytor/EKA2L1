@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -28,6 +29,7 @@
 
 namespace eka2l1::epoc {
     bool event_fifo::is_my_priority_really_high(epoc::event_code evt) {
+  NGAGE_COVERAGE_LOG();
         switch (evt) {
         case event_code::switch_off:
         case event_code::switch_on:
@@ -40,6 +42,7 @@ namespace eka2l1::epoc {
     }
 
     std::uint32_t event_fifo::queue_event(const event &evt) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(lock_);
 
         if (q_.size() == maximum_element) {
@@ -76,6 +79,7 @@ namespace eka2l1::epoc {
     // Lone pointer ups
     // Lone focus lost/gain
     void event_fifo::do_purge() {
+  NGAGE_COVERAGE_LOG();
         for (size_t i = 0; i < q_.size(); i++) {
             switch (q_[i].evt.type) {
             case epoc::event_code::event_password:
@@ -125,6 +129,7 @@ namespace eka2l1::epoc {
     }
 
     event event_fifo::get_event() {
+  NGAGE_COVERAGE_LOG();
         std::optional<event> evt = get_evt_opt();
 
         if (!evt) {
@@ -136,6 +141,7 @@ namespace eka2l1::epoc {
     }
 
     std::uint32_t redraw_fifo::queue_event(void *owner, const redraw_event &evt, const std::uint16_t pri) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(lock_);
         eka2l1::rect target_queue_rect(evt.top_left, evt.bottom_right);
         target_queue_rect.transform_from_symbian_rectangle();
@@ -171,6 +177,7 @@ namespace eka2l1::epoc {
     }
 
     void redraw_fifo::remove_events(void *owner) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(lock_);
         common::erase_elements(q_, [owner](fifo_element &elem) -> bool {
             return elem.evt.owner_ == owner;

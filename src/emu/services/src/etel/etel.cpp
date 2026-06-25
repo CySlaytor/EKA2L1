@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team.
  * 
@@ -23,12 +24,12 @@
 #include <services/etel/common.h>
 #include <services/etel/etel.h>
 #include <services/etel/phone.h>
-#include <services/sysagt/sysagt.h>
 #include <system/epoc.h>
 #include <utils/err.h>
 
 namespace eka2l1 {
     std::string get_etel_server_name_by_epocver(const epocver ver) {
+  NGAGE_COVERAGE_LOG();
         if (ver <= epocver::eka2) {
             return "EtelServer";
         }
@@ -49,6 +50,7 @@ namespace eka2l1 {
     }
 
     void etel_server::init(kernel_system *kern) {
+  NGAGE_COVERAGE_LOG();
         if (call_status_prop_ || network_bars_prop_ || battery_bars_prop_ || charger_status_prop_ ||
             sim_c_status_prop_) {
             return;
@@ -58,7 +60,6 @@ namespace eka2l1 {
         call_status_prop_ = kern->create<service::property>();
         call_status_prop_->define(service::property_type::int_data, 4);
 
-        call_status_prop_->first = eka2l1::SYSTEM_AGENT_PROPERTY_CATEGORY;
         call_status_prop_->second = epoc::ETEL_PHONE_CURRENT_CALL_UID;
 
         call_status_prop_->set_int(epoc::etel_phone_current_call_none);
@@ -67,7 +68,6 @@ namespace eka2l1 {
         sim_c_status_prop_ = kern->create<service::property>();
         sim_c_status_prop_->define(service::property_type::int_data, 4);
 
-        sim_c_status_prop_->first = eka2l1::SYSTEM_AGENT_PROPERTY_CATEGORY;
         sim_c_status_prop_->second = epoc::ETEL_ADV_SIMC_STATUS_PROP_UID;
 
         sim_c_status_prop_->set_int(7);
@@ -76,7 +76,6 @@ namespace eka2l1 {
         network_bars_prop_ = kern->create<service::property>();
         network_bars_prop_->define(service::property_type::int_data, 4);
 
-        network_bars_prop_->first = eka2l1::SYSTEM_AGENT_PROPERTY_CATEGORY;
         network_bars_prop_->second = epoc::ETEL_PHONE_NETWORK_BARS_UID;
 
         network_bars_prop_->set_int(epoc::ETEL_MAX_BAR_LEVEL * epoc::ETEL_BAR_MULTIPLIER);
@@ -85,7 +84,6 @@ namespace eka2l1 {
         battery_bars_prop_ = kern->create<service::property>();
         battery_bars_prop_->define(service::property_type::int_data, 4);
 
-        battery_bars_prop_->first = eka2l1::SYSTEM_AGENT_PROPERTY_CATEGORY;
         battery_bars_prop_->second = epoc::ETEL_PHONE_BATTERY_BARS_UID;
 
         battery_bars_prop_->set_int(epoc::ETEL_MAX_BAR_LEVEL * epoc::ETEL_BAR_MULTIPLIER);
@@ -94,7 +92,6 @@ namespace eka2l1 {
         charger_status_prop_ = kern->create<service::property>();
         charger_status_prop_->define(service::property_type::int_data, 4);
 
-        charger_status_prop_->first = eka2l1::SYSTEM_AGENT_PROPERTY_CATEGORY;
         charger_status_prop_->second = epoc::ETEL_PHONE_CHARGER_STATUS_UID;
 
         charger_status_prop_->set_int(epoc::etel_charger_status_connected);
@@ -109,6 +106,7 @@ namespace eka2l1 {
     }
 
     void etel_server::init2(kernel_system *kern, io_system *io) {
+  NGAGE_COVERAGE_LOG();
         // Load neccessary modules! This is usually handle by another party...
         static constexpr const char *REGULAR_TSY_NAME = "phonetsy";
 
@@ -117,6 +115,7 @@ namespace eka2l1 {
     }
 
     void etel_server::connect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         if (!init2ed_) {
             init2(ctx.sys->get_kernel_system(), ctx.sys->get_io_system());
         }
@@ -126,6 +125,7 @@ namespace eka2l1 {
     }
 
     etel_legacy_level etel_server::legacy_level() {
+  NGAGE_COVERAGE_LOG();
         if (kern->get_epoc_version() <= epocver::epoc6) {
             return ETEL_LEGACY_LEVEL_LEGACY;
         }
@@ -139,9 +139,11 @@ namespace eka2l1 {
 
     etel_session::etel_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_ver)
         : service::typical_session(serv, client_ss_uid, client_ver) {
+  NGAGE_COVERAGE_LOG();
     }
 
     etel_session::~etel_session() {
+  NGAGE_COVERAGE_LOG();
         etel_server *serv = server<etel_server>();
         io_system *io = serv->get_system()->get_io_system();
 
@@ -149,6 +151,7 @@ namespace eka2l1 {
     }
 
     void etel_session::close_phone_module(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> name = ctx->get_argument_value<std::u16string>(0);
 
         if (!name) {
@@ -167,6 +170,7 @@ namespace eka2l1 {
     }
 
     void etel_session::load_phone_module(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> name = ctx->get_argument_value<std::u16string>(0);
 
         if (!name) {
@@ -185,6 +189,7 @@ namespace eka2l1 {
     }
 
     void etel_session::enumerate_phones(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         epoc::etel::module_manager &mngr = server<etel_server>()->mngr_;
         std::uint32_t total_phone = static_cast<std::uint32_t>(mngr.total_entries(epoc::etel_entry_phone));
 
@@ -193,6 +198,7 @@ namespace eka2l1 {
     }
 
     void etel_session::get_phone_info_by_index(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         epoc::etel_phone_info info;
         const std::int32_t index = *ctx->get_argument_value<std::int32_t>(1);
 
@@ -214,6 +220,7 @@ namespace eka2l1 {
     }
 
     void etel_session::get_tsy_name(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const std::int32_t index = *ctx->get_argument_value<std::int32_t>(0);
 
         epoc::etel::module_manager &mngr = server<etel_server>()->mngr_;
@@ -233,6 +240,7 @@ namespace eka2l1 {
     }
 
     void etel_session::add_new_subsession(service::ipc_context *ctx, etel_subsession_instance &instance) {
+  NGAGE_COVERAGE_LOG();
         auto empty_slot = std::find(subsessions_.begin(), subsessions_.end(), nullptr);
 
         if (empty_slot == subsessions_.end()) {
@@ -245,6 +253,7 @@ namespace eka2l1 {
     }
 
     void etel_session::open_from_session(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> name_of_object = ctx->get_argument_value<std::u16string>(0);
 
         if (!name_of_object) {
@@ -283,6 +292,7 @@ namespace eka2l1 {
     }
 
     void etel_session::open_from_subsession(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> name_of_object = ctx->get_argument_value<std::u16string>(0);
 
         if (!name_of_object) {
@@ -337,6 +347,7 @@ namespace eka2l1 {
     }
 
     void etel_session::close_sub(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> subhandle = ctx->get_argument_value<std::uint32_t>(3);
 
         if (subhandle && subhandle.value() <= subsessions_.size()) {
@@ -347,11 +358,13 @@ namespace eka2l1 {
     }
 
     void etel_session::query_tsy_functionality(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_ETEL, "Query TSY functionality stubbed");
         ctx->complete(epoc::error_none);
     }
 
     void etel_session::line_enumerate_call(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         epoc::etel::module_manager &mngr = server<etel_server>()->mngr_;
         std::uint32_t total_call = static_cast<std::uint32_t>(mngr.total_entries(epoc::etel_entry_call));
 
@@ -360,6 +373,7 @@ namespace eka2l1 {
     }
 
     void etel_session::is_supported_by_module(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> tsy_name = ctx->get_argument_value<std::u16string>(0);
         if (!tsy_name.has_value()) {
             ctx->complete(epoc::error_argument);
@@ -380,6 +394,7 @@ namespace eka2l1 {
     }
 
     void etel_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (server<etel_server>()->legacy_level() <= ETEL_LEGACY_LEVEL_TRANSITION) {
             switch (ctx->msg->function) {
             case epoc::etel_old_open_from_session:

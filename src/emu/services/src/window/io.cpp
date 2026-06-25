@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -26,10 +27,12 @@
 
 namespace eka2l1::epoc {
     void window_pointer_focus_walker::add_new_event(const epoc::event &evt) {
+  NGAGE_COVERAGE_LOG();
         evts_.emplace_back(evt, false);
     }
 
     void window_pointer_focus_walker::process_event_to_target_window(epoc::window *win, epoc::event &evt) {
+  NGAGE_COVERAGE_LOG();
         assert(win->type == epoc::window_kind::client);
 
         epoc::canvas_base *user = reinterpret_cast<epoc::canvas_base *>(win);
@@ -55,6 +58,7 @@ namespace eka2l1::epoc {
     }
 
     bool window_pointer_focus_walker::do_it(epoc::window *win) {
+  NGAGE_COVERAGE_LOG();
         if (evts_.empty()) {
             return true;
         }
@@ -109,22 +113,27 @@ namespace eka2l1::epoc {
     }
 
     void window_pointer_focus_walker::clear() {
+  NGAGE_COVERAGE_LOG();
         evts_.clear();
     }
 
     window_key_shipper::window_key_shipper(window_server *serv)
         : serv_(serv) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void window_key_shipper::add_new_event(const epoc::event &evt) {
+  NGAGE_COVERAGE_LOG();
         evts_.push_back(evt);
     }
 
     static const bool is_device_std_key_not_repeatable(const std_scan_code code) {
+  NGAGE_COVERAGE_LOG();
         return (code >= std_key_device_0) && (code <= std_key_device_1);
     }
 
     void window_key_shipper::start_shipping() {
+  NGAGE_COVERAGE_LOG();
         if (evts_.empty()) {
             return;
         }

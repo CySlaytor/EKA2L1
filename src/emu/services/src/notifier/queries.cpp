@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -23,6 +24,7 @@
 
 namespace eka2l1::epoc::notifier {
     void add_builtin_plugins(kernel_system *kern, std::vector<plugin_instance> &plugins) {
+  NGAGE_COVERAGE_LOG();
 #define ADD_PLUGIN(name) plugins.push_back(std::make_unique<name>(kern))
         ADD_PLUGIN(note_display_plugin);
         ADD_PLUGIN(keylock_plugin);

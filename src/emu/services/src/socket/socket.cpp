@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2021 EKA2L1 Team
  * 
@@ -26,12 +27,14 @@
 namespace eka2l1::epoc::socket {
     std::size_t socket::get_option(const std::uint32_t option_id, const std::uint32_t option_family,
         std::uint8_t *buffer, const std::size_t avail_size) {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Unhandled base option family {} (id {})", option_family, option_id);
         return 0;
     }
 
     bool socket::set_option(const std::uint32_t option_id, const std::uint32_t option_family,
         std::uint8_t *buffer, const std::size_t avail_size) {
+  NGAGE_COVERAGE_LOG();
         if (option_family == epoc::socket::SOCKET_OPTION_FAMILY_BASE) {
             switch (option_id) {
             case epoc::socket::SOCKET_OPTION_ID_BLOCKING_IO:
@@ -48,77 +51,93 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket::bind(const saddress &addr, epoc::notify_info &info) {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Binding socket unimplemented");
         info.complete(epoc::error_not_supported);
     }
 
     void socket::bind_callback(const saddress &addr, std::function<void(int)> callback) {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Binding socket with callback unimplemented!");
     }
 
     void socket::connect(const saddress &addr, epoc::notify_info &info) {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Connecting socket unimplemented");
         info.complete(epoc::error_not_supported);
     }
 
     void socket::ioctl(const std::uint32_t command, epoc::notify_info &complete_info, std::uint8_t *buffer,
         const std::size_t available_size, const std::size_t max_buffer_size, const std::uint32_t level) {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Unhandled base IOCTL (command={})", command);
     }
 
     void socket::send(const std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, const saddress *addr,
         std::uint32_t flags, epoc::notify_info &complete_info) {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Sending data to socket unimplemented!");
     }
 
     void socket::receive(std::uint8_t *data, const std::uint32_t data_size, std::uint32_t *sent_size, saddress *addr,
         std::uint32_t flags, epoc::notify_info &complete_info, receive_done_callback cb) {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Receiving data from socket unimplemented!");
     }
 
     std::int32_t socket::local_name(saddress &result, std::uint32_t &result_len) {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Get socket's local name unimplemented!");
         return epoc::error_not_supported;
     }
     
     std::int32_t socket::remote_name(saddress &result, std::uint32_t &result_len) {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Get socket's remote name unimplemented!");
         return epoc::error_not_supported;
     }
     
     std::int32_t socket::listen(const std::uint32_t backlog) {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Socket listening unimplemented!");
         return epoc::error_not_supported;
     }
 
     void socket::accept(std::unique_ptr<socket> *pending_sock, epoc::notify_info &complete_info) {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Socket accept unimplemented!");
         complete_info.complete(epoc::error_not_supported);
     }
 
     void socket::cancel_receive() {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Cancel receive unimplemented!");
     }
 
     void socket::cancel_send() {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Cancel send unimplemented!");
     }
 
     void socket::cancel_connect() {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Cancel connect unimplemented!");
     }
 
     void socket::cancel_accept() {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Cancel accept unimplemented!");
     }
 
     void socket::shutdown(epoc::notify_info &complete_info, int reason) {
+  NGAGE_COVERAGE_LOG();
         LOG_ERROR(SERVICE_ESOCK, "Shutdown not implemented!");
     }
 
     socket_socket::socket_socket(socket_client_session *parent, std::unique_ptr<socket> &sock)
         : socket_subsession(parent)
         , sock_(std::move(sock)) {
+  NGAGE_COVERAGE_LOG();
     }
 
     struct oldarch_option_description {
@@ -128,6 +147,7 @@ namespace eka2l1::epoc::socket {
     };
 
     void socket_socket::get_option(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> option_name;
         std::optional<std::uint32_t> option_fam;
 
@@ -185,6 +205,7 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_socket::set_option(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> option_name;
         std::optional<std::uint32_t> option_fam;
 
@@ -233,6 +254,7 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_socket::bind(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<saddress> sockaddr = ctx->get_argument_data_from_descriptor<saddress>(0);
 
         if (!sockaddr.has_value()) {
@@ -245,6 +267,7 @@ namespace eka2l1::epoc::socket {
     }
     
     void socket_socket::connect(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<saddress> sockaddr = ctx->get_argument_data_from_descriptor<saddress>(0);
 
         if (!sockaddr.has_value()) {
@@ -257,6 +280,7 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_socket::write(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::uint8_t *packet_buffer = ctx->get_descriptor_argument_ptr(2);
         std::size_t packet_size = ctx->get_argument_data_size(2);
 
@@ -270,6 +294,7 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_socket::read(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::uint8_t *packet_buffer = ctx->get_descriptor_argument_ptr(2);
         std::size_t packet_size = ctx->get_argument_max_data_size(2);
 
@@ -293,6 +318,7 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_socket::send(service::ipc_context *ctx, const bool has_return_length, const bool has_addr) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> flags = std::nullopt;
         std::uint8_t *packet_buffer = ctx->get_descriptor_argument_ptr(2);
         std::size_t packet_size = ctx->get_argument_data_size(2);
@@ -334,6 +360,7 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_socket::recv(service::ipc_context *ctx, const bool has_return_length, const bool one_or_more, const bool has_addr) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> flags = std::nullopt;
         std::uint8_t *packet_buffer = ctx->get_descriptor_argument_ptr(2);
         std::size_t packet_size = ctx->get_argument_max_data_size(2);
@@ -397,6 +424,7 @@ namespace eka2l1::epoc::socket {
     }
     
     void socket_socket::send_old(service::ipc_context *ctx, const bool has_addr) {
+  NGAGE_COVERAGE_LOG();
         std::uint8_t *packet_buffer = ctx->get_descriptor_argument_ptr(2);
         std::size_t packet_size = ctx->get_argument_data_size(2);
 
@@ -422,6 +450,7 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_socket::recv_old(service::ipc_context *ctx, const bool one_or_more, const bool has_addr) {
+  NGAGE_COVERAGE_LOG();
         std::uint8_t *packet_buffer = ctx->get_descriptor_argument_ptr(2);
         std::size_t packet_size = ctx->get_argument_max_data_size(2);
 
@@ -460,6 +489,7 @@ namespace eka2l1::epoc::socket {
     }
     
     void socket_socket::ioctl(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> command = ctx->get_argument_value<std::uint32_t>(0);
         std::optional<std::uint32_t> level = ctx->get_argument_value<std::uint32_t>(2);
         std::uint8_t *buffer = ctx->get_descriptor_argument_ptr(1);
@@ -476,6 +506,7 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_socket::local_name(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         epoc::socket::saddress addr;
         std::uint32_t addr_real_size = 0;
 
@@ -491,6 +522,7 @@ namespace eka2l1::epoc::socket {
     }
     
     void socket_socket::remote_name(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         epoc::socket::saddress addr;
         std::uint32_t addr_real_size = 0;
 
@@ -506,6 +538,7 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_socket::listen(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> backlog = ctx->get_argument_value<std::uint32_t>(0);
         if (!backlog.has_value()) {
             ctx->complete(epoc::error_argument);
@@ -516,6 +549,7 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_socket::accept(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> subsess_id = ctx->get_argument_value<std::uint32_t>(1);
 
         if (subsess_id .has_value() && (subsess_id.value() > 0)) {
@@ -542,31 +576,37 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_socket::cancel_send(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         sock_->cancel_send();
         ctx->complete(epoc::error_none);
     }
 
     void socket_socket::cancel_recv(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         sock_->cancel_receive();
         ctx->complete(epoc::error_none);
     }
 
     void socket_socket::cancel_accept(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         sock_->cancel_accept();
         ctx->complete(epoc::error_none);
     }
 
     void socket_socket::cancel_all(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         sock_->cancel_all();
         ctx->complete(epoc::error_none);
     }
 
     void socket_socket::close(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         parent_->subsessions_.remove(id_);
         ctx->complete(epoc::error_none);
     }
 
     void socket_socket::shutdown(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         epoc::notify_info info(ctx->msg->request_sts, ctx->msg->own_thr);
         std::optional<int> reason = ctx->get_argument_value<int>(0);
 
@@ -574,6 +614,7 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_socket::dispatch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (parent_->is_oldarch()) {
             switch (ctx->msg->function) {
             case socket_old_so_set_opt:

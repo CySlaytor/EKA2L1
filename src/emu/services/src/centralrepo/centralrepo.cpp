@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -42,6 +43,7 @@ namespace eka2l1 {
     // TODO: Security check. This include reading keyspace file (.cre) to get policies
     // information and reading capabilities section
     bool indentify_central_repo_entry_var_type(const std::string &tok, central_repo_entry_type &t) {
+  NGAGE_COVERAGE_LOG();
         if (tok == "int") {
             t = central_repo_entry_type::integer;
             return true;
@@ -71,6 +73,7 @@ namespace eka2l1 {
     }
 
     bool parse_new_centrep_ini(const std::string &path, central_repo &repo) {
+  NGAGE_COVERAGE_LOG();
         common::ini_file creini;
         int err = creini.load(path.c_str());
 
@@ -255,6 +258,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_session::init(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         // The UID repo to load
         const std::uint32_t repo_uid = *ctx->get_argument_value<std::uint32_t>(0);
         device_manager *mngr = ctx->sys->get_device_manager();
@@ -285,6 +289,7 @@ namespace eka2l1 {
     }
 
     void central_repo_server::rescan_drives(eka2l1::io_system *io) {
+  NGAGE_COVERAGE_LOG();
         for (drive_number d = drive_a; d <= drive_z; d = static_cast<drive_number>(static_cast<int>(d) + 1)) {
             std::optional<eka2l1::drive> drv = io->get_drive_entry(d);
 
@@ -303,6 +308,7 @@ namespace eka2l1 {
     }
 
     void central_repo_server::callback_on_drive_change(eka2l1::io_system *io, const drive_number drv, int act) {
+  NGAGE_COVERAGE_LOG();
         // Eject
         if (act == 0) {
             if (rom_drv == drv) {
@@ -330,6 +336,7 @@ namespace eka2l1 {
     }
 
     void central_repo_server::redirect_msg_to_session(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         const kernel::uid session_uid = ctx.msg->msg_session->unique_id();
         auto session_ite = client_sessions.find(session_uid);
 
@@ -345,6 +352,7 @@ namespace eka2l1 {
 
     int central_repo_server::load_repo_adv(eka2l1::io_system *io, device_manager *mngr, central_repo *repo, const std::uint32_t key,
         bool scan_org_only) {
+  NGAGE_COVERAGE_LOG();
         bool is_first_repo = first_repo;
         first_repo ? (first_repo = false) : 0;
 
@@ -455,6 +463,7 @@ namespace eka2l1 {
      * of preferable drive (usually internal).
     */
     eka2l1::central_repo *central_repo_server::load_repo(eka2l1::io_system *io, device_manager *mngr, const std::uint32_t key) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::central_repo repo;
         if (load_repo_adv(io, mngr, &repo, key, false) != 0) {
             return nullptr;
@@ -465,6 +474,7 @@ namespace eka2l1 {
     }
 
     eka2l1::central_repo *central_repo_server::load_repo_with_lookup(eka2l1::io_system *io, device_manager *mngr, const std::uint32_t key) {
+  NGAGE_COVERAGE_LOG();
         auto result = repos.find(key);
 
         if (result != repos.end()) {
@@ -477,6 +487,7 @@ namespace eka2l1 {
 
     eka2l1::central_repo *central_repo_server::get_initial_repo(eka2l1::io_system *io,
         device_manager *mngr, const std::uint32_t key) {
+  NGAGE_COVERAGE_LOG();
         // Load from cache first
         eka2l1::central_repo *repo = backup_cacher.get_cached_repo(key);
 
@@ -494,6 +505,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_session::handle_message(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx->msg->function) {
         case cen_rep_init: {
             init(ctx);
@@ -524,6 +536,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::handle_message(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx->msg->function) {
         // TODO: Faster way
         case cen_rep_create_int:
@@ -598,6 +611,7 @@ namespace eka2l1 {
     }
 
     int central_repo_client_session::closerep(io_system *io, device_manager *mngr, const std::uint32_t repo_id, decltype(client_subsessions)::iterator repo_subsession_ite) {
+  NGAGE_COVERAGE_LOG();
         auto &repo_subsession = repo_subsession_ite->second;
 
         if (repo_id != 0 && repo_subsession.attach_repo->uid != repo_id) {
@@ -631,6 +645,7 @@ namespace eka2l1 {
     }
 
     int central_repo_client_session::closerep(io_system *io, device_manager *mngr, const std::uint32_t repo_id, const std::uint32_t id) {
+  NGAGE_COVERAGE_LOG();
         auto repo_subsession_ite = client_subsessions.find(id);
 
         if (repo_subsession_ite == client_subsessions.end()) {
@@ -646,6 +661,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_session::close(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         device_manager *mngr = ctx->sys->get_device_manager();
         const int err = closerep(ctx->sys->get_io_system(), mngr, 0, *ctx->get_argument_value<std::uint32_t>(3));
 
@@ -675,6 +691,7 @@ namespace eka2l1 {
     // If a session disconnect, we should at least save all changes it did
     // At least, if the session connected still exist
     void central_repo_server::disconnect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         // Close all repos that are currently being opened.
         const kernel::uid ss_id = ctx.msg->msg_session->unique_id();
         auto ss_ite = client_sessions.find(ss_id);
@@ -698,6 +715,7 @@ namespace eka2l1 {
     }
 
     void central_repo_server::connect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         central_repo_client_session session;
         session.server = this;
 

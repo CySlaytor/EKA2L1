@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team.
  * 
@@ -41,6 +42,7 @@ namespace eka2l1::epoc {
     akn_ss_settings::akn_ss_settings(io_system *io, central_repo_server *svr)
         : io_(io)
         , dvcmngr_(nullptr) {
+  NGAGE_COVERAGE_LOG();
         if (svr) {
             dvcmngr_ = svr->get_system()->get_device_manager();
 
@@ -68,6 +70,7 @@ namespace eka2l1::epoc {
     }
 
     static bool read_pid(central_repo_entry *entry_, pid &pid_, const int base = 16, const bool uid_only = false) {
+  NGAGE_COVERAGE_LOG();
         pid_.second = 0;
 
         if (entry_->data.etype != central_repo_entry_type::string) {
@@ -95,6 +98,7 @@ namespace eka2l1::epoc {
     }
 
     bool akn_ss_settings::read_default_skin_id() {
+  NGAGE_COVERAGE_LOG();
         if (!skins_rep_) {
             LOG_ERROR(SERVICE_UI, "Skin repository failed to load!");
             return false;
@@ -119,6 +123,7 @@ namespace eka2l1::epoc {
     }
 
     bool akn_ss_settings::read_ah_mirroring_active() {
+  NGAGE_COVERAGE_LOG();
         ah_mirroring_active = false;
 
         if (!avkon_rep_) {
@@ -139,6 +144,7 @@ namespace eka2l1::epoc {
     }
 
     bool akn_ss_settings::read_active_skin_id() {
+  NGAGE_COVERAGE_LOG();
         if (!skins_rep_) {
             LOG_ERROR(SERVICE_UI, "Skin repository failed to load!");
             return false;
@@ -156,6 +162,7 @@ namespace eka2l1::epoc {
     }
 
     bool akn_ss_settings::read_highlight_anim_enabled() {
+  NGAGE_COVERAGE_LOG();
         highlight_anim_enabled = false;
 
         if (!skins_rep_) {
@@ -176,6 +183,7 @@ namespace eka2l1::epoc {
     }
 
     void akn_ss_settings::set_pid_to_skins_repo(const std::uint32_t key, const epoc::pid id, const bool uid_only) {
+  NGAGE_COVERAGE_LOG();
         central_repo_entry *active_skin_entry = skins_rep_->find_entry(key);
         std::u16string data = epoc::pid_to_string(id);
 
@@ -209,11 +217,13 @@ namespace eka2l1::epoc {
     }
 
     void akn_ss_settings::active_skin_pid(const epoc::pid id) {
+  NGAGE_COVERAGE_LOG();
         active_skin_pid_ = id;
         set_pid_to_skins_repo(ACTIVE_SKIN_UID_KEY, id, true);
     }
 
     void akn_ss_settings::default_skin_pid(const epoc::pid id) {
+  NGAGE_COVERAGE_LOG();
         default_skin_pid_ = id;
         set_pid_to_skins_repo(DEFAULT_SKIN_UID_KEY, id, false);
     }

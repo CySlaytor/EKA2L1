@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -35,6 +36,7 @@
 
 namespace eka2l1::epoc {
     void open_font_glyph_offset_array::init(fbscli *cli, const std::int32_t count) {
+  NGAGE_COVERAGE_LOG();
         offset_array_count = count;
 
         std::int32_t *offset_array_ptr = reinterpret_cast<std::int32_t *>(cli->server<fbs_server>()
@@ -52,6 +54,7 @@ namespace eka2l1::epoc {
     }
 
     std::int32_t *open_font_glyph_offset_array::pointer(fbscli *cli) {
+  NGAGE_COVERAGE_LOG();
         if (offset_array_offset == 0) {
             return nullptr;
         }
@@ -66,6 +69,7 @@ namespace eka2l1::epoc {
     }
 
     void *open_font_glyph_offset_array::get_glyph(fbscli *client, const std::int32_t idx) {
+  NGAGE_COVERAGE_LOG();
         if (idx < 0 || idx >= offset_array_count) {
             return nullptr;
         }
@@ -87,6 +91,7 @@ namespace eka2l1::epoc {
     }
 
     bool open_font_glyph_offset_array::set_glyph(fbscli *client, const std::int32_t idx, void *cache_entry) {
+  NGAGE_COVERAGE_LOG();
         if (idx < 0 || idx >= offset_array_count) {
             return false;
         }
@@ -109,6 +114,7 @@ namespace eka2l1::epoc {
     }
 
     bool open_font_glyph_offset_array::is_entry_empty(fbscli *cli, const std::int32_t idx) {
+  NGAGE_COVERAGE_LOG();
         if (idx < 0 || idx >= offset_array_count) {
             return true;
         }
@@ -122,6 +128,7 @@ namespace eka2l1::epoc {
     }
 
     open_font_session_cache_v3 *open_font_session_cache_list::get(fbscli *cli, const std::int32_t session_handle, const bool create) {
+  NGAGE_COVERAGE_LOG();
         const std::int32_t *offset_ptr = find(session_handle);
         fbs_server *serv = cli->server<fbs_server>();
 
@@ -152,6 +159,7 @@ namespace eka2l1::epoc {
     }
 
     open_font_session_cache_link *open_font_session_cache_link::get_or_create(fbscli *cli) {
+  NGAGE_COVERAGE_LOG();
         open_font_session_cache_link *current = this;
         fbs_server *serv = cli->server<fbs_server>();
         memory_system *mem = serv->get_system()->get_memory_system();
@@ -188,6 +196,7 @@ namespace eka2l1::epoc {
     }
 
     bool open_font_session_cache_link::remove(fbscli *cli) {
+  NGAGE_COVERAGE_LOG();
         open_font_session_cache_link *previous = nullptr;
         open_font_session_cache_link *current = this;
         fbs_server *serv = cli->server<fbs_server>();
@@ -226,6 +235,7 @@ namespace eka2l1::epoc {
     }
 
     bool open_font_session_cache_list::erase_cache(fbscli *cli) {
+  NGAGE_COVERAGE_LOG();
         auto cache = get(cli, cli->connection_id_, false);
 
         if (cache) {
@@ -242,14 +252,17 @@ namespace eka2l1::epoc {
     }
 
     void open_font_glyph_v2::destroy(fbscli *cli) {
+  NGAGE_COVERAGE_LOG();
         // Bitmap data allocated together with glyph info
     }
 
     void open_font_glyph_v3::destroy(fbscli *cli) {
+  NGAGE_COVERAGE_LOG();
         // Bitmap data allocated together with glyph info
     }
 
     void open_font_session_cache_v3::destroy(fbscli *cli) {
+  NGAGE_COVERAGE_LOG();
         for (std::int32_t i = 0; i < offset_array.offset_array_count; i++) {
             if (!offset_array.is_entry_empty(cli, i)) {
                 auto glyph_cache = offset_array.get_glyph(cli, i);
@@ -261,6 +274,7 @@ namespace eka2l1::epoc {
     }
 
     void open_font_session_cache_v3::add_glyph(fbscli *cli, const std::uint32_t code, void *the_glyph) {
+  NGAGE_COVERAGE_LOG();
         const std::uint32_t real_index = (code & 0x7fffffff) % offset_array.offset_array_count;
 
         if (!offset_array.is_entry_empty(cli, real_index)) {
@@ -274,6 +288,7 @@ namespace eka2l1::epoc {
 
     template <typename T>
     void open_font_session_cache_old::destroy(fbscli *cli) {
+  NGAGE_COVERAGE_LOG();
         for (std::int32_t i = 0; i < offset_array.offset_array_count; i++) {
             if (!offset_array.is_entry_empty(cli, i)) {
                 auto glyph_cache = offset_array.get_glyph(cli, i);
@@ -286,6 +301,7 @@ namespace eka2l1::epoc {
 
     template <typename T>
     void open_font_session_cache_old::add_glyph(fbscli *cli, const std::uint32_t code, void *the_glyph) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t real_index = (code & 0x7fffffff) % offset_array.offset_array_count;
 
         if (!offset_array.is_entry_empty(cli, real_index)) {
@@ -332,11 +348,13 @@ namespace eka2l1::epoc {
         : entry_(0)
         , unk4_(0)
         , unk8_(0) {
+  NGAGE_COVERAGE_LOG();
     }
 }
 
 namespace eka2l1 {
     static bool is_opcode_ruler_twips(const int opcode) {
+  NGAGE_COVERAGE_LOG();
         return (opcode == fbs_nearest_font_design_height_in_twips || opcode == fbs_nearest_font_max_height_in_twips);
     }
 
@@ -347,6 +365,7 @@ namespace eka2l1 {
     };
 
     fbsfont *fbs_server::look_for_font_with_address(const eka2l1::address addr) {
+  NGAGE_COVERAGE_LOG();
         const address base_shared_old_mm_model = shared_chunk->base(nullptr).ptr_address();
 
         for (auto &font_cache_obj_ptr : font_obj_container) {
@@ -361,6 +380,7 @@ namespace eka2l1 {
     }
 
     static void do_scale_metrics(epoc::open_font_metrics &metrics, const float scale_x, const float scale_y) {
+  NGAGE_COVERAGE_LOG();
         metrics.max_height = static_cast<std::int16_t>(metrics.max_height * scale_y);
         metrics.ascent = static_cast<std::int16_t>(metrics.ascent * scale_y);
         metrics.descent = static_cast<std::int16_t>(metrics.descent * scale_y);
@@ -370,6 +390,7 @@ namespace eka2l1 {
     }
 
     static std::int32_t calculate_baseline(epoc::font_spec_base &spec) {
+  NGAGE_COVERAGE_LOG();
         if (static_cast<epoc::font_spec_v1 &>(spec).style.flags & epoc::font_style_base::super) {
             // Superscript, see 2^5 for example, 5 is the superscript
             constexpr std::int32_t super_script_offset_percentage = -28;
@@ -388,6 +409,7 @@ namespace eka2l1 {
     }
 
     static void calculate_algorithic_style(epoc::alg_style &style, epoc::font_spec_base &spec) {
+  NGAGE_COVERAGE_LOG();
         style.baseline_offsets_in_pixel = calculate_baseline(spec);
 
         style.height_factor = 1;
@@ -407,6 +429,7 @@ namespace eka2l1 {
      */
     static void do_fill_bitmap_font_spec(epoc::font_spec_base &target_spec, epoc::font_spec_base &given_spec,
         std::int16_t adjusted_height, epoc::adapter::font_file_adapter_base *adapter) {
+  NGAGE_COVERAGE_LOG();
         // TODO: Proper conversion through physical screen size
         target_spec.height = adjusted_height * 15;
 
@@ -416,10 +439,12 @@ namespace eka2l1 {
     }
 
     void fbscli::num_typefaces(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->complete(static_cast<std::int32_t>(server<fbs_server>()->persistent_font_store.number_of_typefaces()));
     }
 
     void fbscli::typeface_support(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> font_idx = ctx->get_argument_value<std::uint32_t>(0);
         std::optional<epoc::typeface_support> support = ctx->get_argument_data_from_descriptor<epoc::typeface_support>(1);
 
@@ -449,6 +474,7 @@ namespace eka2l1 {
     template <typename T, typename Q>
     void fbscli::fill_bitmap_information(T *bmpfont, Q *of, epoc::open_font_info &info, epoc::font_spec_base &spec,
         kernel::process *font_user) {
+  NGAGE_COVERAGE_LOG();
         fbs_server *serv = server<fbs_server>();
 
         if (epoc::does_client_use_pointer_instead_of_offset(this)) {
@@ -478,6 +504,7 @@ namespace eka2l1 {
 
         // Fill basic extended function info
         if constexpr (std::is_same_v<Q, epoc::open_font_v2>) {
+  NGAGE_COVERAGE_LOG();
             of->font_max_ascent = of->metrics.ascent;
             of->font_max_descent = of->metrics.descent;
             of->font_standard_descent = of->metrics.descent;
@@ -519,6 +546,7 @@ namespace eka2l1 {
 
     template <typename T>
     void fbs_server::destroy_bitmap_font(T *bmpfont) {
+  NGAGE_COVERAGE_LOG();
         // On EKA1, free the glyph cache offset
         if (legacy_level() >= FBS_LEGACY_LEVEL_KERNEL_TRANSITION) {
             epoc::open_font_v1 *ofo = reinterpret_cast<epoc::open_font_v1 *>(guest_general_data_to_host_ptr(bmpfont->openfont.template cast<std::uint8_t>()));
@@ -548,6 +576,7 @@ namespace eka2l1 {
     template void fbs_server::destroy_bitmap_font<epoc::bitmapfont_v2>(epoc::bitmapfont_v2 *bmpfont);
 
     epoc::bitmapfont_base *fbscli::create_bitmap_open_font(epoc::open_font_info &info, epoc::font_spec_base &spec, kernel::process *font_user) {
+  NGAGE_COVERAGE_LOG();
         fbs_server *serv = server<fbs_server>();
 #define DO_BITMAP_OPEN_FONT_CREATION(ver)                                                      \
     epoc::open_font_v##ver *of = serv->allocate_general_data<epoc::open_font_v##ver>();        \
@@ -570,6 +599,7 @@ namespace eka2l1 {
     }
 
     void fbscli::write_font_handle(service::ipc_context *ctx, fbsfont *font, const int index) {
+  NGAGE_COVERAGE_LOG();
         font_info result_info;
 
         result_info.handle = obj_table_.add(font);
@@ -581,6 +611,7 @@ namespace eka2l1 {
     }
 
     void fbscli::get_nearest_font(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         epoc::font_spec_v1 spec = *ctx->get_argument_data_from_descriptor<epoc::font_spec_v1>(0);
 
         // 1 x int of Max height - 2 x int of device size
@@ -657,6 +688,7 @@ namespace eka2l1 {
     }
 
     void fbscli::get_font_by_uid(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::uid> font_uid = ctx->get_argument_value<epoc::uid>(2);
         std::optional<epoc::alg_style> the_style = ctx->get_argument_data_from_descriptor<epoc::alg_style>(1);
 
@@ -704,6 +736,7 @@ namespace eka2l1 {
     }
 
     void fbscli::duplicate_font(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         fbs_server *serv = server<fbs_server>();
         fbsfont *font = serv->font_obj_container.get<fbsfont>(*ctx->get_argument_value<epoc::handle>(0));
 
@@ -716,6 +749,7 @@ namespace eka2l1 {
     }
 
     void fbscli::get_twips_height(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         fbs_server *serv = server<fbs_server>();
         std::optional<epoc::handle> font_local_handle = ctx->get_argument_value<epoc::handle>(0);
 
@@ -739,6 +773,7 @@ namespace eka2l1 {
     }
 
     fbsfont *fbscli::get_font_object(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if ((ver_.build > 94) || (server<fbs_server>()->get_system()->get_symbian_version_use() >= epocver::epoc95)) {
             // Use object table handle
             return obj_table_.get<fbsfont>(*ctx->get_argument_value<epoc::handle>(0));
@@ -749,6 +784,7 @@ namespace eka2l1 {
     }
 
     void fbscli::get_face_attrib(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         // Look for bitmap font with this same handle
         const fbsfont *font = get_font_object(ctx);
 
@@ -762,6 +798,7 @@ namespace eka2l1 {
     }
 
     void fbscli::rasterize_glyph(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const std::uint32_t codepoint = *ctx->get_argument_value<std::uint32_t>(1);
         const fbsfont *font = get_font_object(ctx);
 
@@ -880,6 +917,7 @@ namespace eka2l1 {
     }
 
     void fbscli::set_default_glyph_bitmap_type(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> default_type = ctx->get_argument_value<std::uint32_t>(0);
         if (!default_type.has_value()) {
             ctx->complete(epoc::error_argument);
@@ -891,10 +929,12 @@ namespace eka2l1 {
     }
 
     void fbscli::get_default_glyph_bitmap_type(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->complete(static_cast<int>(server<fbs_server>()->get_default_glyph_bitmap_type()));
     }
 
     void fbscli::has_character(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         // Look for bitmap font with this same handle
         const fbsfont *font = get_font_object(ctx);
 
@@ -914,6 +954,7 @@ namespace eka2l1 {
     }
 
     void fbscli::get_font_shaping(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         fbsfont *font = get_font_object(ctx);
 
         if (!font) {
@@ -966,6 +1007,7 @@ namespace eka2l1 {
     }
 
     void fbscli::delete_font_shaping(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         fbsfont *font = get_font_object(ctx);
         std::optional<std::int32_t> offset = ctx->get_argument_value<std::int32_t>(1);
 
@@ -1002,6 +1044,7 @@ namespace eka2l1 {
     };
 
     void fbscli::get_font_table(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         fbsfont *font = get_font_object(ctx);
         std::optional<std::uint32_t> tag = ctx->get_argument_value<std::uint32_t>(1);
         
@@ -1043,6 +1086,7 @@ namespace eka2l1 {
     }
 
     void fbscli::release_font_table(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         fbsfont *font = get_font_object(ctx);
         std::optional<std::uint32_t> tag = ctx->get_argument_value<std::uint32_t>(1);
         
@@ -1069,6 +1113,7 @@ namespace eka2l1 {
     }
 
     void fbscli::add_font_file_store(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> filename = ctx->get_argument_value<std::u16string>(0);
         if (!filename.has_value()) {
             ctx->complete(epoc::error_argument);
@@ -1088,11 +1133,13 @@ namespace eka2l1 {
     }
 
     void fbscli::remove_font_file_store(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_FBS, "RemoveFontFileStore stubbed");
         ctx->complete(epoc::error_none);
     }
 
     fbsfont::~fbsfont() {
+  NGAGE_COVERAGE_LOG();
         // Free atlas + bitmap
         atlas.destroy(serv->get_graphics_driver());
         std::uint8_t *font_ptr = serv->get_shared_chunk_base() + guest_font_offset;
@@ -1115,16 +1162,19 @@ namespace eka2l1 {
     }
 
     fbsfont *fbs_server::get_font(const service::uid id) {
+  NGAGE_COVERAGE_LOG();
         return font_obj_container.get<fbsfont>(id);
     }
 
     void fbs_server::load_fonts_from_directory(eka2l1::io_system *io, eka2l1::directory *folder) {
+  NGAGE_COVERAGE_LOG();
         while (auto entry = folder->get_next_entry()) {
             add_single_font(io, common::utf8_to_ucs2(entry->full_path));
         }
     }
 
     bool fbs_server::add_single_font(eka2l1::io_system *io, const std::u16string &path) {
+  NGAGE_COVERAGE_LOG();
         symfile f = io->open_file(path, READ_MODE | BIN_MODE);
         const std::uint64_t fsize = f->size();
 
@@ -1153,6 +1203,7 @@ namespace eka2l1 {
     }
 
     void fbs_server::load_fonts(eka2l1::io_system *io) {
+  NGAGE_COVERAGE_LOG();
         // Search all drives
         for (drive_number drv = drive_z; drv >= drive_a; drv = static_cast<drive_number>(static_cast<int>(drv) - 1)) {
             if (io->get_drive_entry(drv)) {

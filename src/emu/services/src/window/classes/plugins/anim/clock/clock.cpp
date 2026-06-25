@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2023 EKA2L1 Team
  * 
@@ -25,9 +26,11 @@
 namespace eka2l1::epoc {
     clock_anim_executor::clock_anim_executor(canvas_base *canvas)
         : anim_executor(canvas) {
+  NGAGE_COVERAGE_LOG();
     }
 
     std::int32_t clock_anim_executor::handle_request(const std::int32_t opcode, void *args)  {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_WINDOW, "Unimplemented clock animation command {}", opcode);
         return epoc::error_none;
     }

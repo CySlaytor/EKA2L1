@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -28,10 +29,12 @@
 namespace eka2l1 {
     compress_queue::compress_queue(fbs_server *serv)
         : serv_(serv) {
+  NGAGE_COVERAGE_LOG();
         queue_.max_pending_count_ = 256;
     }
 
     void compress_queue::compress(fbsbitmap *bmp) {
+  NGAGE_COVERAGE_LOG();
         if (bmp->bitmap_->header_.compression != epoc::bitmap_file_no_compression) {
             // Why?
             bmp->compress_done_nof.complete(0);
@@ -42,6 +45,7 @@ namespace eka2l1 {
     }
 
     static epoc::bitmap_file_compression get_suitable_compression_method(fbsbitmap *bmp) {
+  NGAGE_COVERAGE_LOG();
         if (bmp->bitmap_->header_.palette_size != 0) {
             return epoc::bitmap_file_palette_compression;
         }
@@ -68,6 +72,7 @@ namespace eka2l1 {
     }
 
     static std::size_t estimate_compress_size(fbsbitmap *bmp, std::uint8_t *data_base) {
+  NGAGE_COVERAGE_LOG();
         std::size_t est_size = 0;
 
         common::ro_buf_stream source(data_base, bmp->bitmap_->header_.bitmap_size - sizeof(loader::sbm_header));
@@ -97,6 +102,7 @@ namespace eka2l1 {
     }
 
     static bool compress_data(fbsbitmap *bmp, std::uint8_t *base, std::uint8_t *dest_ptr, const std::size_t dest_size) {
+  NGAGE_COVERAGE_LOG();
         std::size_t est_size = 0;
 
         common::ro_buf_stream source(base, bmp->bitmap_->header_.bitmap_size - sizeof(loader::sbm_header));
@@ -129,6 +135,7 @@ namespace eka2l1 {
     }
 
     void compress_queue::actual_compress(fbsbitmap *bmp) {
+  NGAGE_COVERAGE_LOG();
         fbsbitmap *clean_bitmap = bmp;
 
         epoc::bitmap_file_compression target_compression = get_suitable_compression_method(bmp);
@@ -235,6 +242,7 @@ namespace eka2l1 {
     }
 
     void compress_queue::run() {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = serv_->get_kernel_object_owner();
 
         while (auto bmp = queue_.pop()) {
@@ -245,15 +253,18 @@ namespace eka2l1 {
     }
 
     void compress_queue::abort() {
+  NGAGE_COVERAGE_LOG();
         queue_.abort();
     }
 
     void compress_queue::notify(epoc::notify_info &nof) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(notify_mutex_);
         notifies_.push_back(nof);
     }
 
     bool compress_queue::cancel(epoc::notify_info &nof) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(notify_mutex_);
         auto find_res = std::find(notifies_.begin(), notifies_.end(), nof);
 
@@ -267,6 +278,7 @@ namespace eka2l1 {
     }
 
     void compress_queue::finish_notify(const int code) {
+  NGAGE_COVERAGE_LOG();
         // Notify dirty bitmaps
         const std::lock_guard<std::mutex> guard(notify_mutex_);
         for (auto notify : notifies_) {

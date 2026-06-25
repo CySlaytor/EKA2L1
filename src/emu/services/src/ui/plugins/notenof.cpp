@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -25,6 +26,7 @@
 
 namespace eka2l1::epoc::notifier {
     void note_display_plugin::handle(epoc::desc8 *request, epoc::des8 *respone, epoc::notify_info &complete_info) {
+  NGAGE_COVERAGE_LOG();
         if (outstanding_) {
             complete_info.complete(epoc::error_in_use);
             return;
@@ -68,6 +70,7 @@ namespace eka2l1::epoc::notifier {
     }
 
     void note_display_plugin::cancel() {
+  NGAGE_COVERAGE_LOG();
         if (!outstanding_) {
             return;
         }

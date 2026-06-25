@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -23,6 +24,7 @@
 
 namespace eka2l1 {
     bool apa_capability::internalize(common::ro_stream &stream) {
+  NGAGE_COVERAGE_LOG();
         flags |= apa_capability::built_as_dll;
 
         std::uint32_t ver = 0;
@@ -86,6 +88,7 @@ namespace eka2l1 {
     }
 
     void apa_capability::do_it(common::chunkyseri &seri) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t version = 4;
         seri.absorb(version);
         seri.absorb(ability);

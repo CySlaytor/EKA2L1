@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -34,6 +35,7 @@ namespace eka2l1::epoc {
         , state_(state_none)
         , sync_thread_(nullptr)
         , sync_status_(0) {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = client->get_ws().get_kernel_system();
 
         // Each message is an integer. Allow maximum of 10 messages
@@ -57,6 +59,7 @@ namespace eka2l1::epoc {
     };
 
     dsa::~dsa() {
+  NGAGE_COVERAGE_LOG();
         do_cancel();
 
         if (sync_thread_) {
@@ -70,6 +73,7 @@ namespace eka2l1::epoc {
     }
 
     void dsa::request_access(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         if (state_ != state_none) {
             if (state_ != state_completed) {
                 LOG_ERROR(SERVICE_WINDOW, "Requesting access on a DSA in progress");
@@ -124,6 +128,7 @@ namespace eka2l1::epoc {
     }
 
     void dsa::get_region(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t max_rects = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
 
         if (state_ == state_prepare) {
@@ -166,6 +171,7 @@ namespace eka2l1::epoc {
     }
 
     void dsa::visible_region_changed(const common::region &new_region) {
+  NGAGE_COVERAGE_LOG();
         // There might be race condition when we notify region changed (due to notification)
         // For safety, just do a copy and assign first
         common::region old_one = operate_region_;
@@ -177,6 +183,7 @@ namespace eka2l1::epoc {
     }
 
     void dsa::do_cancel() {
+  NGAGE_COVERAGE_LOG();
         state_ = state_completed;
 
         if (husband_) {
@@ -194,6 +201,7 @@ namespace eka2l1::epoc {
     }
 
     void dsa::abort(const std::int32_t reason) {
+  NGAGE_COVERAGE_LOG();
         if (state_ == state_completed) {
             // Someone assassinated this DSA before we got our hand on it, damn
             return;
@@ -207,6 +215,7 @@ namespace eka2l1::epoc {
     }
 
     void dsa::get_sync_info(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         struct sync_info {
             std::uint32_t sync_thread_handle_;
             eka2l1::ptr<epoc::request_status> sync_status_;
@@ -220,11 +229,13 @@ namespace eka2l1::epoc {
     }
 
     void dsa::cancel(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         do_cancel();
         ctx.complete(epoc::error_none);
     }
 
     void dsa::destroy(eka2l1::service::ipc_context &context, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         on_command_batch_done(context);
 
         context.complete(epoc::error_none);
@@ -232,6 +243,7 @@ namespace eka2l1::epoc {
     }
 
     bool dsa::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_dsa_op op = static_cast<decltype(op)>(cmd.header.op);
         bool quit = false;
 

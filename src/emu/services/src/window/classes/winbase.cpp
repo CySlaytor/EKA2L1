@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -30,10 +31,12 @@
 
 namespace eka2l1::epoc {
     void window::queue_event(const epoc::event &evt) {
+  NGAGE_COVERAGE_LOG();
         client->queue_event(evt);
     }
 
     void window::set_parent(window *new_parent) {
+  NGAGE_COVERAGE_LOG();
         // New one will be the oldest. Quirky, but how WSERV functions.
         parent = new_parent;
 
@@ -44,10 +47,12 @@ namespace eka2l1::epoc {
     }
 
     window *window::root_window() {
+  NGAGE_COVERAGE_LOG();
         return scr->root.get();
     }
 
     void window::walk_tree(window_tree_walker *walker, const window_tree_walk_style style) {
+  NGAGE_COVERAGE_LOG();
         window *end = root_window();
         window *cur = this;
         window *sibling = cur->sibling;
@@ -94,6 +99,7 @@ namespace eka2l1::epoc {
     }
 
     window::~window() {
+  NGAGE_COVERAGE_LOG();
         while (child != nullptr) {
             child->parent = nullptr;
             child = child->sibling;
@@ -101,6 +107,7 @@ namespace eka2l1::epoc {
     }
 
     void window::set_position(const int new_pos) {
+  NGAGE_COVERAGE_LOG();
         if (!parent) {
             return;
         }
@@ -115,6 +122,7 @@ namespace eka2l1::epoc {
     }
 
     void window::move_window(epoc::window *new_parent, const int new_pos) {
+  NGAGE_COVERAGE_LOG();
         remove_from_sibling_list();
 
         // The window that will be previous sibling of our future window.
@@ -152,6 +160,7 @@ namespace eka2l1::epoc {
     }
 
     bool window::check_order_change(const int new_pos) {
+  NGAGE_COVERAGE_LOG();
         // The more soon we reach the window in the linked list, the higher priority it's.
         window *cur = parent->child;
         window *prev = nullptr;
@@ -180,6 +189,7 @@ namespace eka2l1::epoc {
     }
 
     void window::remove_from_sibling_list() {
+  NGAGE_COVERAGE_LOG();
         if (!parent) {
             return;
         }
@@ -207,6 +217,7 @@ namespace eka2l1::epoc {
     // This is the biggest sin i have commit, using DFS
     // 9:10 PM 5/9/2019 pent0
     void walk_tree_back_to_front(window *start, window_tree_walker *walker) {
+  NGAGE_COVERAGE_LOG();
         if (start == nullptr) {
             return;
         }
@@ -224,10 +235,12 @@ namespace eka2l1::epoc {
     }
 
     void window::walk_tree_back_to_front(window_tree_walker *walker) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::epoc::walk_tree_back_to_front(this, walker);
     }
 
     int window::ordinal_position(const bool full) {
+  NGAGE_COVERAGE_LOG();
         window *win = parent->child;
 
         if (!full) {
@@ -246,6 +259,7 @@ namespace eka2l1::epoc {
     }
 
     void window::set_fade(service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_cmd_set_fade *fade_param = reinterpret_cast<ws_cmd_set_fade *>(cmd.data_ptr);
 
         flags &= ~flags_faded;
@@ -271,6 +285,7 @@ namespace eka2l1::epoc {
     }
 
     void window::window_group_id(service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         if (type == window_kind::group) {
             ctx.complete(id);
         } else {
@@ -284,6 +299,7 @@ namespace eka2l1::epoc {
     }
 
     bool window::execute_command_for_general_node(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         epoc::version cli_ver = client->client_version();
         kernel_system *kern = client->get_ws().get_kernel_system();
 

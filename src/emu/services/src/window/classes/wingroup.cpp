@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -38,14 +39,17 @@ namespace eka2l1::epoc {
     static epoc::security_policy key_capture_policy({ epoc::cap_sw_event });
 
     void window_group::lost_focus() {
+  NGAGE_COVERAGE_LOG();
         queue_event(epoc::event{ client_handle, epoc::event_code::focus_lost });
     }
 
     void window_group::gain_focus() {
+  NGAGE_COVERAGE_LOG();
         queue_event(epoc::event{ client_handle, epoc::event_code::focus_gained });
     }
 
     void window_group::receive_focus(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         flags &= ~flag_focus_receiveable;
 
         if (*reinterpret_cast<std::uint32_t *>(cmd.data_ptr)) {
@@ -61,6 +65,7 @@ namespace eka2l1::epoc {
     }
 
     void window_group::on_owner_process_uid_type_change(const std::uint32_t new_uid) {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = client->get_ws().get_kernel_system();
 
         eka2l1::config::app_settings *settings = kern->get_app_settings();
@@ -78,6 +83,7 @@ namespace eka2l1::epoc {
     }
 
     static void window_group_process_uid_type_change_callback(void *userdata, const kernel::process_uid_type &type) {
+  NGAGE_COVERAGE_LOG();
         epoc::window_group *group = reinterpret_cast<epoc::window_group *>(userdata);
 
         if (group) {
@@ -90,6 +96,7 @@ namespace eka2l1::epoc {
         , uid_owner_change_callback_handle(0)
         , uid_owner_change_process(nullptr)
         , screen_change_event_handle(0) {
+  NGAGE_COVERAGE_LOG();
         set_initial_state();
 
         // Create window group as child
@@ -109,6 +116,7 @@ namespace eka2l1::epoc {
     }
 
     window_group::~window_group() {
+  NGAGE_COVERAGE_LOG();
         if (uid_owner_change_process) {
             uid_owner_change_process->unregister_uid_type_change_callback(uid_owner_change_callback_handle);
         }
@@ -126,6 +134,7 @@ namespace eka2l1::epoc {
     }
 
     void window_group::queue_message_data(const std::uint8_t *data, const std::size_t data_size) {
+  NGAGE_COVERAGE_LOG();
         message_data data_vec;
         data_vec.resize(data_size);
 
@@ -134,6 +143,7 @@ namespace eka2l1::epoc {
     }
 
     void window_group::get_message_data(std::uint8_t *data, std::size_t &dest_size) {
+  NGAGE_COVERAGE_LOG();
         if (msg_datas.empty()) {
             dest_size = 0;
             return;
@@ -147,6 +157,7 @@ namespace eka2l1::epoc {
     }
 
     void window_group::set_text_cursor(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // Warn myself in the future!
         LOG_WARN(SERVICE_WINDOW, "Set cursor text is mostly a stubbed now");
 
@@ -164,11 +175,13 @@ namespace eka2l1::epoc {
     }
 
     void window_group::add_priority_key(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_WINDOW, "Add priortiy key stubbed");
         context.complete(epoc::error_none);
     }
 
     void window_group::set_name(const std::u16string &new_name) {
+  NGAGE_COVERAGE_LOG();
         name = std::move(new_name);
 
         if (this == scr->focus) {
@@ -177,6 +190,7 @@ namespace eka2l1::epoc {
     }
 
     void window_group::set_name(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> name_re;
 
         if (cmd.header.cmd_len > 4) {
@@ -203,6 +217,7 @@ namespace eka2l1::epoc {
     }
 
     void window_group::destroy(service::ipc_context &context, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         // Try to redraw the screen
         on_command_batch_done(context);
 
@@ -210,7 +225,8 @@ namespace eka2l1::epoc {
         client->delete_object(cmd.obj_handle);
     }
 
-    bool window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {        
+    bool window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();        
         // LOG_TRACE(SERVICE_WINDOW, "Window group op: {}", cmd.header.op);
 
         bool result = execute_command_for_general_node(ctx, cmd);

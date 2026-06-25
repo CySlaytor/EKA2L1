@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -43,6 +44,7 @@
 
 namespace eka2l1 {
     static epoc::bitmap_color get_bitmap_color_type_from_display_mode(const epoc::display_mode bpp) {
+  NGAGE_COVERAGE_LOG();
         switch (bpp) {
         case epoc::display_mode::gray2:
             return epoc::monochrome_bitmap;
@@ -61,6 +63,7 @@ namespace eka2l1 {
         , comp_(epoc::bitmap_file_compression::bitmap_file_no_compression)
         , data_(nullptr)
         , data_size_(0) {
+  NGAGE_COVERAGE_LOG();
     }
 
     namespace epoc {
@@ -72,28 +75,34 @@ namespace eka2l1 {
         constexpr std::uint32_t MAGIC_FBS_HEAP_PTR = 0xDEADFB88;
 
         display_mode bitwise_bitmap::settings::initial_display_mode() const {
+  NGAGE_COVERAGE_LOG();
             return static_cast<display_mode>(flags_ & 0x000000FF);
         }
 
         display_mode bitwise_bitmap::settings::current_display_mode() const {
+  NGAGE_COVERAGE_LOG();
             return static_cast<display_mode>((flags_ & 0x0000FF00) >> 8);
         }
 
         void bitwise_bitmap::settings::current_display_mode(const display_mode &mode) {
+  NGAGE_COVERAGE_LOG();
             flags_ &= 0xFFFF00FF;
             flags_ |= (static_cast<std::uint32_t>(mode) << 8);
         }
 
         void bitwise_bitmap::settings::initial_display_mode(const display_mode &mode) {
+  NGAGE_COVERAGE_LOG();
             flags_ &= 0xFFFFFF00;
             flags_ |= static_cast<std::uint32_t>(mode);
         }
 
         bool bitwise_bitmap::settings::dirty_bitmap() const {
+  NGAGE_COVERAGE_LOG();
             return flags_ & settings_flag::dirty_bitmap;
         }
 
         void bitwise_bitmap::settings::dirty_bitmap(const bool is_it) {
+  NGAGE_COVERAGE_LOG();
             if (is_it)
                 flags_ |= settings_flag::dirty_bitmap;
             else
@@ -101,10 +110,12 @@ namespace eka2l1 {
         }
 
         bool bitwise_bitmap::settings::violate_bitmap() const {
+  NGAGE_COVERAGE_LOG();
             return flags_ & settings_flag::violate_bitmap;
         }
 
         void bitwise_bitmap::settings::violate_bitmap(const bool is_it) {
+  NGAGE_COVERAGE_LOG();
             if (is_it)
                 flags_ |= settings_flag::violate_bitmap;
             else
@@ -112,10 +123,12 @@ namespace eka2l1 {
         }
 
         bool bitwise_bitmap::settings::is_large() const {
+  NGAGE_COVERAGE_LOG();
             return flags_ & settings_flag::large_bitmap;
         }
 
         void bitwise_bitmap::settings::set_large(const bool result) {
+  NGAGE_COVERAGE_LOG();
             if (result)
                 flags_ |= settings_flag::large_bitmap;
             else
@@ -123,19 +136,23 @@ namespace eka2l1 {
         }
 
         void bitwise_bitmap::settings::set_width(const std::uint16_t w) {
+  NGAGE_COVERAGE_LOG();
             flags_ &= 0x0000FFFF;
             flags_ |= (static_cast<std::uint32_t>(w) << 16);
         }
 
         std::uint16_t bitwise_bitmap::settings::get_width() const {
+  NGAGE_COVERAGE_LOG();
             return static_cast<std::uint16_t>(flags_ >> 16);
         }
 
         static void do_white_fill(std::uint8_t *dest, const std::size_t size, epoc::display_mode mode) {
+  NGAGE_COVERAGE_LOG();
             std::fill(dest, dest + size, 0xFF);
         }
 
         void bitwise_bitmap::construct(loader::sbm_header &info, epoc::display_mode disp_mode, void *data, const void *base, const bool support_current_display_mode_flag, const bool white_fill) {
+  NGAGE_COVERAGE_LOG();
             uid_ = epoc::BITWISE_BITMAP_UID;
             allocator_ = MAGIC_FBS_HEAP_PTR;
             pile_ = MAGIC_FBS_PILE_PTR;
@@ -177,6 +194,7 @@ namespace eka2l1 {
         }
 
         void bitwise_bitmap::post_construct(fbs_server *serv) {
+  NGAGE_COVERAGE_LOG();
             if (serv->legacy_level() >= FBS_LEGACY_LEVEL_EARLY_KERNEL_TRANSITION) {
                 if ((header_.compression == epoc::bitmap_file_byte_rle_compression) || (header_.compression == epoc::bitmap_file_twelve_bit_rle_compression))
                     header_.compression += epoc::LEGACY_BMP_COMPRESS_IN_MEMORY_TYPE_BASE;
@@ -216,29 +234,36 @@ namespace eka2l1 {
                 , source_byte_width_(source_bw)
                 , dest_byte_width_(dest_bw)
                 , max_line_(max_line) {
+  NGAGE_COVERAGE_LOG();
             }
 
             void seek(const std::int64_t amount, common::seek_where wh) override {
+  NGAGE_COVERAGE_LOG();
                 assert(false);
             }
 
             bool valid() override {
+  NGAGE_COVERAGE_LOG();
                 return (max_line_ < pos_.y);
             }
 
             std::uint64_t tell() override {
+  NGAGE_COVERAGE_LOG();
                 return dest_byte_width_ * pos_.y + pos_.x;
             }
 
             std::uint64_t left() override {
+  NGAGE_COVERAGE_LOG();
                 return max_line_ * dest_byte_width_ - tell();
             }
 
             std::uint64_t size() override {
+  NGAGE_COVERAGE_LOG();
                 return max_line_ * dest_byte_width_;
             }
 
             std::uint64_t write(const void *buf, const std::uint64_t write_size) override {
+  NGAGE_COVERAGE_LOG();
                 std::uint64_t consumed = 0;
 
                 const std::uint8_t *buf8 = reinterpret_cast<const std::uint8_t *>(buf);
@@ -268,6 +293,7 @@ namespace eka2l1 {
         };
 
         int bitwise_bitmap::copy_to(std::uint8_t *dest, const eka2l1::vec2 &dest_size, fbs_server *serv) {
+  NGAGE_COVERAGE_LOG();
             const int min_pixel_height = common::min(header_.size_pixels.height(), dest_size.y);
             const int dest_byte_width = get_byte_width(dest_size.x, header_.bit_per_pixels);
 
@@ -335,6 +361,7 @@ namespace eka2l1 {
         }
 
         bitmap_file_compression bitwise_bitmap::compression_type() const {
+  NGAGE_COVERAGE_LOG();
             if (header_.compression >= epoc::LEGACY_BMP_COMPRESS_IN_MEMORY_TYPE_BASE) {
                 return static_cast<bitmap_file_compression>(header_.compression - epoc::LEGACY_BMP_COMPRESS_IN_MEMORY_TYPE_BASE);
             }
@@ -343,6 +370,7 @@ namespace eka2l1 {
         }
 
         std::uint8_t *bitwise_bitmap::data_pointer(fbs_server *ss) {
+  NGAGE_COVERAGE_LOG();
             // Use traditional method for on-rom bitmap that does not have additional info
             if (!allocator_ || !pile_ || !ss->is_large_bitmap(header_.bitmap_size - sizeof(loader::sbm_header))) {
                 return reinterpret_cast<std::uint8_t *>(this) + data_offset_;
@@ -352,6 +380,7 @@ namespace eka2l1 {
         }
 
         std::uint32_t bitwise_bitmap::data_size() const {
+  NGAGE_COVERAGE_LOG();
             return header_.bitmap_size - header_.header_len;
         }
     }
@@ -399,6 +428,7 @@ namespace eka2l1 {
     };
 
     fbsbitmap::~fbsbitmap() {
+  NGAGE_COVERAGE_LOG();
         if (serv_)
             serv_->free_bitmap(this);
 
@@ -408,6 +438,7 @@ namespace eka2l1 {
     }
 
     fbsbitmap *fbsbitmap::final_clean() {
+  NGAGE_COVERAGE_LOG();
         fbsbitmap *start = this;
         while (start->clean_bitmap) {
             start = start->clean_bitmap;
@@ -417,6 +448,7 @@ namespace eka2l1 {
     }
 
     void *fbs_server::load_data_to_rom(loader::mbm_file &mbmf_, const std::size_t idx_, std::size_t &size_decomp, int *err_code) {
+  NGAGE_COVERAGE_LOG();
         *err_code = fbs_load_data_err_none;
         size_decomp = 0;
 
@@ -467,6 +499,7 @@ namespace eka2l1 {
     }
 
     void fbscli::load_bitmap(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         // Get the FS session
         session_ptr fs_target_session = ctx->sys->get_kernel_system()->get<service::session>(*(ctx->get_argument_value<std::int32_t>(2)));
         const std::uint32_t fs_file_handle = *(ctx->get_argument_value<std::uint32_t>(3));
@@ -490,6 +523,7 @@ namespace eka2l1 {
     };
 
     void fbscli::load_bitmap_fast(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         fbs_server *serv = server<fbs_server>();
         int name_slot = 2;
 
@@ -528,6 +562,7 @@ namespace eka2l1 {
     }
 
     void fbscli::duplicate_bitmap(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         fbsbitmap *bmp = server<fbs_server>()->get<fbsbitmap>(*(ctx->get_argument_value<std::uint32_t>(0)));
         if (!bmp) {
             ctx->complete(epoc::error_bad_handle);
@@ -565,6 +600,7 @@ namespace eka2l1 {
     }
 
     void fbscli::load_bitmap_impl(service::ipc_context *ctx, file *source) {
+  NGAGE_COVERAGE_LOG();
         std::optional<load_bitmap_arg> load_options = std::nullopt;
         fbs_server *serv = server<fbs_server>();
 
@@ -735,6 +771,7 @@ namespace eka2l1 {
     }
 
     static std::size_t calculate_aligned_bitmap_bytes(const eka2l1::vec2 &size, const epoc::display_mode bpp) {
+  NGAGE_COVERAGE_LOG();
         if (size.x == 0 || size.y == 0) {
             return 0;
         }
@@ -743,6 +780,7 @@ namespace eka2l1 {
     }
 
     static std::uint32_t calculate_reserved_each_side(const std::uint32_t height) {
+  NGAGE_COVERAGE_LOG();
         // Reserve some space in left and right. Observed shows some apps outwrite their
         // available data region, a little bit, hopefully.
         static constexpr std::uint32_t MAXIMUM_RESERVED_HEIGHT = 50;
@@ -752,6 +790,7 @@ namespace eka2l1 {
     }
 
     fbsbitmap *fbs_server::create_bitmap(fbs_bitmap_data_info &info, const bool alloc_data, const bool support_current_display_mode_flag, const bool support_dirty) {
+  NGAGE_COVERAGE_LOG();
         if (!shared_chunk || !large_chunk) {
             initialize_server();
         }
@@ -829,6 +868,7 @@ namespace eka2l1 {
     }
 
     bool fbs_server::free_bitmap(fbsbitmap *bmp) {
+  NGAGE_COVERAGE_LOG();
         if (!bmp->bitmap_ || bmp->count > 0) {
             return false;
         }
@@ -861,6 +901,7 @@ namespace eka2l1 {
     }
 
     bool fbs_server::is_large_bitmap(const std::uint32_t compressed_size) const {
+  NGAGE_COVERAGE_LOG();
         static constexpr std::uint32_t RANGE_START_LARGE = 1 << 12;
         static constexpr std::uint32_t RANGE_START_LARGE_TRANS = 1 << 16;
 
@@ -882,6 +923,7 @@ namespace eka2l1 {
     }
 
     void fbscli::create_bitmap(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         bmp_specs_legacy specs;
 
         const bool use_spec_legacy = ctx->get_argument_data_size(0) >= sizeof(bmp_specs_legacy);
@@ -998,10 +1040,12 @@ namespace eka2l1 {
     }
 
     fbsbitmap *fbscli::get_clean_bitmap(fbsbitmap *bmp) {
+  NGAGE_COVERAGE_LOG();
         return bmp->final_clean();
     }
 
     void fbscli::resize_bitmap(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const auto fbss = server<fbs_server>();
         const epoc::handle handle = *(ctx->get_argument_value<std::uint32_t>(0));
 
@@ -1117,6 +1161,7 @@ namespace eka2l1 {
     }
 
     void fbscli::notify_dirty_bitmap(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (dirty_nof_.empty()) {
             dirty_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
 
@@ -1127,6 +1172,7 @@ namespace eka2l1 {
     }
 
     void fbscli::cancel_notify_dirty_bitmap(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (server<fbs_server>()->compressor)
             server<fbs_server>()->compressor->cancel(dirty_nof_);
         else
@@ -1136,6 +1182,7 @@ namespace eka2l1 {
     }
 
     void fbscli::get_clean_bitmap(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const epoc::handle bmp_handle = *ctx->get_argument_value<epoc::handle>(0);
         fbsbitmap *bmp = obj_table_.get<fbsbitmap>(bmp_handle);
 
@@ -1162,6 +1209,7 @@ namespace eka2l1 {
 
     namespace epoc {
         bool save_bwbmp_to_file(const std::string &destination, epoc::bitwise_bitmap *bitmap, const char *base, const epocver sysver) {
+  NGAGE_COVERAGE_LOG();
             if (bitmap->header_.compression != epoc::bitmap_file_no_compression) {
                 return false;
             }
@@ -1304,6 +1352,7 @@ namespace eka2l1 {
         }
 
         bool convert_to_rgba8888(fbs_server *serv, common::ro_stream &source, common::wo_stream &dest, loader::sbm_header &header, std::int32_t byte_width, const bitmap_file_compression comp, const bool make_standard_mask) {
+  NGAGE_COVERAGE_LOG();
             if (byte_width == -1) {
                 byte_width = get_byte_width(header.size_pixels.x, header.bit_per_pixels);
             }
@@ -1560,6 +1609,7 @@ namespace eka2l1 {
         }
 
         bool convert_to_rgba8888(fbs_server *serv, bitwise_bitmap *bmp, common::wo_stream &dest, const bool make_standard_mask) {
+  NGAGE_COVERAGE_LOG();
             if (!bmp) {
                 return false;
             }
@@ -1570,6 +1620,7 @@ namespace eka2l1 {
         }
 
         bool convert_to_rgba8888(fbs_server *serv, loader::mbm_file &file, const std::size_t index, common::wo_stream &dest, const bool make_standard_mask) {
+  NGAGE_COVERAGE_LOG();
             std::size_t max_data = 0;
             if (!file.read_single_bitmap_raw(index, nullptr, max_data)) {
                 return false;
@@ -1586,6 +1637,7 @@ namespace eka2l1 {
     }
 
     void fbscli::background_compress_bitmap(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const epoc::handle bmp_handle = *ctx->get_argument_value<epoc::handle>(0);
         fbsbitmap *bmp = obj_table_.get<fbsbitmap>(bmp_handle);
 
@@ -1614,6 +1666,7 @@ namespace eka2l1 {
     }
 
     void fbscli::compress_bitmap(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const epoc::handle bmp_handle = *ctx->get_argument_value<epoc::handle>(0);
         fbsbitmap *bmp = obj_table_.get<fbsbitmap>(bmp_handle);
 

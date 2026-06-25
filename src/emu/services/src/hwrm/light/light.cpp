@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -24,6 +25,7 @@
 
 namespace eka2l1::epoc {
     static const char *light_op_to_string(const int op) {
+  NGAGE_COVERAGE_LOG();
         switch (op) {
         case hwrm_light_op_on:
             return "Light on";
@@ -58,9 +60,11 @@ namespace eka2l1::epoc {
 
     light_resource::light_resource(kernel_system *kern)
         : kern_(kern) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void light_resource::get_supported_targets(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         // Which do we supported? Primary display light? primary keyboard light? etc...
         LOG_TRACE(SERVICE_HWRM, "Light resource's get supported targets stubbed with -1 (all permitted)");
         std::uint32_t support_mask = static_cast<std::uint32_t>(-1);
@@ -70,16 +74,19 @@ namespace eka2l1::epoc {
     }
 
     void light_resource::cleanup(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         // Don't have anything to cleanup right now. TODO.
         ctx.complete(epoc::error_none);
     }
 
     void light_resource::turn_on(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         // TODO: Calling backend's light on...
         ctx.complete(epoc::error_none);
     }
 
     void light_resource::execute_command(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         if ((ctx.msg->function >= 2000) && (ctx.msg->function < 3000)) {
             ctx.msg->function -= 1000;
         }

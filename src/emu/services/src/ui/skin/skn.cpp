@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team.
  * 
@@ -28,12 +29,14 @@ namespace eka2l1::epoc {
         , stream_(stream)
         , ver_(std::move(platform_version))
         , importer_lang_(lang) {
+  NGAGE_COVERAGE_LOG();
         if (!read_master_chunk()) {
             LOG_ERROR(SERVICE_UI, "Reading master chunk failed!");
         }
     }
 
     bool skn_file::read_master_chunk() {
+  NGAGE_COVERAGE_LOG();
         if (stream_->read(skn_desc_dfo_common_len, &master_chunk_size_, 4) != 4) {
             return false;
         }
@@ -59,6 +62,7 @@ namespace eka2l1::epoc {
     }
 
     bool skn_file::process_chunks(std::uint32_t base_offset, const std::int32_t count) {
+  NGAGE_COVERAGE_LOG();
         for (std::int32_t i = 0; i < count; i++) {
             std::uint32_t chunk_size = 0;
             std::uint16_t chunk_type = 0;
@@ -120,6 +124,7 @@ namespace eka2l1::epoc {
     }
 
     std::uint32_t skn_file::handle_info_chunk(std::uint32_t base_offset, skn_file_info &info) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t chunk_size = 0;
 
         stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
@@ -146,6 +151,7 @@ namespace eka2l1::epoc {
     }
 
     std::uint32_t skn_file::handle_name_chunk(std::uint32_t base_offset, skn_name &name) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t chunk_size = 0;
         stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
         stream_->read(base_offset + skn_desc_dfo_name_lang, &name.lang, 2);
@@ -160,6 +166,7 @@ namespace eka2l1::epoc {
     }
 
     std::uint32_t skn_file::handle_filename_chunk(std::uint32_t base_offset) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t chunk_size = 0;
         stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
 
@@ -182,6 +189,7 @@ namespace eka2l1::epoc {
     }
 
     std::uint32_t skn_file::handle_class_chunk(std::uint32_t base_offset) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t chunk_size = 0;
         stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
 
@@ -194,6 +202,7 @@ namespace eka2l1::epoc {
     }
 
     void skn_file::process_class_def_chunks(std::uint32_t base_offset, std::int32_t chunk_count) {
+  NGAGE_COVERAGE_LOG();
         for (std::int32_t i = 0; i < chunk_count; i++) {
             std::uint32_t chunk_size = 0;
             stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
@@ -238,6 +247,7 @@ namespace eka2l1::epoc {
     }
 
     void skn_file::process_bitmap_def_chunk(std::uint32_t base_offset) {
+  NGAGE_COVERAGE_LOG();
         skn_bitmap_info bmp_info_{};
         bmp_info_.type = skn_def_type::bitmap;
 
@@ -252,6 +262,7 @@ namespace eka2l1::epoc {
     }
 
     void skn_file::process_image_table_def_chunk(std::uint32_t base_offset) {
+  NGAGE_COVERAGE_LOG();
         skn_image_table tab_{};
         tab_.type = skn_def_type::img_tbl;
 
@@ -282,6 +293,7 @@ namespace eka2l1::epoc {
     }
 
     void skn_file::process_color_table_def_chunk(std::uint32_t base_offset) {
+  NGAGE_COVERAGE_LOG();
         skn_color_table tab_{};
         tab_.type = skn_def_type::color_tbl;
 
@@ -318,6 +330,7 @@ namespace eka2l1::epoc {
     }
 
     void skn_file::process_bitmap_anim_def_chunk(std::uint32_t base_offset) {
+  NGAGE_COVERAGE_LOG();
         skn_bitmap_animation anim_{};
         anim_.type = skn_def_type::color_tbl;
 
@@ -364,6 +377,7 @@ namespace eka2l1::epoc {
     }
 
     std::string skn_file::process_string(std::uint32_t base_offset, const std::uint16_t size) {
+  NGAGE_COVERAGE_LOG();
         std::string buf;
         buf.resize(size);
 
@@ -373,6 +387,7 @@ namespace eka2l1::epoc {
     }
 
     void skn_file::process_effect_parameters(std::uint32_t &base_offset, std::vector<skn_effect_parameter> &parameters) {
+  NGAGE_COVERAGE_LOG();
         for (std::uint16_t i = 0; i < static_cast<std::uint16_t>(parameters.size()); i++) {
             std::uint16_t parameter_size = 0;
             stream_->read(base_offset + skn_desc_dfo_param_len, &parameter_size, 2);
@@ -391,6 +406,7 @@ namespace eka2l1::epoc {
     }
 
     void skn_file::process_effects(std::uint32_t &base_offset, std::vector<skn_effect> &effects) {
+  NGAGE_COVERAGE_LOG();
         for (std::uint16_t i = 0; i < static_cast<std::uint16_t>(effects.size()); i++) {
             stream_->read(base_offset + skn_desc_dfo_effect_uid, &effects[i].uid, 4);
             stream_->read(base_offset + skn_desc_dfo_effect_input_layerA_idx, &effects[i].input_layer_a_index, 1);
@@ -424,6 +440,7 @@ namespace eka2l1::epoc {
     }
 
     void skn_file::process_effect_queue_chunk(std::uint32_t base_offset) {
+  NGAGE_COVERAGE_LOG();
         skn_effect_queue effect_queue;
 
         stream_->read(base_offset + skn_desc_dfo_effect_queue_major, &effect_queue.id_hash, 8);
@@ -462,6 +479,7 @@ namespace eka2l1::epoc {
     }
 
     void skn_file::process_attrib(std::uint32_t base_offset, skn_attrib_info &attrib) {
+  NGAGE_COVERAGE_LOG();
         std::uint16_t ver = 0;
         stream_->read(base_offset + skn_desc_dfo_common_ver, &ver, 2);
 
@@ -484,6 +502,7 @@ namespace eka2l1::epoc {
     }
 
     std::uint32_t skn_file::handle_release_26_restriction_chunk(std::uint32_t base_offset) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t chunk_size = 0;
         stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
 
@@ -504,6 +523,7 @@ namespace eka2l1::epoc {
     }
 
     std::uint32_t skn_file::handle_release_generic_restriction_chunk(std::uint32_t base_offset) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t chunk_size = 0;
         stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
 
@@ -524,6 +544,7 @@ namespace eka2l1::epoc {
     }
 
     std::uint32_t skn_file::handle_lang_restriction_chunk(std::uint32_t base_offset) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t chunk_size = 0;
         stream_->read(base_offset + skn_desc_dfo_common_len, &chunk_size, 4);
 

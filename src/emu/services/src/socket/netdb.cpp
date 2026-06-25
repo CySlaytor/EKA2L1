@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2022 EKA2L1 Team
  * 
@@ -27,9 +28,11 @@ namespace eka2l1::epoc::socket {
     socket_net_database::socket_net_database(socket_client_session *parent, std::unique_ptr<net_database> &net_db)
         : socket_subsession(parent)
         , net_db_(std::move(net_db)) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void socket_net_database::query(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const char *query_data = reinterpret_cast<const char*>(ctx->get_descriptor_argument_ptr(0));
         epoc::des8 *result_des = eka2l1::ptr<epoc::des8>(ctx->msg->args.args[2]).get(ctx->msg->own_thr->owning_process());
 
@@ -44,16 +47,19 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_net_database::cancel(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         net_db_->cancel();
         ctx->complete(epoc::error_none);
     }
 
     void socket_net_database::close(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         parent_->subsessions_.remove(id_);
         ctx->complete(epoc::error_none);
     }
 
     void socket_net_database::dispatch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (parent_->is_oldarch()) {
             switch (ctx->msg->function) {
             case socket_old_ndb_query:

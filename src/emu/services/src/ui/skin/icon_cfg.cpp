@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -31,9 +32,11 @@ namespace eka2l1::epoc {
         , mngr_(mngr)
         , inited_(false)
         , sys_lang_(lang_) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void akn_skin_icon_config_map::read_and_parse_repo() {
+  NGAGE_COVERAGE_LOG();
         eka2l1::central_repo *repo = cenrep_serv_->load_repo_with_lookup(io_, mngr_, ICON_CAPTION_UID);
 
         if (!repo) {
@@ -86,6 +89,7 @@ namespace eka2l1::epoc {
     }
 
     int akn_skin_icon_config_map::is_icon_configured(const epoc::uid app_uid) {
+  NGAGE_COVERAGE_LOG();
         if (!inited_) {
             read_and_parse_repo();
             inited_ = true;

@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2023 EKA2L1 Team
  * 
@@ -25,10 +26,12 @@
 namespace eka2l1 {
     browser_for_app_session::browser_for_app_session(service::typical_server *serv, kernel::uid client_ss_uid, epoc::version client_version)
         : app_ui_based_session(serv, client_ss_uid, client_version) {
+  NGAGE_COVERAGE_LOG();
 
     }
 
     void browser_for_app_session::open_url(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         // Unknown first 16 bytes, skip them and get to URL part
         std::optional<std::string> open_url_params = ctx->get_argument_value<std::string>(0);
         if (!open_url_params.has_value()) {
@@ -50,6 +53,7 @@ namespace eka2l1 {
     }
 
     void browser_for_app_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx->msg->function) {
         case browser_for_app_open_url:
             open_url(ctx);
@@ -64,9 +68,11 @@ namespace eka2l1 {
 
     browser_for_app_server::browser_for_app_server(system *sys, std::uint32_t server_differentiator)
         : app_ui_based_server(sys, server_differentiator, 0x10008D39) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void browser_for_app_server::connect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         create_session<browser_for_app_session>(&ctx);
         typical_server::connect(ctx);
     }

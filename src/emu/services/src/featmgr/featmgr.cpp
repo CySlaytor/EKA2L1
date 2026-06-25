@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2018 EKA2L1 Team
  * 
@@ -50,6 +51,7 @@ namespace eka2l1 {
     };
 
     void featmgr_server::do_feature_scanning(system *sys) {
+  NGAGE_COVERAGE_LOG();
         // TODO: There is a lot of features.
         // See in here: https://github.com/SymbianSource/oss.FCL.sf.os.deviceplatformrelease/blob/master/foundation_system/sf_config/config/inc/publicruntimeids.hrh
 
@@ -97,6 +99,7 @@ namespace eka2l1 {
     }
 
     bool featmgr_server::load_featmgr_configs(io_system *io) {
+  NGAGE_COVERAGE_LOG();
         symfile cfg_file = io->open_file(u"Z:\\private\\102744CA\\featreg.cfg", READ_MODE | BIN_MODE);
 
         if (!cfg_file) {
@@ -137,6 +140,7 @@ namespace eka2l1 {
     }
 
     void featmgr_server::feature_supported(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         if (!config_loaded) {
             bool succ = load_featmgr_configs(ctx.sys->get_io_system());
 

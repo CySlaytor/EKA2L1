@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -53,11 +54,13 @@ namespace eka2l1::epoc {
     bitmap_cache::bitmap_cache(kernel_system *kern_)
         : fbss_(nullptr)
         , kern(kern_) {
+  NGAGE_COVERAGE_LOG();
         std::fill(driver_textures.begin(), driver_textures.end(), 0);
         std::fill(hashes.begin(), hashes.end(), 0);
     }
 
     void bitmap_cache::clean(drivers::graphics_driver *drv) {
+  NGAGE_COVERAGE_LOG();
         if (!drv) {
             return;
         }
@@ -75,6 +78,7 @@ namespace eka2l1::epoc {
     }
 
     bool is_palette_bitmap(epoc::bitwise_bitmap *bw_bmp) {
+  NGAGE_COVERAGE_LOG();
         epoc::display_mode dsp = bw_bmp->settings_.current_display_mode();
         if (dsp == epoc::display_mode::none) {
             dsp = bw_bmp->settings_.initial_display_mode();
@@ -85,6 +89,7 @@ namespace eka2l1::epoc {
 
     static char *converted_one_bpp_to_twenty_four_bpp_bitmap(epoc::bitwise_bitmap *bw_bmp,
         const std::uint32_t *original_ptr, std::size_t &raw_size) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t byte_width_converted = common::align(bw_bmp->header_.size_pixels.x * 3, 4);
         raw_size = byte_width_converted * bw_bmp->header_.size_pixels.y;
 
@@ -107,6 +112,7 @@ namespace eka2l1::epoc {
     
     static char *converted_gray_four_bpp_to_twenty_four_bpp_bitmap(epoc::bitwise_bitmap *bw_bmp,
         const std::uint8_t *original_ptr, std::size_t &raw_size) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t byte_width_converted = common::align(bw_bmp->header_.size_pixels.x * 3, 4);
         raw_size = byte_width_converted * bw_bmp->header_.size_pixels.y;
 
@@ -130,6 +136,7 @@ namespace eka2l1::epoc {
     static char *converted_palette_bitmap_to_twenty_four_bitmap(epoc::bitwise_bitmap *bw_bmp,
         const std::uint8_t *original_ptr, epoc::palette_256 &the_palette, epoc::palette_16 &the_palette_16,
         std::size_t &raw_size) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t byte_width_converted = common::align(bw_bmp->header_.size_pixels.x * 3, 4);
         raw_size = byte_width_converted * bw_bmp->header_.size_pixels.y;
         char *return_ptr = new char[raw_size];
@@ -187,6 +194,7 @@ namespace eka2l1::epoc {
     }
 
     static std::uint32_t get_suitable_bpp_for_bitmap(epoc::bitwise_bitmap *bmp) {
+  NGAGE_COVERAGE_LOG();
         if (bmp->uid_ != epoc::bitwise_bitmap_uid) {
             // Extended bitmap, will be converted to RGBA8888
             return 32;
@@ -200,6 +208,7 @@ namespace eka2l1::epoc {
     }
 
     std::uint64_t bitmap_cache::hash_bitwise_bitmap(epoc::bitwise_bitmap *bw_bmp) {
+  NGAGE_COVERAGE_LOG();
         std::uint64_t hash = 0xB1711A3F;
 
         // Hash using XXHASH
@@ -223,6 +232,7 @@ namespace eka2l1::epoc {
     }
 
     std::int64_t bitmap_cache::get_suitable_bitmap_index() {
+  NGAGE_COVERAGE_LOG();
         // First time, will scans through the bitmap array to find empty box
         // Sometimes, app might purges a lot of bitmaps at same time
         for (std::int64_t i = MAX_CACHE_SIZE - 1; i >= 0; i--) {
@@ -244,6 +254,7 @@ namespace eka2l1::epoc {
 
     drivers::handle bitmap_cache::add_or_get(drivers::graphics_driver *driver, epoc::bitwise_bitmap *bmp, 
         drivers::graphics_command_builder *builder, gdi_store_command *update_cmd) {
+  NGAGE_COVERAGE_LOG();
         if (!fbss_) {
             server_ptr ss = kern->get_by_name<service::server>(epoc::get_fbs_server_name_by_epocver(
                 kern->get_epoc_version()));

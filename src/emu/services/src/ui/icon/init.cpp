@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team.
  * 
@@ -31,6 +32,7 @@
 
 namespace eka2l1 {
     void akn_icon_server::init_server() {
+  NGAGE_COVERAGE_LOG();
         fbss = reinterpret_cast<fbs_server *>(&(*sys->get_kernel_system()->get_by_name<service::server>(
             epoc::get_fbs_server_name_by_epocver(sys->get_symbian_version_use()))));
 

@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2021 EKA2L1 Team
  * 
@@ -24,9 +25,11 @@ namespace eka2l1::epoc::msv {
         : min_(0)
         , max_(0)
         , flags_(0) {
+  NGAGE_COVERAGE_LOG();
     }
 
     entry *entry_range_table::add(entry &ent, const bool extend_range) {
+  NGAGE_COVERAGE_LOG();
         if (get(ent.id_)) {
             return nullptr;
         }
@@ -56,6 +59,7 @@ namespace eka2l1::epoc::msv {
     }
 
     bool entry_range_table::remove(const msv_id id) {
+  NGAGE_COVERAGE_LOG();
         auto ite = std::lower_bound(entries_.begin(), entries_.end(), id, [](const entry &lhs, const msv_id &rhs) {
             return lhs.id_ < rhs;
         });
@@ -75,6 +79,7 @@ namespace eka2l1::epoc::msv {
     }
 
     bool entry_range_table::add_tons(std::vector<entry> &ents, const std::size_t start_index, const std::size_t end_index) {
+  NGAGE_COVERAGE_LOG();
         if (ents.empty() || (start_index > end_index) || (end_index >= ents.size())) {
             return true;
         }
@@ -109,6 +114,7 @@ namespace eka2l1::epoc::msv {
     }
 
     entry *entry_range_table::get(const msv_id id) {
+  NGAGE_COVERAGE_LOG();
         if ((id < min_) || (id > max_)) {
             return nullptr;
         }
@@ -125,6 +131,7 @@ namespace eka2l1::epoc::msv {
     }
 
     bool entry_range_table::update_child_id(const msv_id parent_id, const msv_id child_id, const bool is_add) {
+  NGAGE_COVERAGE_LOG();
         entry *parent_obj = get(parent_id);
         if (!parent_obj) {
             return false;
@@ -150,10 +157,12 @@ namespace eka2l1::epoc::msv {
     }
 
     bool entry_range_table::splitable() const {
+  NGAGE_COVERAGE_LOG();
         return (entries_.size() >= CACHE_THRESHOLD);
     }
 
     const std::size_t entry_range_table::left_to_splittable() const {
+  NGAGE_COVERAGE_LOG();
         if (CACHE_THRESHOLD <= entries_.size()) {
             return 0;
         }
@@ -162,6 +171,7 @@ namespace eka2l1::epoc::msv {
     }
 
     bool entry_range_table::do_split(const msv_id parent_splitter) {
+  NGAGE_COVERAGE_LOG();
         // Take the middle entry 
         entry_range_table *new_table = new entry_range_table;
         const std::size_t middle_wards = entries_.size() / 2;
@@ -192,13 +202,16 @@ namespace eka2l1::epoc::msv {
     visible_folder::visible_folder(const msv_id my_id)
         : flags_(0)
         , myid_(my_id) {
+  NGAGE_COVERAGE_LOG();
     }
 
     visible_folder::~visible_folder() {
+  NGAGE_COVERAGE_LOG();
         clear_tables();
     }
 
     void visible_folder::clear_tables() {
+  NGAGE_COVERAGE_LOG();
         while (!tables_.empty()) {
             entry_range_table *table = E_LOFF(tables_.first()->deque(), entry_range_table, folder_link_);
             delete table;
@@ -206,6 +219,7 @@ namespace eka2l1::epoc::msv {
     }
     
     entry *visible_folder::add(entry &ent) {
+  NGAGE_COVERAGE_LOG();
         if (tables_.empty()) {
             entry_range_table *table = new entry_range_table;
             
@@ -301,6 +315,7 @@ namespace eka2l1::epoc::msv {
     }
 
     bool visible_folder::add_entry_list(std::vector<entry> &entries, const bool complete_child_of_folder) {
+  NGAGE_COVERAGE_LOG();
         if (entries.empty()) {
             if (complete_child_of_folder) {
                 all_children_present(true);
@@ -399,6 +414,7 @@ namespace eka2l1::epoc::msv {
     }
 
     entry *visible_folder::get_entry(const msv_id id) {
+  NGAGE_COVERAGE_LOG();
         common::double_linked_queue_element *first = tables_.first();
         common::double_linked_queue_element *end = tables_.end();
 
@@ -421,6 +437,7 @@ namespace eka2l1::epoc::msv {
     }
 
     bool visible_folder::remove_entry(const msv_id id) {
+  NGAGE_COVERAGE_LOG();
         common::double_linked_queue_element *first = tables_.first();
         common::double_linked_queue_element *end = tables_.end();
 
@@ -446,6 +463,7 @@ namespace eka2l1::epoc::msv {
     }
 
     bool visible_folder::update_child_id(const msv_id parent_id, const msv_id child_id, const bool is_add) {
+  NGAGE_COVERAGE_LOG();
         common::double_linked_queue_element *first = tables_.first();
         common::double_linked_queue_element *end = tables_.end();
 
@@ -462,6 +480,7 @@ namespace eka2l1::epoc::msv {
     }
 
     std::vector<entry *> visible_folder::get_children_by_parent(const msv_id parent_id, visible_folder_children_query_error *error) {
+  NGAGE_COVERAGE_LOG();
         std::vector<entry*> ents;
 
         if (error) {

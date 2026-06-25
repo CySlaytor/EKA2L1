@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 
 /*
  * Copyright (c) 2023 EKA2L1 Team
@@ -33,6 +34,7 @@ namespace eka2l1::service {
     static const std::u16string BROWSER_APP_HOST_NAME_MAP = u"browser";
 
     bool handle_launch_browser(kernel::process *pr, const epoc::apa::command_line &cmd_line) {
+  NGAGE_COVERAGE_LOG();
         // browser_for_app_server is purged, we only launch directly on the host machine
         if (!cmd_line.document_name_.empty()) {
             return common::launch_browser(common::ucs2_to_utf8(cmd_line.document_name_));
@@ -47,6 +49,7 @@ namespace eka2l1::service {
     };
 
     void init_symbian_app_launch_to_host_launch(system *sys) {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = sys->get_kernel_system();
         
         applist_server *serv = kern->get_by_name<applist_server>(

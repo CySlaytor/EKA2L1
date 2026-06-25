@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2022 EKA2L1 Team
  * 
@@ -31,6 +32,7 @@
 namespace eka2l1::epoc {
     // NOTE: Must store objects then free ref with local font atlas.
     gdi_store_command_segment::~gdi_store_command_segment() {
+  NGAGE_COVERAGE_LOG();
         for (std::size_t i = 0; i < font_objects_.size(); i++) {
             reinterpret_cast<fbsfont*>(font_objects_[i])->deref();
         }
@@ -41,6 +43,7 @@ namespace eka2l1::epoc {
     }
 
     void gdi_store_command_segment::add_command(gdi_store_command &command) {
+  NGAGE_COVERAGE_LOG();
         if (command.opcode_ == gdi_store_command_draw_text) {
             auto &data = command.get_data_struct_const<gdi_store_command_draw_text_data>();
             if (data.fbs_font_ptr_) {
@@ -79,9 +82,11 @@ namespace eka2l1::epoc {
 
     gdi_store_command_collection::gdi_store_command_collection()
         : current_segment_(nullptr) {
+  NGAGE_COVERAGE_LOG();
     }
 
     gdi_store_command_segment *gdi_store_command_collection::add_new_segment(const eka2l1::rect &draw_rect, const gdi_store_command_segment_type type) {
+  NGAGE_COVERAGE_LOG();
         std::unique_ptr<gdi_store_command_segment> new_segment = std::make_unique<gdi_store_command_segment>();
 
         new_segment->type_ = type;
@@ -96,6 +101,7 @@ namespace eka2l1::epoc {
     }
 
     void gdi_store_command_collection::promote_last_segment() {
+  NGAGE_COVERAGE_LOG();
         if (segments_.empty()) {
             return;
         }
@@ -125,6 +131,7 @@ namespace eka2l1::epoc {
     }
 
     bool gdi_store_command_collection::clean_old_nonredraw_segments() {
+  NGAGE_COVERAGE_LOG();
         if (segments_.empty()) {
             return false;
         }
@@ -186,6 +193,7 @@ namespace eka2l1::epoc {
     }
 
     void gdi_store_command_collection::redraw_done() {
+  NGAGE_COVERAGE_LOG();
         current_segment_ = nullptr;
     }
 
@@ -198,15 +206,18 @@ namespace eka2l1::epoc {
         , position_(position)
         , clip_(clip)
         , texture_filter_(texture_filter) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void gdi_command_builder::build_segment(const gdi_store_command_segment &segment) {
+  NGAGE_COVERAGE_LOG();
         for (std::size_t i = 0; i < segment.commands_.size(); i++) {
             build_single_command(segment.commands_[i]);
         }
     }
 
     void gdi_command_builder::build_single_command(const gdi_store_command &command) {
+  NGAGE_COVERAGE_LOG();
         switch (command.opcode_) {
         case gdi_store_command_draw_rect:
             build_command_draw_rect(command.get_data_struct_const<gdi_store_command_draw_rect_data>());
@@ -250,6 +261,7 @@ namespace eka2l1::epoc {
     }
 
     void gdi_command_builder::build_command_draw_rect(const gdi_store_command_draw_rect_data &cmd) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::rect scaled_rect = cmd.rect_;
         scaled_rect.top += position_;
 
@@ -260,6 +272,7 @@ namespace eka2l1::epoc {
     }
 
     void gdi_command_builder::build_command_draw_line(const gdi_store_command_draw_line_data &cmd) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::point scaled_start = (cmd.start_ + position_) * scale_factor_;
         eka2l1::point scaled_end = (cmd.end_ + position_) * scale_factor_;
 
@@ -291,6 +304,7 @@ namespace eka2l1::epoc {
     }
 
     void gdi_command_builder::build_command_draw_polygon(const gdi_store_command_draw_polygon_data &cmd) {
+  NGAGE_COVERAGE_LOG();
         std::vector<eka2l1::point> copied_points(cmd.point_count_);
         for (std::size_t i = 0; i < cmd.point_count_; i++) {
             copied_points[i] = (cmd.points_[i] + position_) * scale_factor_;
@@ -302,6 +316,7 @@ namespace eka2l1::epoc {
     }
 
     void gdi_command_builder::build_command_draw_text(const gdi_store_command_draw_text_data &cmd) {
+  NGAGE_COVERAGE_LOG();
         builder_.set_brush_color_detail(cmd.color_);
         fbsfont *text_font = reinterpret_cast<fbsfont*>(cmd.fbs_font_ptr_);
         
@@ -335,6 +350,7 @@ namespace eka2l1::epoc {
     }
 
     void gdi_command_builder::build_command_draw_raw_texture(const gdi_store_command_draw_raw_texture_data &cmd) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::rect scaled_dest_rect = cmd.dest_rect_;
         scaled_dest_rect.top += position_;
 
@@ -345,6 +361,7 @@ namespace eka2l1::epoc {
     }
 
     void gdi_command_builder::build_command_draw_bitmap(const gdi_store_command_draw_bitmap_data &cmd) {
+  NGAGE_COVERAGE_LOG();
         epoc::bitwise_bitmap *source_bitmap_bw = reinterpret_cast<epoc::bitwise_bitmap*>(cmd.main_fbs_bitmap_);
 
         if ((cmd.gdi_flags_ & GDI_STORE_COMMAND_MAIN_RAW) == 0) {
@@ -466,6 +483,7 @@ namespace eka2l1::epoc {
     }
 
     void gdi_command_builder::build_command_set_clip_rect_single(const gdi_store_command_set_clip_rect_single_data &cmd) {
+  NGAGE_COVERAGE_LOG();
         eka2l1::rect rect_advanced = cmd.clipping_rect_;
         rect_advanced.top += position_;
 
@@ -481,6 +499,7 @@ namespace eka2l1::epoc {
     }
 
     void gdi_command_builder::build_command_set_clip_rect_multiple(const gdi_store_command_set_clip_rect_multiple_data &cmd) {
+  NGAGE_COVERAGE_LOG();
         common::region clipped;
         clipped.rects_.insert(clipped.rects_.begin(), cmd.rects_, cmd.rects_ + cmd.rect_count_);
         clipped.advance(position_);
@@ -490,6 +509,7 @@ namespace eka2l1::epoc {
     }
 
     void gdi_command_builder::build_command_disable_clip() {
+  NGAGE_COVERAGE_LOG();
         if (clip_.empty()) {
             builder_.set_feature(drivers::graphics_feature::stencil_test, false);
             builder_.set_feature(drivers::graphics_feature::clipping, false);
@@ -499,6 +519,7 @@ namespace eka2l1::epoc {
     }
 
     void gdi_command_builder::build_command_update_texture(const gdi_store_command_update_texture_data &cmd) {
+  NGAGE_COVERAGE_LOG();
         if (cmd.destroy_handle_) {
             builder_.destroy_bitmap(cmd.destroy_handle_);
         }

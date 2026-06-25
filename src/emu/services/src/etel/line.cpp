@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team.
  * 
@@ -29,17 +30,21 @@ namespace eka2l1 {
         : info_(info)
         , caps_(caps)
         , name_(name) {
+  NGAGE_COVERAGE_LOG();
     }
 
     etel_line::~etel_line() {
+  NGAGE_COVERAGE_LOG();
     }
 
     etel_line_subsession::etel_line_subsession(etel_session *session, etel_line *line, const etel_legacy_level lvl)
         : etel_subsession(session, lvl)
         , line_(line) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void etel_line_subsession::dispatch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (legacy_level_ <= ETEL_LEGACY_LEVEL_TRANSITION) {
             switch (ctx->msg->function) {
             case epoc::etel_old_line_get_status:
@@ -97,6 +102,7 @@ namespace eka2l1 {
     }
 
     void etel_line_subsession::get_status(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (ctx->msg->function == epoc::etel_mobile_line_get_mobile_line_status) {
             LOG_TRACE(SERVICE_ETEL, "Mobile line get status stubbed with normal get status");
         }
@@ -106,19 +112,23 @@ namespace eka2l1 {
     }
 
     void etel_line_subsession::notify_status_change(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         status_change_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
 
     void etel_line_subsession::cancel_notify_status_change(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->complete(epoc::error_none);
         status_change_nof_.complete(epoc::error_cancel);
     }
 
     void etel_line_subsession::notify_incoming_call(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         incoming_call_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
 
     void etel_line_subsession::cancel_notify_incoming_call(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->complete(epoc::error_none);
         incoming_call_nof_.complete(epoc::error_cancel);
     }

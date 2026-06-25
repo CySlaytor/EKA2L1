@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team.
  * 
@@ -38,9 +39,11 @@ namespace eka2l1 {
 
     akn_skin_server_session::akn_skin_server_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_version)
         : service::typical_session(svr, client_ss_uid, client_version) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void akn_skin_server_session::do_set_notify_handler(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         // The notify handler does nothing rather than guarantee that the client already has a handle mechanic
         // to the request notification later.
         client_handler_ = *ctx->get_argument_value<std::uint32_t>(0);
@@ -48,6 +51,7 @@ namespace eka2l1 {
     }
 
     void akn_skin_server_session::check_icon_config(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const std::optional<epoc::uid> id = ctx->get_argument_data_from_descriptor<epoc::uid>(0);
 
         if (!id) {
@@ -60,6 +64,7 @@ namespace eka2l1 {
     }
 
     void akn_skin_server_session::store_scalable_gfx(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         // Message parameters
         // 0. ItemID
         // 1. LayoutType & size
@@ -84,6 +89,7 @@ namespace eka2l1 {
     }
 
     void akn_skin_server_session::do_next_event(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (flags & ASS_FLAG_CANCELED) {
             // Clear the nof list
             while (!nof_list_.empty()) {
@@ -114,6 +120,7 @@ namespace eka2l1 {
     }
 
     void akn_skin_server_session::do_cancel(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         // If a handler is set and no pending notifications
         if (client_handler_ && nof_list_.empty()) {
             nof_info_.complete(epoc::error_cancel);
@@ -123,6 +130,7 @@ namespace eka2l1 {
     }
 
     void akn_skin_server_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx->msg->function) {
         case epoc::akn_skin_server_set_notify_handler: {
             do_set_notify_handler(ctx);
@@ -160,9 +168,11 @@ namespace eka2l1 {
     akn_skin_server::akn_skin_server(eka2l1::system *sys)
         : service::typical_server(sys, "!AknSkinServer")
         , settings_(nullptr) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void akn_skin_server::connect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         if (!settings_) {
             do_initialisation();
         }
@@ -172,10 +182,12 @@ namespace eka2l1 {
     }
 
     int akn_skin_server::is_icon_configured(const epoc::uid app_uid) {
+  NGAGE_COVERAGE_LOG();
         return icon_config_map_->is_icon_configured(app_uid);
     }
 
     void akn_skin_server::merge_active_skin(eka2l1::io_system *io) {
+  NGAGE_COVERAGE_LOG();
         epoc::pid skin_pid = settings_->active_skin_pid();
         if (skin_pid.first == 0) {
             epoc::pid default_pid = settings_->default_skin_pid();
@@ -220,6 +232,7 @@ namespace eka2l1 {
     }
 
     void akn_skin_server::do_initialisation() {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = sys->get_kernel_system();
         server_ptr svr = kern->get_by_name<service::server>("!CentralRepository");
 
@@ -281,6 +294,7 @@ namespace eka2l1 {
         const epoc::skn_layout_info layout_info,
         const std::uint32_t bmp_handle,
         const std::uint32_t msk_handle) {
+  NGAGE_COVERAGE_LOG();
         fbsbitmap *bmp = fbss->get<fbsbitmap>(bmp_handle);
         fbsbitmap *msk = msk_handle ? fbss->get<fbsbitmap>(msk_handle) : nullptr;
 

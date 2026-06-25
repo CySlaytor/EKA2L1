@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 #include <common/path.h>
 #include <common/time.h>
 #include <common/vecx.h>
@@ -97,6 +98,7 @@ namespace eka2l1::epoc {
     using akns_srv_image_table_def = akns_srv_color_table_def;
 
     static pid make_pid_from_id_hash(const std::uint64_t hash) {
+  NGAGE_COVERAGE_LOG();
         return { static_cast<std::int32_t>(hash), static_cast<std::int32_t>(hash >> 32) };
     }
 
@@ -108,6 +110,7 @@ namespace eka2l1::epoc {
         , granularity_(granularity)
         , level_(0)
         , flags_(flags) {
+  NGAGE_COVERAGE_LOG();
         // Calculate max size this chunk can hold (of course, in granularity meters)
         max_size_gran_ = shared_chunk_->max_size() / granularity;
 
@@ -127,6 +130,7 @@ namespace eka2l1::epoc {
     }
 
     const std::uint32_t akn_skin_chunk_maintainer::maximum_filename() {
+  NGAGE_COVERAGE_LOG();
         const std::size_t area_size = get_area_size(akn_skin_chunk_area_base_offset::filename_area_base);
 
         // If the filename area doesn't exist
@@ -138,6 +142,7 @@ namespace eka2l1::epoc {
     }
 
     const std::uint32_t akn_skin_chunk_maintainer::current_filename_count() {
+  NGAGE_COVERAGE_LOG();
         const std::size_t area_crr_size = get_area_current_size(akn_skin_chunk_area_base_offset::filename_area_base);
 
         // If the filename area doesn't exist
@@ -149,6 +154,7 @@ namespace eka2l1::epoc {
     }
 
     static std::uint32_t *search_filename_in_area(std::uint32_t *area, const std::uint32_t filename_id, const std::uint32_t count) {
+  NGAGE_COVERAGE_LOG();
         if (area == nullptr) {
             // Area doesn't exist
             return nullptr;
@@ -168,6 +174,7 @@ namespace eka2l1::epoc {
     }
 
     std::int32_t akn_skin_chunk_maintainer::get_filename_offset_from_id(const std::uint32_t filename_id) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t *areabase = reinterpret_cast<std::uint32_t *>(get_area_base(akn_skin_chunk_area_base_offset::filename_area_base));
 
         if (areabase == nullptr) {
@@ -188,6 +195,7 @@ namespace eka2l1::epoc {
 
     bool akn_skin_chunk_maintainer::update_filename(const std::uint32_t filename_id, const std::u16string &filename,
         const std::u16string &filename_base) {
+  NGAGE_COVERAGE_LOG();
         // We need to search for the one and only.
         // Get the base first
         std::uint32_t *areabase = reinterpret_cast<std::uint32_t *>(get_area_base(akn_skin_chunk_area_base_offset::filename_area_base));
@@ -228,10 +236,12 @@ namespace eka2l1::epoc {
     static constexpr std::int32_t MAX_HASH_AVAIL = 128;
 
     static std::uint32_t calculate_item_hash(const epoc::pid &id) {
+  NGAGE_COVERAGE_LOG();
         return (id.first + id.second) % MAX_HASH_AVAIL;
     }
 
     std::int32_t akn_skin_chunk_maintainer::get_item_definition_index(const epoc::pid &id) {
+  NGAGE_COVERAGE_LOG();
         if (flags_ & akn_skin_chunk_maintainer_lookup_use_linked_list) {
             std::int32_t *hash = reinterpret_cast<std::int32_t *>(get_area_base(epoc::akn_skin_chunk_area_base_offset::item_def_hash_base));
 
@@ -272,6 +282,7 @@ namespace eka2l1::epoc {
     }
 
     std::int32_t akn_skin_chunk_maintainer::update_data(const std::uint8_t *new_data, std::uint8_t *old_data, const std::size_t new_size, const std::size_t old_size) {
+  NGAGE_COVERAGE_LOG();
         std::int32_t offset = 0;
 
         if (old_data == nullptr || (old_size < new_size)) {
@@ -300,6 +311,7 @@ namespace eka2l1::epoc {
 
     // More efficient. Giving the index first.
     bool akn_skin_chunk_maintainer::update_definition_hash(epoc::akns_item_def *def, const std::int32_t index) {
+  NGAGE_COVERAGE_LOG();
         // Get current head
         std::int32_t head = calculate_item_hash(def->id_);
         std::int32_t *hash = reinterpret_cast<std::int32_t *>(get_area_base(epoc::akn_skin_chunk_area_base_offset::item_def_hash_base));
@@ -315,6 +327,7 @@ namespace eka2l1::epoc {
 
     bool akn_skin_chunk_maintainer::update_definition(const epoc::akns_item_def &def, const void *data, const std::size_t data_size,
         const std::size_t old_data_size) {
+  NGAGE_COVERAGE_LOG();
         std::int32_t index = get_item_definition_index(def.id_);
         std::size_t old_data_size_to_update = 0;
         void *old_data = nullptr;
@@ -387,6 +400,7 @@ namespace eka2l1::epoc {
 
     bool akn_skin_chunk_maintainer::add_area(const akn_skin_chunk_area_base_offset offset_type,
         const std::int64_t allocated_size_gran) {
+  NGAGE_COVERAGE_LOG();
         // Enum value "*_base" always aligned with 3
         if (static_cast<int>(offset_type) % 3 != 0) {
             return false;
@@ -450,6 +464,7 @@ namespace eka2l1::epoc {
     }
 
     akn_skin_chunk_maintainer::akn_skin_chunk_area *akn_skin_chunk_maintainer::get_area_info(const akn_skin_chunk_area_base_offset area_type) {
+  NGAGE_COVERAGE_LOG();
         if (static_cast<int>(area_type) % 3 != 0) {
             // Don't satisfy the condition
             return nullptr;
@@ -469,6 +484,7 @@ namespace eka2l1::epoc {
     }
 
     const std::size_t akn_skin_chunk_maintainer::get_area_size(const akn_skin_chunk_area_base_offset area_type, const bool paper_calc) {
+  NGAGE_COVERAGE_LOG();
         akn_skin_chunk_area *area = get_area_info(area_type);
 
         if (!area) {
@@ -490,6 +506,7 @@ namespace eka2l1::epoc {
 
     void *akn_skin_chunk_maintainer::get_area_base(const akn_skin_chunk_area_base_offset area_type,
         std::uint64_t *offset_from_begin) {
+  NGAGE_COVERAGE_LOG();
         akn_skin_chunk_area *area = get_area_info(area_type);
 
         if (!area) {
@@ -509,6 +526,7 @@ namespace eka2l1::epoc {
     }
 
     const std::size_t akn_skin_chunk_maintainer::get_area_current_size(const akn_skin_chunk_area_base_offset area_type) {
+  NGAGE_COVERAGE_LOG();
         akn_skin_chunk_area *area = get_area_info(area_type);
 
         if (!area) {
@@ -522,6 +540,7 @@ namespace eka2l1::epoc {
     }
 
     bool akn_skin_chunk_maintainer::set_area_current_size(const akn_skin_chunk_area_base_offset area_type, const std::uint32_t new_size) {
+  NGAGE_COVERAGE_LOG();
         akn_skin_chunk_area *area = get_area_info(area_type);
 
         if (!area) {
@@ -537,6 +556,7 @@ namespace eka2l1::epoc {
     }
 
     akns_item_def *akn_skin_chunk_maintainer::get_item_definition(const epoc::pid &id) {
+  NGAGE_COVERAGE_LOG();
         const std::int32_t index = get_item_definition_index(id);
 
         if (index < 0) {
@@ -554,6 +574,7 @@ namespace eka2l1::epoc {
     }
 
     bool akn_skin_chunk_maintainer::import_color_table(const skn_color_table &table) {
+  NGAGE_COVERAGE_LOG();
         akns_item_def item;
         item.type_ = akns_item_type_color_table;
         item.id_ = make_pid_from_id_hash(table.id_hash);
@@ -613,6 +634,7 @@ namespace eka2l1::epoc {
     }
 
     static bool import_effect(akn_skin_chunk_maintainer &maintainer, const skn_effect &effect, std::vector<std::uint8_t> &effects) {
+  NGAGE_COVERAGE_LOG();
         effects.resize(sizeof(akns_srv_effect_def));
 
         akns_srv_effect_def *srv_effect = reinterpret_cast<decltype(srv_effect)>(&effects[0]);
@@ -674,6 +696,7 @@ namespace eka2l1::epoc {
     }
 
     bool akn_skin_chunk_maintainer::import_effect_queue(const skn_effect_queue &queue) {
+  NGAGE_COVERAGE_LOG();
         akns_item_def item;
         item.type_ = akns_item_type_effect_queue;
         item.id_ = make_pid_from_id_hash(queue.id_hash);
@@ -725,6 +748,7 @@ namespace eka2l1::epoc {
     }
 
     bool akn_skin_chunk_maintainer::import_bitmap(const skn_bitmap_info &info) {
+  NGAGE_COVERAGE_LOG();
         akns_item_def item;
         item.type_ = akns_item_type_bitmap;
         item.id_ = make_pid_from_id_hash(info.id_hash);
@@ -764,6 +788,7 @@ namespace eka2l1::epoc {
     }
 
     bool akn_skin_chunk_maintainer::import_image_table(const skn_image_table &table) {
+  NGAGE_COVERAGE_LOG();
         akns_item_def item;
         item.type_ = akns_item_type_image_table;
         item.id_ = make_pid_from_id_hash(table.id_hash);
@@ -822,6 +847,7 @@ namespace eka2l1::epoc {
     }
 
     bool akn_skin_chunk_maintainer::import(skn_file &skn, const std::u16string &filename_base) {
+  NGAGE_COVERAGE_LOG();
         // First up import filenames
         for (auto &filename : skn.filenames_) {
             if (!update_filename(filename.first, filename.second, filename_base)) {
@@ -858,6 +884,7 @@ namespace eka2l1::epoc {
     }
 
     bool akn_skin_chunk_maintainer::store_scalable_gfx(const pid item_id, const skn_layout_info layout_info, fbsbitmap *bmp, fbsbitmap *msk) {
+  NGAGE_COVERAGE_LOG();
         bitmap_store_->store_bitmap(bmp);
         if (msk) {
             bitmap_store_->store_bitmap(msk);
@@ -920,11 +947,13 @@ namespace eka2l1::epoc {
     }
 
     bool akn_skin_chunk_maintainer::inject_skin_background(const std::u16string &path, const std::u16string &base_path) {
+  NGAGE_COVERAGE_LOG();
         return true;
     }
 
     // https://github.com/SymbianSource/oss.FCL.sf.mw.uiresources/blob/b78660bec78835802edd6575b96897d4aba58376/skins/AknSkins/srvsrc/AknsSrvChunkMaintainer.cpp#L238
     bool akn_skin_chunk_maintainer::set_wallpaper(const std::u16string &path, const std::u16string &base_path) {
+  NGAGE_COVERAGE_LOG();
         akns_item_def wallpaper_def;
         wallpaper_def.id_.first = AKN_SKIN_MAJOR_UID;
         wallpaper_def.id_.second = AKN_SKIN_MINOR_WALLPAPER_UID;

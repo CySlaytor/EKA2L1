@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -25,6 +26,7 @@
 
 namespace eka2l1::epoc {
     bool sprite::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_sprite_op op = static_cast<decltype(op)>(cmd.header.op);
         bool quit = false;
 
@@ -53,5 +55,6 @@ namespace eka2l1::epoc {
         : window_client_obj(client, scr)
         , position(pos)
         , attached_window(attached_window) {
+  NGAGE_COVERAGE_LOG();
     }
 }

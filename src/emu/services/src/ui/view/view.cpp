@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -27,6 +28,7 @@
 
 namespace eka2l1 {
     std::string get_view_server_name_by_epocver(const epocver ver) {
+  NGAGE_COVERAGE_LOG();
         if (ver <= epocver::epoc80) {
             return "ViewServer";
         }
@@ -41,6 +43,7 @@ namespace eka2l1 {
     }
 
     void view_server::connect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         if (!(flags_ & flag_inited)) {
             init(sys->get_io_system());
         }
@@ -50,6 +53,7 @@ namespace eka2l1 {
     }
 
     bool view_server::init(io_system *io) {
+  NGAGE_COVERAGE_LOG();
         priority_ = 0;
 
         // Try to read resource file contains priority
@@ -83,6 +87,7 @@ namespace eka2l1 {
     }
 
     std::optional<ui::view::view_id> view_server::active_view() {
+  NGAGE_COVERAGE_LOG();
         for (auto &[uid, session]: sessions) {
             view_session *ss = reinterpret_cast<view_session*>(session.get());
             if (ss) {
@@ -97,6 +102,7 @@ namespace eka2l1 {
     }
 
     view_session *view_server::active_view_session() {
+  NGAGE_COVERAGE_LOG();
         for (auto &[uid, session]: sessions) {
             view_session *ss = reinterpret_cast<view_session*>(session.get());
             if (ss && ss->active_view().has_value()) {
@@ -108,6 +114,7 @@ namespace eka2l1 {
     }
 
     void view_server::call_activation_listener(const ui::view::view_id id) {
+  NGAGE_COVERAGE_LOG();
         for (auto &[uid, session]: sessions) {
             view_session *ss = reinterpret_cast<view_session*>(session.get());
             if (ss) {
@@ -117,6 +124,7 @@ namespace eka2l1 {
     }
 
     void view_server::call_deactivation_listener(const ui::view::view_id id) {
+  NGAGE_COVERAGE_LOG();
         for (auto &[uid, session]: sessions) {
             view_session *ss = reinterpret_cast<view_session*>(session.get());
             if (ss) {
@@ -126,6 +134,7 @@ namespace eka2l1 {
     }
 
     void view_server::make_view_active(view_session *activator, const ui::view::view_id &active_id, const ui::view::custom_message &msg) {
+  NGAGE_COVERAGE_LOG();
         view_session *deactivate_ss = active_view_session();
         std::optional<ui::view::view_id> old_id = std::nullopt;
 
@@ -148,6 +157,7 @@ namespace eka2l1 {
     }
 
     void view_server::deactivate_active_view() {
+  NGAGE_COVERAGE_LOG();
         view_session *deactivate_ss = active_view_session();
 
         if (deactivate_ss) {
@@ -168,9 +178,11 @@ namespace eka2l1 {
         , next_deactivation_id_(ui::view::EMPTY_VIEW_ID)
         , app_uid_(0)
         , active_view_id_index_(-1) {
+  NGAGE_COVERAGE_LOG();
     }
 
     std::optional<ui::view::view_id> view_session::active_view() {
+  NGAGE_COVERAGE_LOG();
         if (active_view_id_index_ < 0) {
             return std::nullopt;
         }
@@ -179,6 +191,7 @@ namespace eka2l1 {
     }
 
     void view_session::set_active_view(const ui::view::view_id &id) {
+  NGAGE_COVERAGE_LOG();
         auto iterator = std::find(ids_.begin(), ids_.end(), id);
         if (iterator != ids_.end()) {
             active_view_id_index_ = static_cast<std::int32_t>(std::distance(ids_.begin(), iterator));
@@ -186,10 +199,12 @@ namespace eka2l1 {
     }
 
     void view_session::clear_active_view() {
+  NGAGE_COVERAGE_LOG();
         active_view_id_index_ = -1;
     }
 
     void view_session::on_view_activation(const ui::view::view_id &id) {
+  NGAGE_COVERAGE_LOG();
         if (outstanding_activation_notify_) {
             if ((next_activation_id_ == ui::view::EMPTY_VIEW_ID) || (next_activation_id_ == id)) {
                 queue_.queue_event({ ui::view::view_event::event_active_notification, id, ui::view::EMPTY_VIEW_ID, 0, 0 });
@@ -198,6 +213,7 @@ namespace eka2l1 {
     }
 
     void view_session::on_view_deactivation(const ui::view::view_id &id) {
+  NGAGE_COVERAGE_LOG();
         if (outstanding_deactivation_notify_) {
             if ((next_deactivation_id_ == ui::view::EMPTY_VIEW_ID) || (next_deactivation_id_ == id)) {
                 queue_.queue_event({ ui::view::view_event::event_deactive_notification, id, ui::view::EMPTY_VIEW_ID, 0, 0 });
@@ -206,6 +222,7 @@ namespace eka2l1 {
     }
 
     void view_session::add_view(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<ui::view::view_id> id = ctx->get_argument_data_from_descriptor<ui::view::view_id>(0);
 
         if (!id) {
@@ -227,6 +244,7 @@ namespace eka2l1 {
     }
 
     void view_session::remove_view(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<ui::view::view_id> id = ctx->get_argument_data_from_descriptor<ui::view::view_id>(0);
 
         if (!id) {
@@ -257,6 +275,7 @@ namespace eka2l1 {
     }
 
     void view_session::request_view_event(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const std::size_t event_buf_size = ctx->get_argument_data_size(0);
 
         if (event_buf_size < sizeof(ui::view::view_event)) {
@@ -275,11 +294,13 @@ namespace eka2l1 {
     }
 
     void view_session::request_view_event_cancel(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         queue_.cancel();
         ctx->complete(epoc::error_none);
     }
 
     void view_session::active_view(service::ipc_context *ctx, const bool should_complete) {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = server<view_server>()->get_kernel_object_owner();
 
         std::optional<epoc::uid> custom_message_id;
@@ -338,6 +359,7 @@ namespace eka2l1 {
     }
 
     void view_session::deactive_view(service::ipc_context *ctx, const bool should_complete) {
+  NGAGE_COVERAGE_LOG();
         view_server *svr = server<view_server>();
         svr->deactivate_active_view();
 
@@ -345,23 +367,27 @@ namespace eka2l1 {
     }
 
     void view_session::async_message_for_client_to_panic_with(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         to_panic_.sts = ctx->msg->request_sts;
         to_panic_.requester = ctx->msg->own_thr;
     }
 
     void view_session::get_priority(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const std::uint32_t priority = server<view_server>()->priority();
         ctx->write_data_to_descriptor_argument(0, &priority);
         ctx->complete(epoc::error_none);
     }
 
     void view_session::get_custom_message(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const ui::view::custom_message custom = queue_.current_custom_message();
         ctx->write_data_to_descriptor_argument(0, custom.data_.data(), static_cast<std::uint32_t>(custom.data_.size()), nullptr, true);
         ctx->complete(epoc::error_none);
     }
 
     void view_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = server<view_server>()->get_kernel_object_owner();
 
         if (!kern->is_eka1() && (ctx->msg->function >= view_opcode_set_system_default_view) && (ctx->msg->function < view_opcode_end_nocap)) {

@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team.
  * 
@@ -30,9 +31,11 @@
 namespace eka2l1 {
     akn_icon_server_session::akn_icon_server_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version version)
         : service::typical_session(svr, client_ss_uid, version) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void akn_icon_server_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         switch (ctx->msg->function) {
         case akn_icon_server_get_init_data: {
             // Write initialisation data to buffer
@@ -61,9 +64,11 @@ namespace eka2l1 {
 
     akn_icon_server::akn_icon_server(eka2l1::system *sys)
         : service::typical_server(sys, "!AknIconServer") {
+  NGAGE_COVERAGE_LOG();
     }
 
     void akn_icon_server::connect(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         if (!(flags & akn_icon_srv_flag_inited)) {
             init_server();
         }
@@ -73,6 +78,7 @@ namespace eka2l1 {
     }
 
     void akn_icon_server::retrieve_icon(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::akn_icon_params> spec = ctx->get_argument_data_from_descriptor<epoc::akn_icon_params>(0);
         std::optional<epoc::akn_icon_srv_return_data> ret = ctx->get_argument_data_from_descriptor<epoc::akn_icon_srv_return_data>(1);
 
@@ -121,6 +127,7 @@ namespace eka2l1 {
     }
 
     bool akn_icon_server::cache_or_delete_icon(const std::size_t icon_idx) {
+  NGAGE_COVERAGE_LOG();
         if (icon_idx >= icons.size()) {
             return false;
         }
@@ -150,6 +157,7 @@ namespace eka2l1 {
     }
 
     void akn_icon_server::free_bitmap(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::akn_icon_params> params = ctx->get_argument_data_from_descriptor<epoc::akn_icon_params>(0);
 
         std::size_t icon_index = 0;
@@ -177,6 +185,7 @@ namespace eka2l1 {
     }
 
     std::optional<epoc::akn_icon_srv_return_data> akn_icon_server::find_existing_icon(epoc::akn_icon_params &spec, std::size_t *idx) {
+  NGAGE_COVERAGE_LOG();
         for (std::size_t i = 0; i < icons.size(); i++) {
             epoc::akn_icon_params cached_spec = icons[i].spec;
 
@@ -204,6 +213,7 @@ namespace eka2l1 {
     }
 
     void akn_icon_server::add_icon(const epoc::akn_icon_srv_return_data &ret, const epoc::akn_icon_params &spec) {
+  NGAGE_COVERAGE_LOG();
         icon_data_item item;
         item.ret = ret;
         item.spec = spec;

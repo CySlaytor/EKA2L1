@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team.
  * 
@@ -21,6 +22,7 @@
 
 namespace eka2l1::epoc {
     const char *akn_skin_server_opcode_to_str(const akn_skin_server_opcode op) {
+  NGAGE_COVERAGE_LOG();
         switch (op) {
 #define OPCODE(op)             \
     case akn_skin_server_##op: \

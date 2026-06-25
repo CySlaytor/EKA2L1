@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -26,15 +27,18 @@
 
 namespace eka2l1::service {
     normal_object_container::~normal_object_container() {
+  NGAGE_COVERAGE_LOG();
         clear();
     }
 
     void normal_object_container::clear() {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::recursive_mutex> guard(obj_lock);
         objs.clear();
     }
 
     bool normal_object_container::remove(epoc::ref_count_object *obj) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::recursive_mutex> guard(obj_lock);
 
         auto res = std::lower_bound(objs.begin(), objs.end(), obj,
@@ -61,10 +65,12 @@ namespace eka2l1::service {
     }
 
     typical_server::~typical_server() {
+  NGAGE_COVERAGE_LOG();
         sessions.clear();
     }
 
     void typical_server::disconnect_impl(service::session *ss) {
+  NGAGE_COVERAGE_LOG();
         if (!ss) {
             return;
         }
@@ -73,17 +79,20 @@ namespace eka2l1::service {
     }
 
     void typical_server::disconnect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         disconnect_impl(ctx.msg->msg_session);
         ctx.complete(0);
     }
 
     std::optional<epoc::version> typical_server::get_version(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = ctx->sys->get_kernel_system();
         std::optional<epoc::version> ver = get_server_version(kern, ctx);
         return ver;
     }
 
     void typical_server::process_accepted_msg() {
+  NGAGE_COVERAGE_LOG();
         ipc_msg_ptr process_msg = nullptr;
         receive(process_msg);
 

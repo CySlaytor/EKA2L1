@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team.
  * 
@@ -31,6 +32,7 @@ namespace eka2l1::epoc {
     static constexpr const char16_t *SKIN_FOLDER = u"\\private\\10207114\\import\\";
 
     std::u16string pid_to_string(const epoc::pid skin_pid) {
+  NGAGE_COVERAGE_LOG();
         std::u16string result;
         result += fmt::format(u"{:0>8x}", skin_pid.first);
 
@@ -42,6 +44,7 @@ namespace eka2l1::epoc {
     }
 
     static epoc::pid string_to_pid(const std::string &str) {
+  NGAGE_COVERAGE_LOG();
         common::pystr pstr(str);
         epoc::pid result;
 
@@ -56,6 +59,7 @@ namespace eka2l1::epoc {
     }
     
     std::optional<epoc::pid> pick_first_skin(eka2l1::io_system *io) {
+  NGAGE_COVERAGE_LOG();
         for (drive_number drv = drive_a; drv <= drive_z; drv++) {
             if (io->get_drive_entry(drv)) {
                 std::u16string skin_folder_path(1, drive_to_char16(drv));
@@ -108,6 +112,7 @@ namespace eka2l1::epoc {
     }
 
     std::optional<std::u16string> find_skin_file(eka2l1::io_system *io, const epoc::pid skin_pid) {
+  NGAGE_COVERAGE_LOG();
         for (drive_number drv = drive_a; drv <= drive_z; drv++) {
             if (io->get_drive_entry(drv)) {
                 std::u16string skin_folder_path(1, drive_to_char16(drv));
@@ -138,6 +143,7 @@ namespace eka2l1::epoc {
     }
 
     std::optional<std::u16string> get_resource_path_of_skin(eka2l1::io_system *io, const epoc::pid skin_pid) {
+  NGAGE_COVERAGE_LOG();
         std::u16string formal_path = u"\\resource\\skins\\";
         formal_path += pid_to_string(skin_pid);
 

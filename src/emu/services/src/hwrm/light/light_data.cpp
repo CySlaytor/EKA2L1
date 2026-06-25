@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -26,6 +27,7 @@
 
 namespace eka2l1::epoc::hwrm::light {
     bool resource_data::initialise_components(kernel_system *kern) {
+  NGAGE_COVERAGE_LOG();
         // Create and define the property. Remember to destroy later.
         infos_prop_ = kern->create<service::property>();
 
@@ -58,6 +60,7 @@ namespace eka2l1::epoc::hwrm::light {
     }
 
     bool resource_data::publish_light(target light_target, status sts) {
+  NGAGE_COVERAGE_LOG();
         // Find the light in the list
         auto find_result = std::find_if(infos_.begin(), infos_.end(), [light_target](const target_info &trg) {
             return trg.target_ == light_target;
@@ -82,6 +85,7 @@ namespace eka2l1::epoc::hwrm::light {
     }
 
     resource_data::resource_data(kernel_system *sys) {
+  NGAGE_COVERAGE_LOG();
         if (!initialise_components(sys)) {
             LOG_ERROR(SERVICE_HWRM, "Unable to initialise light resource data!");
         }

@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  *
@@ -31,6 +32,7 @@
 
 namespace eka2l1 {
     std::string get_socket_server_name_by_epocver(const epocver ver) {
+  NGAGE_COVERAGE_LOG();
         if (ver <= epocver::eka2) {
             return "SocketServer";
         }
@@ -47,11 +49,13 @@ namespace eka2l1 {
     }
 
     void socket_server::connect(service::ipc_context &context) {
+  NGAGE_COVERAGE_LOG();
         create_session<socket_client_session>(&context);
         context.complete(epoc::error_none);
     }
 
     epoc::socket::protocol *socket_server::find_protocol(const std::uint32_t addr_family, const std::uint32_t protocol_id) {
+  NGAGE_COVERAGE_LOG();
         for (auto &pr : protocols_) {
             std::vector<std::uint32_t> ids = pr->family_ids();
             if (std::find(ids.begin(), ids.end(), addr_family) != ids.end()) {
@@ -66,6 +70,7 @@ namespace eka2l1 {
     }
 
     epoc::socket::protocol *socket_server::find_protocol_by_name(const std::u16string &name) {
+  NGAGE_COVERAGE_LOG();
         for (auto &pr : protocols_) {
             if (common::compare_ignore_case(pr->name(), name) == 0) {
                 return pr.get();
@@ -76,11 +81,13 @@ namespace eka2l1 {
     }
 
     bool socket_server::add_protocol(std::unique_ptr<epoc::socket::protocol> &pr) {
+  NGAGE_COVERAGE_LOG();
         protocols_.push_back(std::move(pr));
         return true;
     }
 
     epoc::socket::connect_agent *socket_server::get_connect_agent(const std::u16string &name) {
+  NGAGE_COVERAGE_LOG();
         auto agt_ite = std::find_if(agents_.begin(), agents_.end(), [name](std::unique_ptr<epoc::socket::connect_agent> &agt) {
             return agt->agent_name() == name;
         });
@@ -93,6 +100,7 @@ namespace eka2l1 {
     }
 
     bool socket_server::add_agent(std::unique_ptr<epoc::socket::connect_agent> &ag) {
+  NGAGE_COVERAGE_LOG();
         for (const auto &agt : agents_) {
             if (agt->agent_name() == ag->agent_name()) {
                 return false;
@@ -106,13 +114,16 @@ namespace eka2l1 {
     socket_client_session::socket_client_session(service::typical_server *serv, const kernel::uid ss_id,
         epoc::version client_version)
         : service::typical_session(serv, ss_id, client_version) {
+  NGAGE_COVERAGE_LOG();
     }
 
     bool socket_client_session::is_oldarch() {
+  NGAGE_COVERAGE_LOG();
         return server<socket_server>()->get_kernel_object_owner()->get_epoc_version() < epocver::epoc81a;
     }
 
     void socket_client_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (is_oldarch()) {
             switch (ctx->msg->function) {
             case socket_old_pr_find:
@@ -249,6 +260,7 @@ namespace eka2l1 {
     }
 
     void socket_client_session::sr_get_by_number(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::int32_t port = *(ctx->get_argument_value<std::int32_t>(1));
 
         std::string name = "DummyService";
@@ -258,11 +270,13 @@ namespace eka2l1 {
     }
 
     void socket_client_session::cn_get_long_des_setting(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_ESOCK, "CnGetLongDesSetting stubbed");
         ctx->complete(epoc::error_none);
     }
 
     static void fill_protocol_description(epoc::socket::protocol *pr, protocol_description &des) {
+  NGAGE_COVERAGE_LOG();
         des.addr_fam_ = pr->family_ids()[0];
         des.protocol_ = pr->supported_ids()[0];
         des.ver_ = pr->ver();
@@ -277,6 +291,7 @@ namespace eka2l1 {
     }
 
     void socket_client_session::pr_find(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> protocol_name = ctx->get_argument_value<std::u16string>(1);
         if (!protocol_name.has_value()) {
             ctx->complete(epoc::error_argument);
@@ -299,6 +314,7 @@ namespace eka2l1 {
     }
 
     void socket_client_session::hr_create(service::ipc_context *ctx, const bool with_conn) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> addr_family = ctx->get_argument_value<std::uint32_t>(0);
         std::optional<std::uint32_t> protocol = ctx->get_argument_value<std::uint32_t>(1);
         std::optional<std::uint32_t> conn_subhandle = ctx->get_argument_value<std::uint32_t>(2);
@@ -348,6 +364,7 @@ namespace eka2l1 {
     }
 
     void socket_client_session::so_create(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> addr_family = ctx->get_argument_value<std::uint32_t>(0);
         std::optional<std::uint32_t> sock_type = ctx->get_argument_value<std::uint32_t>(1);
         std::optional<std::uint32_t> protocol = ctx->get_argument_value<std::uint32_t>(2);
@@ -384,6 +401,7 @@ namespace eka2l1 {
     }
 
     void socket_client_session::ndb_create(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> addr_family = ctx->get_argument_value<std::uint32_t>(0);
         std::optional<std::uint32_t> protocol = ctx->get_argument_value<std::uint32_t>(1);
 
@@ -419,6 +437,7 @@ namespace eka2l1 {
     }
 
     void socket_client_session::so_create_with_conn_or_subconn(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<socket_open_info> open_info = ctx->get_argument_data_from_descriptor<socket_open_info>(0);
 
         if (!open_info.has_value()) {
@@ -453,6 +472,7 @@ namespace eka2l1 {
     }
 
     void socket_client_session::so_create_null(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::unique_ptr<epoc::socket::socket> sock_impl = nullptr;
         socket_subsession_instance so_inst = std::make_unique<epoc::socket::socket_socket>(this, sock_impl);
 
@@ -464,6 +484,7 @@ namespace eka2l1 {
     }
 
     void socket_client_session::cn_open(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         socket_subsession_instance cn_inst = std::make_unique<epoc::socket::socket_connection_proxy>(this, nullptr);
 
         const std::uint32_t id = static_cast<std::uint32_t>(subsessions_.add(cn_inst));
@@ -474,6 +495,7 @@ namespace eka2l1 {
     }
 
     void socket_client_session::ss_request_optimal_dealer(eka2l1::service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->complete(epoc::error_not_found);
     }
 }

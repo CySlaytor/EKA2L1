@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -32,6 +33,7 @@
 
 namespace eka2l1 {
     std::uint32_t central_repo::get_default_meta_for_new_key(const std::uint32_t key) {
+  NGAGE_COVERAGE_LOG();
         for (std::size_t i = 0; i < meta_range.size(); i++) {
             if (meta_range[i].high_key) {
                 // Normal range
@@ -51,6 +53,7 @@ namespace eka2l1 {
     }
 
     bool central_repo::add_new_entry(const std::uint32_t key, const central_repo_entry_variant &var) {
+  NGAGE_COVERAGE_LOG();
         if (find_entry(key)) {
             return false;
         }
@@ -68,6 +71,7 @@ namespace eka2l1 {
 
     bool central_repo::add_new_entry(const std::uint32_t key, const central_repo_entry_variant &var,
         const std::uint32_t meta) {
+  NGAGE_COVERAGE_LOG();
         if (find_entry(key)) {
             return false;
         }
@@ -84,6 +88,7 @@ namespace eka2l1 {
     }
 
     central_repo_entry *central_repo::find_entry(const std::uint32_t key) {
+  NGAGE_COVERAGE_LOG();
         auto ite = std::find_if(entries.begin(), entries.end(), [=](const central_repo_entry &e) {
             return e.key == key;
         });
@@ -98,6 +103,7 @@ namespace eka2l1 {
     void central_repo::query_entries(const std::uint32_t partial_key, const std::uint32_t mask,
         std::vector<central_repo_entry *> &matched_entries,
         const central_repo_entry_type etype) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t required_mask = mask & partial_key;
 
         for (auto &entry : entries) {
@@ -109,10 +115,12 @@ namespace eka2l1 {
 
     central_repo_client_subsession::central_repo_client_subsession()
         : flags(0) {
+  NGAGE_COVERAGE_LOG();
         set_transaction_mode(central_repo_transaction_mode::read_write);
     }
 
     void central_repo_client_subsession::modification_success(const std::uint32_t key) {
+  NGAGE_COVERAGE_LOG();
         // Iters through all
         for (std::size_t i = 0; i < notifies.size(); i++) {
             cenrep_notify_info &notify = notifies[i];
@@ -129,6 +137,7 @@ namespace eka2l1 {
 
     int central_repo_client_subsession::add_notify_request(epoc::notify_info &info,
         const std::uint32_t mask, const std::uint32_t match) {
+  NGAGE_COVERAGE_LOG();
         auto find_result = std::find_if(notifies.begin(), notifies.end(), [&](const cenrep_notify_info &notify) {
             return (notify.mask == mask) && (notify.match == match);
         });
@@ -147,6 +156,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::cancel_all_notify_requests() {
+  NGAGE_COVERAGE_LOG();
         common::erase_elements(notifies, [=](cenrep_notify_info &info) {
             info.sts.complete(-3);
             return true;
@@ -154,6 +164,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::cancel_notify_request(const std::uint32_t match_key, const std::uint32_t mask) {
+  NGAGE_COVERAGE_LOG();
         common::erase_elements(notifies, [=](cenrep_notify_info &info) {
             if ((info.match == match_key) && (info.mask == mask)) {
                 info.sts.complete(-3);
@@ -165,6 +176,7 @@ namespace eka2l1 {
     }
 
     central_repo_entry *central_repo_client_subsession::get_entry(const std::uint32_t key, int mode) {
+  NGAGE_COVERAGE_LOG();
         // Repo is in transaction
         bool active = is_active();
 
@@ -200,6 +212,7 @@ namespace eka2l1 {
     }
 
     bool central_repos_cacher::free_oldest() {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t repo_key = 0xFFFFFFFF;
         std::uint64_t oldest_access = 0xFFFFFFFFFFFFFFFF;
 
@@ -219,6 +232,7 @@ namespace eka2l1 {
     }
 
     eka2l1::central_repo *central_repos_cacher::add_repo(const std::uint32_t key, eka2l1::central_repo &repo) {
+  NGAGE_COVERAGE_LOG();
         if (entries.size() == MAX_REPO_CACHE_ENTRIES) {
             // Free the oldest
             if (!free_oldest()) {
@@ -243,6 +257,7 @@ namespace eka2l1 {
     }
 
     bool central_repos_cacher::remove_repo(const std::uint32_t key) {
+  NGAGE_COVERAGE_LOG();
         if (entries.erase(key)) {
             return true;
         }
@@ -251,6 +266,7 @@ namespace eka2l1 {
     }
 
     eka2l1::central_repo *central_repos_cacher::get_cached_repo(const std::uint32_t key) {
+  NGAGE_COVERAGE_LOG();
         auto ite = entries.find(key);
 
         if (ite == entries.end()) {
@@ -265,6 +281,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::reset(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         io_system *io = ctx->sys->get_io_system();
         device_manager *mngr = ctx->sys->get_device_manager();
 
@@ -293,6 +310,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::create_value(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> id = ctx->get_argument_value<std::uint32_t>(0);
 
         if (!id) {
@@ -359,6 +377,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::set_value(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         // We get the entry.
         // Use mode 1 (write) to get the entry, since we are modifying data.
         central_repo_entry *entry = get_entry(*ctx->get_argument_value<std::uint32_t>(0), 1);
@@ -426,6 +445,7 @@ namespace eka2l1 {
 #pragma optimize("", off)
 #endif
     void central_repo_client_subsession::get_value(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         // We get the entry.
         // Use mode 0 (write) to get the entry, since we are modifying data.
         std::optional<std::uint32_t> the_key = ctx->get_argument_value<std::uint32_t>(0);
@@ -505,6 +525,7 @@ namespace eka2l1 {
 #endif
 
     void central_repo_client_subsession::append_new_key_to_found_eq_list(std::uint32_t *array, const std::uint32_t key, const std::uint32_t max_uids_buf) {
+  NGAGE_COVERAGE_LOG();
         // We have to push it to the temporary array, since this array can be retrieve anytime before another FindEq call
         // Even if the provided array is not full
         array[0]++;
@@ -518,6 +539,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::find(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         // Clear found result
         // TODO: Should we?
         key_found_result.clear();
@@ -642,6 +664,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::get_find_result(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t *found_uid_result_array = reinterpret_cast<std::uint32_t *>(ctx->get_descriptor_argument_ptr(0));
         const std::size_t found_uid_max_uids = (ctx->get_argument_max_data_size(0) / sizeof(std::uint32_t));
 
@@ -651,6 +674,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::notify_nof_check(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         epoc::notify_info holder;
         holder.sts = 0;
 
@@ -664,6 +688,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::notify(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const std::uint32_t mask = (ctx->msg->function == cen_rep_notify_req) ? 0xFFFFFFFF : *ctx->get_argument_value<std::uint32_t>(1);
         const std::uint32_t partial_key = *ctx->get_argument_value<std::uint32_t>(0);
 
@@ -690,6 +715,7 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::notify_cancel(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t mask = 0;
         std::uint32_t partial_key = 0;
 
@@ -713,6 +739,7 @@ namespace eka2l1 {
     }
 
     int central_repo_client_subsession::reset_key(eka2l1::central_repo *init_repo, const std::uint32_t key) {
+  NGAGE_COVERAGE_LOG();
         // In transacton, fail
         if (is_active()) {
             return -1;
@@ -737,11 +764,13 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::start_transaction(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_CENREP, "TransactionStart stubbed");
         ctx->complete(epoc::error_none);
     }
 
     void central_repo_client_subsession::cancel_transaction(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_CENREP, "TransactionCancel stubbed");
         ctx->complete(epoc::error_none);
     }

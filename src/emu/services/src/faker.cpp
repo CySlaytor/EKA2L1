@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -27,6 +28,7 @@
 #include <common/allocator.h>
 
 static bool faker_next_hook(void *userdata) {
+  NGAGE_COVERAGE_LOG();
     return reinterpret_cast<eka2l1::service::faker *>(userdata)->walk();
 }
 
@@ -37,16 +39,19 @@ namespace eka2l1::service {
         , lr_addr_(0)
         , data_offset_(0)
         , initial_(nullptr) {
+  NGAGE_COVERAGE_LOG();
         initialise(kern, libmngr, name, uid);
     }
 
     eka2l1::address faker::trampoline_address() const {
+  NGAGE_COVERAGE_LOG();
         return lr_addr_;
     }
 
     static constexpr std::uint32_t TEMP_ARGS_REGION = 0x100;
 
     bool faker::initialise(kernel_system *kern, hle::lib_manager *mngr, const std::string &name, const std::uint32_t uid) {
+  NGAGE_COVERAGE_LOG();
         // Create the fake process first
         process_ = kern->create<kernel::process>(kern->get_memory_system(), name, u"Nowhere", u"");
 
@@ -201,6 +206,7 @@ namespace eka2l1::service {
     }
 
     bool faker::walk() {
+  NGAGE_COVERAGE_LOG();
         if (!initial_ || initial_->type_ == chain::chain_type::unk) {
             return false;
         }
@@ -244,6 +250,7 @@ namespace eka2l1::service {
     }
 
     static faker::chain *get_end_chain(faker::chain *beginning) {
+  NGAGE_COVERAGE_LOG();
         faker::chain *my_end = beginning;
 
         while (my_end->next_ != nullptr) {
@@ -254,6 +261,7 @@ namespace eka2l1::service {
     }
 
     eka2l1::address faker::new_temporary_argument_with_size(const std::uint32_t size, std::uint8_t **pointer) {
+  NGAGE_COVERAGE_LOG();
         std::uint8_t *result = reinterpret_cast<std::uint8_t *>(allocator_->allocate(size));
 
         if (!result) {
@@ -273,6 +281,7 @@ namespace eka2l1::service {
     }
 
     std::uint8_t *faker::get_last_temporary_argument_impl(const int number) {
+  NGAGE_COVERAGE_LOG();
         if (free_lists_.size() <= number) {
             return nullptr;
         }
@@ -281,26 +290,32 @@ namespace eka2l1::service {
     }
 
     std::uint32_t faker::get_native_return_value() const {
+  NGAGE_COVERAGE_LOG();
         return E_LOFF(process_->get_thread_list().first(), kernel::thread, process_thread_link)->get_thread_context().cpu_registers[0];
     }
 
     faker::chain *faker::then(void *userdata, faker::chain::chain_func func) {
+  NGAGE_COVERAGE_LOG();
         return get_end_chain(initial_)->then(userdata, func);
     }
 
     faker::chain *faker::then(eka2l1::ptr<void> raw_func_addr) {
+  NGAGE_COVERAGE_LOG();
         return get_end_chain(initial_)->then(raw_func_addr);
     }
 
     faker::chain *faker::then(eka2l1::ptr<void> raw_func_addr, const std::uint32_t arg1) {
+  NGAGE_COVERAGE_LOG();
         return get_end_chain(initial_)->then(raw_func_addr, arg1);
     }
 
     faker::chain *faker::then(eka2l1::ptr<void> raw_func_addr, const std::uint32_t arg1, const std::uint32_t arg2) {
+  NGAGE_COVERAGE_LOG();
         return get_end_chain(initial_)->then(raw_func_addr, arg2);
     }
 
     kernel::thread *faker::main_thread() {
+  NGAGE_COVERAGE_LOG();
         return E_LOFF(process_->get_thread_list().first(), kernel::thread, process_thread_link);
     }
 
@@ -308,9 +323,11 @@ namespace eka2l1::service {
         : daddy_(daddy)
         , next_(nullptr)
         , type_(faker::chain::chain_type::unk) {
+  NGAGE_COVERAGE_LOG();
     }
 
     static void notify_native_execution(faker *daddy) {
+  NGAGE_COVERAGE_LOG();
         faker::chain *first = daddy->initial();
 
         while (first->next_ != nullptr && first->type_ != faker::chain::chain_type::raw_code) {
@@ -323,6 +340,7 @@ namespace eka2l1::service {
     }
 
     faker::chain *faker::chain::then(void *userdata, faker::chain::chain_func func) {
+  NGAGE_COVERAGE_LOG();
         type_ = faker::chain::chain_type::hook;
         data_.userdata_ = userdata;
         data_.func_ = func;
@@ -332,6 +350,7 @@ namespace eka2l1::service {
     }
 
     faker::chain *faker::chain::then(eka2l1::ptr<void> raw_func_addr) {
+  NGAGE_COVERAGE_LOG();
         notify_native_execution(daddy_);
 
         type_ = faker::chain::chain_type::raw_code;
@@ -342,6 +361,7 @@ namespace eka2l1::service {
     }
 
     faker::chain *faker::chain::then(eka2l1::ptr<void> raw_func_addr, const std::uint32_t arg1) {
+  NGAGE_COVERAGE_LOG();
         notify_native_execution(daddy_);
 
         type_ = faker::chain::chain_type::raw_code;
@@ -353,6 +373,7 @@ namespace eka2l1::service {
     }
 
     faker::chain *faker::chain::then(eka2l1::ptr<void> raw_func_addr, const std::uint32_t arg1, const std::uint32_t arg2) {
+  NGAGE_COVERAGE_LOG();
         notify_native_execution(daddy_);
 
         type_ = faker::chain::chain_type::raw_code;

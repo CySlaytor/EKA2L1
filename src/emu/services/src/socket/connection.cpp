@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2020 EKA2L1 Team
  * 
@@ -31,13 +32,16 @@ namespace eka2l1::epoc::socket {
         : pr_(pr)
         , sock_(nullptr)
         , dest_(dest) {
+  NGAGE_COVERAGE_LOG();
     }
 
     std::size_t connection::register_progress_advance_callback(progress_advance_callback cb) {
+  NGAGE_COVERAGE_LOG();
         return progress_callbacks_.add(cb);
     }
 
     bool connection::remove_progress_advance_callback(const std::size_t handle) {
+  NGAGE_COVERAGE_LOG();
         return progress_callbacks_.remove(handle);
     }
 
@@ -45,9 +49,11 @@ namespace eka2l1::epoc::socket {
         : socket_subsession(parent)
         , conn_(conn)
         , progress_reported_(false) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void socket_connection_proxy::progress_notify(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (!progress_reported_) {
             epoc::socket::conn_progress progress;
             progress.error_ = 0;
@@ -65,6 +71,7 @@ namespace eka2l1::epoc::socket {
     }
 
     void socket_connection_proxy::dispatch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (parent_->is_oldarch()) {
             switch (ctx->msg->function) {
             

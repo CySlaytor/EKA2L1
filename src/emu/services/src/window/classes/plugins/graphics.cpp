@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -26,6 +27,7 @@
 
 namespace eka2l1::epoc {
     bool graphics_piece::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
+  NGAGE_COVERAGE_LOG();
         ws_graphic_drawer_opcode op = static_cast<ws_graphic_drawer_opcode>(cmd.header.op);
         bool quit = false;
 
@@ -65,5 +67,6 @@ namespace eka2l1::epoc {
 
     graphics_piece::graphics_piece(window_server_client_ptr client, screen *scr)
         : window_client_obj(client, scr) {
+  NGAGE_COVERAGE_LOG();
     }
 }

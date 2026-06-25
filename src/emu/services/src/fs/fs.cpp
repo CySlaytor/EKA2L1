@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2018 EKA2L1 Team
  * 
@@ -48,6 +49,7 @@
 
 namespace eka2l1 {
     bool check_path_capabilities_pass(const std::u16string &path, kernel::process *pr, epoc::security_policy &private_policy, epoc::security_policy &sys_policy, epoc::security_policy &resource_policy) {
+  NGAGE_COVERAGE_LOG();
         if (!pr->get_kernel_object_owner()->support_capabilities()) {
             return true;
         }
@@ -106,6 +108,7 @@ namespace eka2l1 {
     }
 
     static std::u16string get_private_path_trim_uid(kernel::process *pr) {
+  NGAGE_COVERAGE_LOG();
         // Try to get the app uid
         uint32_t uid = std::get<2>(pr->get_uid_type());
         std::string hex_id = common::uppercase_string(common::to_string(uid, std::hex));
@@ -114,6 +117,7 @@ namespace eka2l1 {
     }
 
     static std::u16string get_private_path(kernel::process *pr, const drive_number drive) {
+  NGAGE_COVERAGE_LOG();
         const char16_t drive_dos_char = drive_to_char16(drive);
         const std::u16string drive_u16 = std::u16string(&drive_dos_char, 1) + u":";
 
@@ -121,6 +125,7 @@ namespace eka2l1 {
     }
 
     std::u16string get_full_symbian_path(const std::u16string &session_path, const std::u16string &target_path) {
+  NGAGE_COVERAGE_LOG();
         if (target_path.empty()) {
             return session_path;
         }
@@ -142,16 +147,19 @@ namespace eka2l1 {
     }
 
     size_t fs_path_case_insensitive_hasher::operator()(const utf16_str &key) const {
+  NGAGE_COVERAGE_LOG();
         utf16_str copy = common::lowercase_ucs2_string(key);
         return std::hash<utf16_str>()(copy);
     }
 
     bool fs_path_case_insensitive_comparer::operator()(const utf16_str &x, const utf16_str &y) const {
+  NGAGE_COVERAGE_LOG();
         return (common::compare_ignore_case(x, y) == -1);
     }
 
     fs_server_client::fs_server_client(service::typical_server *srv, kernel::uid suid, epoc::version client_version, kernel::thread *own_thr)
         : typical_session(srv, suid, client_version) {
+  NGAGE_COVERAGE_LOG();
         // Please don't remove the separator, absolute path needs this to determine root directory
         kernel::process *pr = own_thr ? own_thr->owning_process() : nullptr;
 
@@ -178,6 +186,7 @@ namespace eka2l1 {
     }
 
     fs_server::~fs_server() {
+  NGAGE_COVERAGE_LOG();
         io_system *io = sys->get_io_system();
         for (const std::u16string &path: temporary_file_cleanset_) {
             io->delete_entry(path);
@@ -185,6 +194,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const epocver version = server<fs_server>()->sys->get_symbian_version_use();
 
         if (version < epocver::eka2) {
@@ -337,6 +347,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::replace(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         auto given_path_target = ctx->get_argument_value<std::u16string>(0);
         auto given_path_dest = ctx->get_argument_value<std::u16string>(1);
 
@@ -367,6 +378,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::rename(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         auto given_path_target = ctx->get_argument_value<std::u16string>(0);
         auto given_path_dest = ctx->get_argument_value<std::u16string>(1);
 
@@ -408,6 +420,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::delete_entry(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         auto given_path = ctx->get_argument_value<std::u16string>(0);
 
         if (!given_path) {
@@ -434,10 +447,12 @@ namespace eka2l1 {
     }
 
     void fs_server::synchronize_driver(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->complete(epoc::error_none);
     }
 
     void fs_server::set_default_system_path(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         auto new_path = ctx->get_argument_value<std::u16string>(0);
 
         if (!new_path) {
@@ -450,11 +465,13 @@ namespace eka2l1 {
     }
 
     void fs_server::get_default_system_path(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->write_arg(0, default_sys_path);
         ctx->complete(epoc::error_none);
     }
 
     bool fs_server::is_file_opened(const std::u16string &path) {
+  NGAGE_COVERAGE_LOG();
         for (auto &[path_attrib, attrib] : attribs) {
             if (common::compare_ignore_case(path_attrib, path) == 0) {
                 return true;
@@ -465,6 +482,7 @@ namespace eka2l1 {
     }
 
     void fs_server::init() {
+  NGAGE_COVERAGE_LOG();
         if (flags & FLAG_INITED) {
             return;
         }
@@ -513,6 +531,7 @@ namespace eka2l1 {
     }
 
     void fs_server::connect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         if (!(flags & FLAG_INITED)) {
             init();
         }
@@ -522,10 +541,12 @@ namespace eka2l1 {
     }
 
     void fs_server::disconnect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         typical_server::disconnect(ctx);
     }
 
     fs_server_client *fs_server::get_correspond_client(service::session *ss) {
+  NGAGE_COVERAGE_LOG();
         if (!(flags & FLAG_INITED)) {
             init();
         }
@@ -539,11 +560,13 @@ namespace eka2l1 {
     }
 
     void fs_server_client::session_path(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         ctx->write_arg(0, ss_path);
         ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::set_session_path(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         auto new_path = ctx->get_argument_value<std::u16string>(0);
 
         if (!new_path) {
@@ -556,6 +579,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::set_session_to_private(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         auto drive_ordinal = ctx->get_argument_value<std::int32_t>(0);
 
         if (!drive_ordinal) {
@@ -568,6 +592,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::create_private_path(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         const std::u16string private_path = get_private_path(ctx->msg->own_thr->owning_process(),
             static_cast<drive_number>(ctx->get_argument_value<std::int32_t>(0).value()));
 
@@ -589,6 +614,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::is_file_in_rom(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<utf16_str> path = ctx->get_argument_value<utf16_str>(0);
 
         if (!path) {
@@ -613,6 +639,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::is_valid_name(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<utf16_str> path = ctx->get_argument_value<utf16_str>(0);
 
         if (!path) {
@@ -629,6 +656,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::notify_change(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = ctx->sys->get_kernel_system();
         notify_entry entry;
 
@@ -651,6 +679,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::notify_change_ex(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = ctx->sys->get_kernel_system();
         std::optional<utf16_str> wildcard_match = ctx->get_argument_value<utf16_str>(1);
 
@@ -681,6 +710,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::notify_change_cancel(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         for (auto it = notify_entries.begin(); it != notify_entries.end(); ++it) {
             it->info.complete(epoc::error_cancel);
         }
@@ -690,6 +720,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::notify_change_cancel_ex(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         address request_status_addr = ctx->get_argument_value<address>(0).value();
         for (auto it = notify_entries.begin(); it != notify_entries.end(); ++it) {
             notify_entry entry = *it;
@@ -703,16 +734,19 @@ namespace eka2l1 {
     }
 
     void fs_server_client::notify_dismount(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_EFSRV, "Notify dismount stubbed");
         dismount_notify_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
 
     void fs_server_client::notify_dismount_cancel(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         dismount_notify_.complete(epoc::error_cancel);
         ctx->complete(epoc::error_none);
     }
 
     bool is_e32img(symfile f) {
+  NGAGE_COVERAGE_LOG();
         int sig;
 
         f->seek(12, file_seek_mode::beg);
@@ -726,6 +760,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::mkdir(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> dir = ctx->get_argument_value<std::u16string>(0);
 
         if (!dir) {
@@ -763,6 +798,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::rmdir(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> dir = ctx->get_argument_value<std::u16string>(0);
 
         if (!dir) {
@@ -777,6 +813,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::parse(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         auto name = ctx->get_argument_value<std::u16string>(0);
         auto related = ctx->get_argument_value<std::u16string>(1);
         auto parse = ctx->get_argument_data_from_descriptor<file_parse>(2);
@@ -794,6 +831,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::entry(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> fname_op = ctx->get_argument_value<std::u16string>(0);
 
         if (!fname_op) {
@@ -830,6 +868,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::set_entry(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::u16string> fname_op = ctx->get_argument_value<std::u16string>(0);
         std::optional<epoc::time> time = ctx->get_argument_data_from_descriptor<epoc::time>(1);
         std::uint32_t set_att_mask = *ctx->get_argument_value<std::uint32_t>(2);
@@ -856,6 +895,7 @@ namespace eka2l1 {
     }
 
     void fs_server::private_path(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::u16string path = get_private_path_trim_uid(ctx->msg->own_thr->owning_process());
 
         ctx->write_arg(0, path);
@@ -863,11 +903,13 @@ namespace eka2l1 {
     }
 
     void fs_server_client::set_should_notify_failure(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         should_notify_failures = static_cast<bool>(ctx->get_argument_value<std::int32_t>(0));
         ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::generic_close(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle_res) {
@@ -894,6 +936,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::is_file_opened(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<utf16_str> path = ctx->get_argument_value<utf16_str>(0);
 
         if (!path) {
@@ -909,6 +952,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::filesystem_name(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> drv_val = ctx->get_argument_value<std::uint32_t>(1);
 
         if (!drv_val.has_value()) {
@@ -924,11 +968,13 @@ namespace eka2l1 {
     }
 
     void fs_server_client::file_lock(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_EFSRV, "Locking file unimplemented!");
         ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::file_unlock(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_EFSRV, "Unlocking file unimplemented!");
         ctx->complete(epoc::error_none);
     }

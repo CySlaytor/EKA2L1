@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2019 EKA2L1 Team
  * 
@@ -32,6 +33,7 @@
 
 namespace eka2l1 {
     static bool read_str16_aligned(common::ro_stream *stream, std::u16string &dat) {
+  NGAGE_COVERAGE_LOG();
         char len = 0;
 
         // Read string length
@@ -62,6 +64,7 @@ namespace eka2l1 {
     }
 
     static bool read_non_localisable_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive) {
+  NGAGE_COVERAGE_LOG();
         if (!read_str16_aligned(stream, reg.localised_info_rsc_path)) {
             return false;
         }
@@ -113,6 +116,7 @@ namespace eka2l1 {
     }
 
     static bool read_mandatory_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive, const bool app_path_oldarch) {
+  NGAGE_COVERAGE_LOG();
         // Skip over reserved variables
         stream->seek(8, common::seek_where::beg);
         std::u16string app_file;
@@ -149,6 +153,7 @@ namespace eka2l1 {
     }
 
     bool read_registeration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive, const bool app_path_oldarch) {
+  NGAGE_COVERAGE_LOG();
         if (!read_mandatory_info(stream, reg, land_drive, app_path_oldarch)) {
             return false;
         }
@@ -162,6 +167,7 @@ namespace eka2l1 {
     }
 
     bool read_localised_registration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive) {
+  NGAGE_COVERAGE_LOG();
         // Skip over reserved variables
         stream->seek(8, common::seek_where::beg);
         std::u16string cap;
@@ -222,6 +228,7 @@ namespace eka2l1 {
     }
 
     static std::int8_t get_aif_version_from_uids(epoc::uid_type &uids) {
+  NGAGE_COVERAGE_LOG();
         static constexpr std::uint32_t DIRECT_STORE_UID = 0x10000037;
         static constexpr std::uint32_t AIF_UID_1 = 0x1000006A;
         static constexpr std::uint32_t AIF_V2_UID = 0x101FB032;
@@ -237,6 +244,7 @@ namespace eka2l1 {
 
     bool read_resourced_info_aif(common::ro_stream *stream, apa_app_registry &reg, const drive_number drv,
         const language lang) {
+  NGAGE_COVERAGE_LOG();
         // NOTE: Little endian data xD
         std::uint32_t rsc_size = 0;
         if (stream->read(&rsc_size, sizeof(rsc_size)) != sizeof(rsc_size)) {
@@ -398,6 +406,7 @@ namespace eka2l1 {
 
     bool read_leagacy_info_aif(common::ro_stream *stream, apa_app_registry &reg, const drive_number drv,
         const language lang) {
+  NGAGE_COVERAGE_LOG();
         std::uint32_t header_pos = 0;
 
         if (stream->read(&header_pos, sizeof(std::uint32_t)) != sizeof(std::uint32_t)) {
@@ -585,6 +594,7 @@ namespace eka2l1 {
 
     bool read_registeration_info_aif(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive,
         const language lang) {
+  NGAGE_COVERAGE_LOG();
         // Read the first 3 UIDS
         epoc::uid_type uids;
         if (stream->read(&uids, sizeof(epoc::uid_type)) != sizeof(epoc::uid_type)) {
@@ -619,6 +629,7 @@ namespace eka2l1 {
     }
 
     bool read_icon_data_aif(common::ro_stream *stream, fbs_server *serv, std::vector<apa_app_icon> &icon_list, const address rom_addr) {
+  NGAGE_COVERAGE_LOG();
         // Seek to header pos, over the UIDs
         epoc::uid_type uids;
         if (stream->read(&uids, sizeof(epoc::uid_type)) != sizeof(epoc::uid_type)) {
@@ -799,6 +810,7 @@ namespace eka2l1 {
     }
 
     static bool read_a_caption(common::ro_stream &stream, std::u16string &cap) {
+  NGAGE_COVERAGE_LOG();
         std::uint8_t length = 0;
         std::uint8_t unk2 = 0;
 
@@ -821,6 +833,7 @@ namespace eka2l1 {
     }
 
     bool read_caption_data_oldarch(common::ro_stream *stream, apa_app_registry &reg) {
+  NGAGE_COVERAGE_LOG();
         loader::rsc_file caption_file_rsc_reader(stream);
         std::vector<std::uint8_t> data = caption_file_rsc_reader.read(1);
 

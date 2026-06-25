@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2021 EKA2L1 Team
  * 
@@ -22,6 +23,7 @@
 namespace eka2l1::epoc::socket {
     protocol::protocol(const bool oldarch)
         : flags_(0) {
+  NGAGE_COVERAGE_LOG();
         if (oldarch)
             flags_ |= FLAG_OLDARCH;
     }

@@ -1,3 +1,4 @@
+#include <services/ngage_coverage.h>
 /*
  * Copyright (c) 2018 EKA2L1 Team
  * 
@@ -41,14 +42,17 @@
 namespace eka2l1 {
     oom_ui_app_server::oom_ui_app_server(eka2l1::system *sys)
         : service::typical_server(sys, OOM_APP_UI_SERVER_NAME) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void oom_ui_app_server::connect(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         create_session<oom_ui_app_session>(&ctx);
         typical_server::connect(ctx);
     }
 
     epoc::cap::sgc_server *oom_ui_app_server::get_sgc_server() {
+  NGAGE_COVERAGE_LOG();
         if (!sgc) {
             init(sys->get_kernel_system(), sys->get_io_system(), sys->get_device_manager());
         }
@@ -60,14 +64,17 @@ namespace eka2l1 {
         : service::typical_session(svr, client_ss_uid, client_version)
         , blank_count(0)
         , old_layout(is_old_layout) {
+  NGAGE_COVERAGE_LOG();
     }
 
     void oom_ui_app_session::redraw_status_pane(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         server<oom_ui_app_server>()->redraw_status_pane();
         ctx->complete(epoc::error_none);
     }
 
     void oom_ui_app_session::blank_screen(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         blank_count++;
 
         if (blank_count == 0) {
@@ -83,6 +90,7 @@ namespace eka2l1 {
     }
 
     void oom_ui_app_session::unblank_screen(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         blank_count--;
 
         LOG_TRACE(SERVICE_UI, "Unblanking screen in AKNCAP session stubbed");
@@ -90,6 +98,7 @@ namespace eka2l1 {
     }
 
     void oom_ui_app_session::fetch(service::ipc_context *ctx) {
+  NGAGE_COVERAGE_LOG();
         if (ctx->sys->get_symbian_version_use() <= epocver::epoc93fp2) {
             // Move app in z order does not exist. Forward to other message
             if (ctx->msg->function >= akn_eik_app_ui_move_app_in_z_order) {
@@ -145,10 +154,12 @@ namespace eka2l1 {
     }
 
     void oom_ui_app_server::redraw_status_pane() {
+  NGAGE_COVERAGE_LOG();
         LOG_TRACE(SERVICE_UI, "Status pane redrawed");
     }
 
     static std::uint32_t calculate_screen_style_hash(const std::string &style) {
+  NGAGE_COVERAGE_LOG();
         std::uint64_t hash = 0;
         static constexpr std::uint8_t HASH_MULT = 131;
 
@@ -161,6 +172,7 @@ namespace eka2l1 {
     }
 
     std::string oom_ui_app_server::get_layout_buf() {
+  NGAGE_COVERAGE_LOG();
         kernel_system *kern = sys->get_kernel_system();
         if (!winsrv) {
             winsrv = reinterpret_cast<window_server *>(&(*kern->get_by_name<service::server>(
@@ -212,6 +224,7 @@ namespace eka2l1 {
     }
 
     void oom_ui_app_server::get_layout_config_size(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         layout_buf = get_layout_buf();
 
         int layout_buf_size = static_cast<int>(layout_buf.size());
@@ -221,6 +234,7 @@ namespace eka2l1 {
     }
 
     void oom_ui_app_server::get_layout_config(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         layout_buf = get_layout_buf();
 
         ctx.write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&layout_buf[0]),
@@ -230,6 +244,7 @@ namespace eka2l1 {
     }
 
     void oom_ui_app_server::set_sgc_params(service::ipc_context &ctx, const bool old_layout) {
+  NGAGE_COVERAGE_LOG();
         std::optional<epoc::sgc_params> params = ctx.get_argument_data_from_descriptor<epoc::sgc_params>(0);
 
         if (!params.has_value()) {
@@ -253,6 +268,7 @@ namespace eka2l1 {
     }
 
     void oom_ui_app_server::update_key_block_mode(service::ipc_context &ctx) {
+  NGAGE_COVERAGE_LOG();
         std::optional<std::uint32_t> disable_it = ctx.get_argument_value<std::uint32_t>(0);
 
         if (!disable_it.has_value()) {
@@ -265,6 +281,7 @@ namespace eka2l1 {
     }
 
     void oom_ui_app_server::init(kernel_system *kern, io_system *io, device_manager *mngr) {
+  NGAGE_COVERAGE_LOG();
         const std::lock_guard<std::mutex> guard(lock);
 
         auto cenrep = reinterpret_cast<central_repo_server *>(kern->get_by_name<service::server>(
@@ -301,6 +318,7 @@ namespace eka2l1 {
     }
 
     std::optional<akn_running_app_info> get_akn_app_info_from_window_group(epoc::window_group *group) {
+  NGAGE_COVERAGE_LOG();
         // AKN window group format: 2 hex digit shows status, null terminator, UID in hex
         // null terminator, App name, null terminator
         common::pystr16 the_name = group->name;
@@ -328,6 +346,7 @@ namespace eka2l1 {
     }
 
     std::vector<akn_running_app_info> get_akn_app_infos(window_server *winsrv) {
+  NGAGE_COVERAGE_LOG();
         std::vector<akn_running_app_info> infos;
         epoc::screen *scr = winsrv->get_screens();
 
