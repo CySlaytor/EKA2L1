@@ -19,14 +19,12 @@ namespace eka2l1 {
 
         template <typename T, typename ret, typename... args, size_t... indices>
         std::enable_if_t<!std::is_same_v<ret, void>, void> call(ret (*export_fn)(T *, args...), const args_layout<args...> &layout, std::index_sequence<indices...>, arm::core *cpu, kernel::process *pr, T *data) {
-            TRACK_CLASS_COVERAGE(); // <--- Tracks all Non-Void bridged API invocations
             const ret result = (*export_fn)(data, read<args, indices, args...>(cpu, layout, pr)...);
             write_return_value(cpu, result);
         }
 
         template <typename T, typename... args, size_t... indices>
         void call(void (*export_fn)(T *, args...), const args_layout<args...> &layout, std::index_sequence<indices...>, arm::core *cpu, kernel::process *pr, T *data) {
-            TRACK_CLASS_COVERAGE(); // <--- Tracks all Void bridged API invocations
             (*export_fn)(data, read<args, indices, args...>(cpu, layout, pr)...);
         }
 

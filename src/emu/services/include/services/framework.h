@@ -166,7 +166,6 @@ namespace eka2l1::service {
             : svr_(svr)
             , client_ss_uid_(client_ss_uid)
             , ver_(client_ver) {
-            TRACK_CLASS_COVERAGE(); // <--- Identify which Session Types are actually opened by the game
         }
 
         virtual ~typical_session() {}

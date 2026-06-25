@@ -40,7 +40,6 @@ namespace eka2l1::epoc {
 
     static codeseg_ptr get_codeseg_from_addr(kernel_system *kern, kernel::process *pr, const std::uint32_t addr,
         const bool ep) {
-        TRACK_CLASS_COVERAGE();
         hle::lib_manager &mngr = *kern->get_lib_manager();
 
         for (const auto &seg_obj : kern->get_codeseg_list()) {
@@ -90,7 +89,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, heap) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread_local_data *local_data = current_local_data(kern);
 
         if (local_data->heap.ptr_address() == 0) {
@@ -101,7 +99,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, heap_switch, eka2l1::ptr<void> new_heap) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread_local_data *local_data = current_local_data(kern);
         eka2l1::ptr<void> old_heap = local_data->heap;
         local_data->heap = new_heap;
@@ -110,13 +107,11 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, trap_handler) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread_local_data *local_data = current_local_data(kern);
         return local_data->trap_handler;
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, set_trap_handler, eka2l1::ptr<void> new_handler) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread_local_data *local_data = current_local_data(kern);
         eka2l1::ptr<void> old_handler = local_data->trap_handler;
         local_data->trap_handler = new_handler;
@@ -125,25 +120,21 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, active_scheduler) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread_local_data *local_data = current_local_data(kern);
         return local_data->scheduler;
     }
 
     BRIDGE_FUNC(void, set_active_scheduler, eka2l1::ptr<void> new_scheduler) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread_local_data *local_data = current_local_data(kern);
         local_data->scheduler = new_scheduler;
     }
 
     BRIDGE_FUNC(void, after, std::int32_t micro_secs, eka2l1::ptr<epoc::request_status> status) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *thr = kern->crr_thread();
         thr->sleep_nof(status, micro_secs);
     }
 
     BRIDGE_FUNC(std::int32_t, process_exit_type, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr_real = kern->get<kernel::process>(h);
 
         if (!pr_real) {
@@ -155,7 +146,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, process_exit_reason, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr_real = kern->get<kernel::process>(h);
 
         if (!pr_real) {
@@ -167,7 +157,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, process_exit_category, kernel::handle h, epoc::des8 *category) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr_real = kern->get<kernel::process>(h);
         process_ptr cr_process = kern->crr_process();
 
@@ -185,13 +174,11 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, process_rendezvous, std::int32_t complete_code) {
-        TRACK_CLASS_COVERAGE();
         kernel::process *pr = kern->crr_process();
         pr->rendezvous(complete_code);
     }
 
     BRIDGE_FUNC(void, process_filename, std::int32_t process_handle, eka2l1::ptr<des8> name) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr_real = kern->get<kernel::process>(process_handle);
         process_ptr cr_process = kern->crr_process();
 
@@ -222,7 +209,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, process_get_memory_info, kernel::handle h, eka2l1::ptr<kernel::memory_info> info) {
-        TRACK_CLASS_COVERAGE();
         kernel::memory_info *info_host = info.get(kern->crr_process());
         process_ptr pr_real = kern->get<kernel::process>(h);
 
@@ -235,7 +221,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, process_get_id, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr_real = kern->get<kernel::process>(h);
 
         if (!pr_real) {
@@ -247,7 +232,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, process_type, kernel::handle h, eka2l1::ptr<epoc::uid_type> uid_type) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr_real = kern->get<kernel::process>(h);
 
         if (!pr_real) {
@@ -266,7 +250,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, process_data_parameter_length, std::int32_t slot) {
-        TRACK_CLASS_COVERAGE();
         kernel::process *crr_process = kern->crr_process();
 
         if (slot >= 16 || slot < 0) {
@@ -285,7 +268,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, process_set_handle_parameter, kernel::handle process, std::int32_t slot_num, kernel::handle target) {
-        TRACK_CLASS_COVERAGE();
         kernel::process *pr = kern->get<kernel::process>(process);
         if (!pr) {
             return epoc::error_bad_handle;
@@ -307,7 +289,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(kernel::handle, process_get_handle_parameter, std::int32_t slot_num, kernel::object_type obj_type, kernel::owner_type own) {
-        TRACK_CLASS_COVERAGE();
         kernel::process *pr = kern->crr_process();
 
         if (slot_num >= 16 || slot_num < 0) {
@@ -325,7 +306,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, process_get_data_parameter, std::int32_t slot_num, eka2l1::ptr<std::uint8_t> data_ptr, std::int32_t length) {
-        TRACK_CLASS_COVERAGE();
         kernel::process *pr = kern->crr_process();
 
         if (slot_num >= 16 || slot_num < 0) {
@@ -356,7 +336,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, process_set_data_parameter, kernel::handle h, std::int32_t slot_num, eka2l1::ptr<std::uint8_t> data, std::int32_t data_size) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->get<kernel::process>(h);
 
         if (!pr) {
@@ -380,7 +359,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, process_command_line_length, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->get<kernel::process>(h);
 
         if (!pr) {
@@ -391,7 +369,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, process_command_line, kernel::handle h, eka2l1::ptr<epoc::des8> data_des) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->get<kernel::process>(h);
 
         if (!pr) {
@@ -407,12 +384,6 @@ namespace eka2l1::epoc {
 
         std::u16string cmdline = pr->get_cmd_args();
 
-        {
-            static std::mutex mtx;
-            std::lock_guard<std::mutex> lock(mtx);
-            std::ofstream out("used_classes_coverage.txt", std::ios::app);
-            out << "[CMDLINE DISCOVERY] Game read Command Line arguments: " << common::ucs2_to_utf8(cmdline) << "\n";
-        }
 
         char *data_ptr = data->get_pointer(crr_process);
         memcpy(data_ptr, cmdline.data(), cmdline.length() << 1);
@@ -420,7 +391,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, process_set_flags, kernel::handle h, std::uint32_t clear_mask, std::uint32_t set_mask) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->get<kernel::process>(h);
 
         uint32_t org_flags = pr->get_flags();
@@ -431,7 +401,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, process_set_priority, kernel::handle h, std::int32_t process_priority) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->get<kernel::process>(h);
 
         if (!pr) {
@@ -443,7 +412,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, process_priority, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->get<kernel::process>(h);
 
         if (!pr) {
@@ -454,7 +422,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, process_id, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->get<kernel::process>(h);
 
         if (!pr) {
@@ -465,7 +432,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, process_rename, kernel::handle h, eka2l1::ptr<des8> new_name) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->get<kernel::process>(h);
         process_ptr cur_pr = kern->crr_process();
 
@@ -480,7 +446,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, process_resume, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->get<kernel::process>(h);
 
         if (!pr) {
@@ -491,7 +456,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, process_logon, kernel::handle h, eka2l1::ptr<epoc::request_status> req_sts, bool rendezvous) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->get<kernel::process>(h);
 
         if (!pr) {
@@ -502,7 +466,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, process_logon_cancel, kernel::handle h, eka2l1::ptr<epoc::request_status> request_sts, bool rendezvous) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->get<kernel::process>(h);
 
         if (!pr) {
@@ -519,7 +482,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, process_kill, kernel::handle h, kernel::entity_exit_type etype, std::int32_t reason, epoc::desc16 *category) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->get<kernel::process>(h);
 
         if (!pr) {
@@ -539,7 +501,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, dll_tls, kernel::handle h, std::int32_t dll_uid) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *thr = kern->crr_thread();
         std::optional<kernel::tls_slot> slot = thr->get_tls_slot(h, dll_uid);
 
@@ -551,7 +512,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, dll_set_tls, kernel::handle h, std::int32_t dll_uid, eka2l1::ptr<void> data_set) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *thr = kern->crr_thread();
 
         if (!thr->set_tls_slot(h, dll_uid, data_set)) {
@@ -562,13 +522,11 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, dll_free_tls, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *thr = kern->crr_thread();
         thr->close_tls_slot(h);
     }
 
     BRIDGE_FUNC(void, dll_filename, std::int32_t entry_addr, eka2l1::ptr<epoc::des8> full_path_ptr) {
-        TRACK_CLASS_COVERAGE();
         std::optional<std::u16string> dll_full_path = get_dll_full_path(kern, entry_addr);
 
         if (!dll_full_path) {
@@ -585,12 +543,10 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, utc_offset) {
-        TRACK_CLASS_COVERAGE();
         return kern->utc_offset();
     }
 
     BRIDGE_FUNC(std::int32_t, time_now, eka2l1::ptr<std::uint64_t> time_ptr, eka2l1::ptr<std::int32_t> utc_offset_ptr) {
-        TRACK_CLASS_COVERAGE();
         kernel::process *pr = kern->crr_process();
 
         std::uint64_t *time = time_ptr.get(pr);
@@ -609,7 +565,6 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, set_utc_time_and_offset, eka2l1::ptr<std::uint64_t> time_ptr, std::int32_t utc_offset,
         std::uint32_t mode, std::uint32_t changes) {
-        TRACK_CLASS_COVERAGE();
         std::uint64_t *time = time_ptr.get(kern->crr_process());
 
         if (mode & time_set_time)
@@ -619,7 +574,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, message_construct, std::int32_t msg_handle, service::message2 *msg_to_construct) {
-        TRACK_CLASS_COVERAGE();
         ipc_msg_ptr msg = kern->get_msg(msg_handle);
 
         if (!msg) {
@@ -634,7 +588,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, set_session_ptr, std::int32_t msg_handle, std::uint32_t session_addr) {
-        TRACK_CLASS_COVERAGE();
         ipc_msg_ptr msg = kern->get_msg(msg_handle);
 
         if (!msg) {
@@ -645,7 +598,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, message_complete, std::int32_t msg_handle, std::int32_t val) {
-        TRACK_CLASS_COVERAGE();
         ipc_msg_ptr msg = kern->get_msg(msg_handle);
 
         if (msg->request_sts) {
@@ -668,7 +620,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, message_complete_handle, std::int32_t msg_handle, std::int32_t handle) {
-        TRACK_CLASS_COVERAGE();
         ipc_msg_ptr msg = kern->get_msg(msg_handle);
         std::uint32_t dup_handle = kern->mirror(msg->own_thr, handle, kernel::owner_type::thread);
 
@@ -689,7 +640,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, message_kill, kernel::handle h, kernel::entity_exit_type etype, std::int32_t reason, eka2l1::ptr<desc8> cage) {
-        TRACK_CLASS_COVERAGE();
         process_ptr crr = kern->crr_process();
 
         std::string exit_cage = cage.get(crr)->to_std_string(kern->crr_process());
@@ -708,7 +658,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, message_get_des_length, kernel::handle h, std::int32_t param) {
-        TRACK_CLASS_COVERAGE();
         if (param < 0) {
             return epoc::error_argument;
         }
@@ -729,7 +678,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, message_get_des_max_length, kernel::handle h, std::int32_t param) {
-        TRACK_CLASS_COVERAGE();
         if (param < 0) {
             return epoc::error_argument;
         }
@@ -752,7 +700,6 @@ namespace eka2l1::epoc {
 
     std::int32_t do_ipc_manipulation(kernel_system *kern, kernel::thread *client_thread, std::uint8_t *client_ptr, ipc_copy_info &copy_info,
         std::int32_t start_offset) {
-        TRACK_CLASS_COVERAGE();
         bool des8 = true;
         if (copy_info.flags & CHUNK_SHIFT_BY_1) {
             des8 = false;
@@ -810,7 +757,6 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, message_ipc_copy, kernel::handle h, std::int32_t param, eka2l1::ptr<ipc_copy_info> info,
         std::int32_t start_offset) {
-        TRACK_CLASS_COVERAGE();
         if (!info || param < 0 || param > 3) {
             return epoc::error_argument;
         }
@@ -845,7 +791,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, message_client, kernel::handle h, kernel::owner_type owner) {
-        TRACK_CLASS_COVERAGE();
         eka2l1::ipc_msg_ptr msg = kern->get_msg(h);
 
         if (!msg) {
@@ -858,7 +803,6 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, message_open_handle, kernel::handle h, kernel::object_type obj_type,
         const std::int32_t index, kernel::owner_type owner) {
-        TRACK_CLASS_COVERAGE();
         eka2l1::ipc_msg_ptr msg = kern->get_msg(h);
 
         if (!msg) {
@@ -883,14 +827,12 @@ namespace eka2l1::epoc {
     }
 
     static void query_security_info(kernel::process *process, epoc::security_info *info) {
-        TRACK_CLASS_COVERAGE();
         assert(process);
 
         *info = std::move(process->get_sec_info());
     }
 
     BRIDGE_FUNC(void, process_security_info, kernel::handle h, eka2l1::ptr<epoc::security_info> info) {
-        TRACK_CLASS_COVERAGE();
         epoc::security_info *sec_info = info.get(kern->crr_process());
         process_ptr pr = kern->get<kernel::process>(h);
 
@@ -898,7 +840,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, thread_security_info, kernel::handle h, eka2l1::ptr<epoc::security_info> info) {
-        TRACK_CLASS_COVERAGE();
         epoc::security_info *sec_info = info.get(kern->crr_process());
 
         thread_ptr thr = kern->get<kernel::thread>(h);
@@ -912,7 +853,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, message_security_info, std::int32_t h, eka2l1::ptr<epoc::security_info> info) {
-        TRACK_CLASS_COVERAGE();
         epoc::security_info *sec_info = info.get(kern->crr_process());
         eka2l1::ipc_msg_ptr msg = kern->get_msg(h);
 
@@ -925,7 +865,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, creator_security_info, epoc::security_info *info) {
-        TRACK_CLASS_COVERAGE();
         if (!info) {
             return;
         }
@@ -942,7 +881,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, session_security_info, std::int32_t h, epoc::security_info *info) {
-        TRACK_CLASS_COVERAGE();
         service::session *ss = kern->get<service::session>(h);
 
         if (!info || !ss) {
@@ -965,19 +903,10 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, server_create, eka2l1::ptr<desc8> server_name_des, std::int32_t mode) {
-        TRACK_CLASS_COVERAGE();
         kernel::process *crr_pr = kern->crr_process();
 
         std::string server_name = server_name_des.get(crr_pr)->to_std_string(crr_pr);
 
-        // --- INJECTED STRING LOGGER ---
-        {
-            static std::mutex mtx;
-            std::lock_guard<std::mutex> lock(mtx);
-            std::ofstream out("used_classes_coverage.txt", std::ios::app);
-            out << "[SERVICE DISCOVERY] Game created server: " << server_name << "\n";
-        }
-        // ------------------------------
 
         if (!server_name.empty() && server_name[0] == '!') {
             if (!crr_pr->satisfy(server_exclamation_point_name_policy)) {
@@ -994,7 +923,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, server_receive, kernel::handle h, eka2l1::ptr<epoc::request_status> req_sts, eka2l1::ptr<void> data_ptr) {
-        TRACK_CLASS_COVERAGE();
         server_ptr server = kern->get<service::server>(h);
 
         if (!server) {
@@ -1008,7 +936,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, server_cancel, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         server_ptr server = kern->get<service::server>(h);
 
         if (!server) {
@@ -1019,7 +946,6 @@ namespace eka2l1::epoc {
     }
 
     static kernel::owner_type get_session_owner_type_from_share(const service::share_mode shmode) {
-        TRACK_CLASS_COVERAGE();
         if (shmode == service::SHARE_MODE_UNSHAREABLE) {
             return kernel::owner_type::thread;
         }
@@ -1028,7 +954,6 @@ namespace eka2l1::epoc {
     }
 
     static std::int32_t do_create_session_from_server(kernel_system *kern, server_ptr server, std::int32_t msg_slot_count, eka2l1::ptr<void> sec, std::int32_t mode) {
-        TRACK_CLASS_COVERAGE();
         const service::share_mode sv_share = server->get_share_mode();
 
         if (sv_share < mode) {
@@ -1058,19 +983,10 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, session_create, eka2l1::ptr<desc8> server_name_des, std::int32_t msg_slot, eka2l1::ptr<void> sec, std::int32_t mode) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->crr_process();
 
         const std::string server_name = server_name_des.get(pr)->to_std_string(pr);
 
-        // --- INJECTED STRING LOGGER ---
-        {
-            static std::mutex mtx;
-            std::lock_guard<std::mutex> lock(mtx);
-            std::ofstream out("used_classes_coverage.txt", std::ios::app);
-            out << "[SERVICE DISCOVERY] Game requested session to server: " << server_name << "\n";
-        }
-        // ------------------------------
 
         server_ptr server = kern->get_by_name<service::server>(server_name);
 
@@ -1083,7 +999,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, session_create_from_handle, kernel::handle h, std::int32_t msg_slots, eka2l1::ptr<void> sec, std::int32_t mode) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->crr_process();
         server_ptr server = kern->get<service::server>(h);
 
@@ -1096,7 +1011,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, session_share, std::uint32_t *handle, std::int32_t share) {
-        TRACK_CLASS_COVERAGE();
         session_ptr ss = kern->get<service::session>(*handle);
 
         if (!ss) {
@@ -1130,7 +1044,6 @@ namespace eka2l1::epoc {
 
     static std::int32_t session_send_general(kernel_system *kern, kernel::handle h, std::int32_t ord, const std::uint32_t *ipc_args,
         eka2l1::ptr<epoc::request_status> status, const bool no_header_flag, const bool sync) {
-        TRACK_CLASS_COVERAGE();
         process_ptr crr_pr = kern->crr_process();
 
         ipc_arg arg;
@@ -1181,18 +1094,15 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, session_send_sync, kernel::handle h, std::int32_t ord, const std::uint32_t *ipc_args,
         eka2l1::ptr<epoc::request_status> status) {
-        TRACK_CLASS_COVERAGE();
         return session_send_general(kern, h, ord, ipc_args, status, false, true);
     }
 
     BRIDGE_FUNC(std::int32_t, session_send, kernel::handle h, std::int32_t ord, const std::uint32_t *ipc_args,
         eka2l1::ptr<epoc::request_status> status) {
-        TRACK_CLASS_COVERAGE();
         return session_send_general(kern, h, ord, ipc_args, status, false, false);
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, leave_start) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *thr = kern->crr_thread();
         LOG_TRACE(KERNEL, "Leave started! Guess leave code: {}", static_cast<std::int32_t>(kern->get_cpu()->get_reg(0)));
 
@@ -1202,7 +1112,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, leave_end) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *thr = kern->crr_thread();
         thr->decrease_leave_depth();
 
@@ -1214,39 +1123,28 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, debug_mask) {
-        TRACK_CLASS_COVERAGE();
         return 0;
     }
 
     BRIDGE_FUNC(void, set_debug_mask, std::int32_t ts_debug_mask) {
-        TRACK_CLASS_COVERAGE();
     }
 
     BRIDGE_FUNC(std::int32_t, debug_mask_index, std::int32_t idx) {
-        TRACK_CLASS_COVERAGE();
         return 0;
     }
 
     BRIDGE_FUNC(std::int32_t, hal_function, std::int32_t cage, std::int32_t func, eka2l1::ptr<std::int32_t> a1, eka2l1::ptr<std::int32_t> a2) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->crr_process();
 
         int *arg1 = a1.get(pr);
         int *arg2 = a2.get(pr);
 
-        {
-            static std::mutex mtx;
-            std::lock_guard<std::mutex> lock(mtx);
-            std::ofstream out("used_classes_coverage.txt", std::ios::app);
-            out << "[HAL DISCOVERY] Game queried HAL Group: " << cage << " Func: " << func << "\n";
-        }
 
         return do_hal(kern->get_system(), cage, func, arg1, arg2);
     }
 
     BRIDGE_FUNC(std::int32_t, chunk_new, epoc::owner_type owner, eka2l1::ptr<desc8> name_des,
         eka2l1::ptr<epoc::chunk_create> chunk_create_info_ptr) {
-        TRACK_CLASS_COVERAGE();
         memory_system *mem = kern->get_memory_system();
         process_ptr pr = kern->crr_process();
 
@@ -1292,7 +1190,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, chunk_max_size, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         chunk_ptr chunk = kern->get<kernel::chunk>(h);
         if (!chunk) {
             return epoc::error_bad_handle;
@@ -1302,7 +1199,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(eka2l1::ptr<std::uint8_t>, chunk_base, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         chunk_ptr chunk = kern->get<kernel::chunk>(h);
         if (!chunk) {
             return 0;
@@ -1312,7 +1208,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, chunk_size, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         chunk_ptr chunk = kern->get<kernel::chunk>(h);
 
         if (!chunk) {
@@ -1323,7 +1218,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, chunk_bottom, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         chunk_ptr chunk = kern->get<kernel::chunk>(h);
 
         if (!chunk) {
@@ -1334,7 +1228,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, chunk_top, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         chunk_ptr chunk = kern->get<kernel::chunk>(h);
 
         if (!chunk) {
@@ -1345,7 +1238,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, chunk_adjust, kernel::handle h, std::int32_t type, std::int32_t a1, std::int32_t a2) {
-        TRACK_CLASS_COVERAGE();
         chunk_ptr chunk = kern->get<kernel::chunk>(h);
 
         if (!chunk) {
@@ -1383,7 +1275,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, imb_range, eka2l1::ptr<void> addr, std::uint32_t size) {
-        TRACK_CLASS_COVERAGE();
         process_ptr crr_process = kern->crr_process();
         void *addr_space_ptr = crr_process->get_ptr_on_addr_space(addr.ptr_address());
 
@@ -1409,7 +1300,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, semaphore_create, eka2l1::ptr<desc8> sema_name_des, std::int32_t init_count, epoc::owner_type owner) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->crr_process();
 
         desc8 *desname = sema_name_des.get(pr);
@@ -1427,7 +1317,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, semaphore_wait, kernel::handle h, std::int32_t timeout) {
-        TRACK_CLASS_COVERAGE();
         sema_ptr sema = kern->get<kernel::semaphore>(h);
 
         if (!sema) {
@@ -1439,7 +1328,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, semaphore_count, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         sema_ptr sema = kern->get<kernel::semaphore>(h);
 
         if (!sema) {
@@ -1450,7 +1338,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, semaphore_signal, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         sema_ptr sema = kern->get<kernel::semaphore>(h);
 
         if (!sema) {
@@ -1461,7 +1348,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, semaphore_signal_n, kernel::handle h, std::int32_t sig_count) {
-        TRACK_CLASS_COVERAGE();
         sema_ptr sema = kern->get<kernel::semaphore>(h);
 
         if (!sema) {
@@ -1472,7 +1358,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, mutex_create, eka2l1::ptr<desc8> mutex_name_des, epoc::owner_type owner) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->crr_process();
 
         desc8 *desname = mutex_name_des.get(pr);
@@ -1491,7 +1376,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, mutex_wait, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         mutex_ptr mut = kern->get<kernel::mutex>(h);
 
         if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
@@ -1503,7 +1387,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, mutex_wait_ver2, kernel::handle h, std::int32_t timeout) {
-        TRACK_CLASS_COVERAGE();
         mutex_ptr mut = kern->get<kernel::mutex>(h);
 
         if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
@@ -1525,7 +1408,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, mutex_signal, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         mutex_ptr mut = kern->get<kernel::mutex>(h);
 
         if (!mut || mut->get_object_type() != kernel::object_type::mutex) {
@@ -1536,7 +1418,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, mutex_is_held, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         if (kern->is_eka1()) {
             LOG_ERROR(KERNEL, "EKA2 mutex behaviour is invalidly being invoked on EKA1!");
             return epoc::error_not_supported;
@@ -1554,7 +1435,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, condvar_create, eka2l1::ptr<desc8> mutex_name_des, epoc::owner_type owner) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->crr_process();
 
         desc8 *desname = mutex_name_des.get(pr);
@@ -1573,7 +1453,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, condvar_wait, kernel::handle condvar_h, kernel::handle mutex_h, std::int32_t timeout) {
-        TRACK_CLASS_COVERAGE();
         kernel::condvar *cv = kern->get<kernel::condvar>(condvar_h);
         kernel::mutex *mut = kern->get<kernel::mutex>(mutex_h);
 
@@ -1585,7 +1464,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, condvar_signal, kernel::handle condvar_h) {
-        TRACK_CLASS_COVERAGE();
         kernel::condvar *cv = kern->get<kernel::condvar>(condvar_h);
         if (cv) {
             cv->signal();
@@ -1595,7 +1473,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, condvar_broadcast, kernel::handle condvar_h) {
-        TRACK_CLASS_COVERAGE();
         kernel::condvar *cv = kern->get<kernel::condvar>(condvar_h);
         if (cv) {
             cv->broadcast();
@@ -1605,17 +1482,14 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, wait_for_any_request) {
-        TRACK_CLASS_COVERAGE();
         kern->crr_thread()->wait_for_any_request();
     }
 
     BRIDGE_FUNC(void, request_signal, std::int32_t signal_count) {
-        TRACK_CLASS_COVERAGE();
         kern->crr_thread()->signal_request(signal_count);
     }
 
     BRIDGE_FUNC(std::int32_t, object_next, std::int32_t obj_type, eka2l1::ptr<des8> name_des, eka2l1::ptr<epoc::find_handle> handle_finder) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->crr_process();
 
         epoc::find_handle *handle = handle_finder.get(pr);
@@ -1648,7 +1522,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, handle_close, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         if (h & 0x8000) {
             return epoc::error_general;
         }
@@ -1657,13 +1530,11 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, handle_duplicate, std::int32_t h, epoc::owner_type owner, std::int32_t dup_handle) {
-        TRACK_CLASS_COVERAGE();
         return kern->mirror(&(*kern->get<kernel::thread>(h)), dup_handle,
             (owner == epoc::owner_process) ? kernel::owner_type::process : kernel::owner_type::thread);
     }
 
     BRIDGE_FUNC(std::int32_t, handle_duplicate_v2, std::int32_t h, epoc::owner_type owner, std::uint32_t *dup_handle) {
-        TRACK_CLASS_COVERAGE();
         const std::uint32_t handle_result = kern->mirror(&(*kern->get<kernel::thread>(h)), *dup_handle,
             (owner == epoc::owner_process) ? kernel::owner_type::process : kernel::owner_type::thread);
 
@@ -1676,7 +1547,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, handle_open_object, std::int32_t obj_type, eka2l1::ptr<epoc::desc8> name_des, std::int32_t owner) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->crr_process();
         std::string obj_name = name_des.get(pr)->to_std_string(pr);
 
@@ -1699,7 +1569,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, handle_open_object_by_find_handle, std::int32_t owner, epoc::find_handle *finder) {
-        TRACK_CLASS_COVERAGE();
         if (!finder) {
             LOG_ERROR(KERNEL, "Find handle object pointer is null!");
             return epoc::error_argument;
@@ -1722,7 +1591,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, handle_name, kernel::handle h, eka2l1::ptr<des8> name_des) {
-        TRACK_CLASS_COVERAGE();
         kernel_obj_ptr obj = kern->get_kernel_obj_raw(h, kern->crr_thread());
         process_ptr crr_pr = kern->crr_process();
 
@@ -1735,7 +1603,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, handle_full_name, kernel::handle h, eka2l1::ptr<des8> full_name_des) {
-        TRACK_CLASS_COVERAGE();
         kernel_obj_ptr obj = kern->get_kernel_obj_raw(h, kern->crr_thread());
         process_ptr pr = kern->crr_process();
 
@@ -1752,7 +1619,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, handle_info, const kernel::handle h, eka2l1::ptr<kernel::handle_info> info) {
-        TRACK_CLASS_COVERAGE();
         kernel_obj_ptr the_object = kern->get_kernel_obj_raw(h, kern->crr_thread());
         kernel::process *crr_pr = kern->crr_process();
 
@@ -1771,7 +1637,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, handle_count, kernel::handle h, std::uint32_t *total_handle_process, std::uint32_t *total_handle_thread) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -1783,7 +1648,6 @@ namespace eka2l1::epoc {
     }
 
     std::int32_t get_call_list_from_codeseg(codeseg_ptr cs, process_ptr caller, std::int32_t *count, address *list_ep) {
-        TRACK_CLASS_COVERAGE();
         std::vector<uint32_t> list;
         cs->queries_call_list(caller, list);
         cs->unmark();
@@ -1795,7 +1659,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, static_call_list, std::int32_t *total, std::uint32_t *list_ptr) {
-        TRACK_CLASS_COVERAGE();
         kernel::process *pr = kern->crr_process();
         kernel::codeseg *seg = pr->get_codeseg();
 
@@ -1808,7 +1671,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, static_call_done) {
-        TRACK_CLASS_COVERAGE();
         kernel::process *pr = kern->crr_process();
         kernel::codeseg *seg = pr->get_codeseg();
 
@@ -1816,20 +1678,17 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, wait_dll_lock) {
-        TRACK_CLASS_COVERAGE();
         kern->crr_process()->wait_dll_lock();
         return epoc::error_none;
     }
 
     BRIDGE_FUNC(std::int32_t, release_dll_lock) {
-        TRACK_CLASS_COVERAGE();
         kern->crr_process()->signal_dll_lock(kern->crr_thread());
 
         return epoc::error_none;
     }
 
     BRIDGE_FUNC(std::int32_t, library_attach, kernel::handle h, eka2l1::ptr<std::int32_t> num_eps, eka2l1::ptr<std::uint32_t> ep_list) {
-        TRACK_CLASS_COVERAGE();
         library_ptr lib = kern->get<kernel::library>(h);
 
         if (!lib) {
@@ -1873,7 +1732,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, library_lookup, kernel::handle h, std::uint32_t ord_index) {
-        TRACK_CLASS_COVERAGE();
         library_ptr lib = kern->get<kernel::library>(h);
 
         if (!lib) {
@@ -1891,7 +1749,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, library_attached, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         library_ptr lib = kern->get<kernel::library>(h);
 
         if (!lib) {
@@ -1908,18 +1765,15 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, library_detach, std::int32_t *count, address *ep) {
-        TRACK_CLASS_COVERAGE();
         return kern->crr_thread()->get_detach_eps_limit(count, ep);
     }
 
     BRIDGE_FUNC(std::int32_t, library_detached) {
-        TRACK_CLASS_COVERAGE();
         kern->crr_thread()->cleanup_detachs();
         return epoc::error_none;
     }
 
     BRIDGE_FUNC(std::int32_t, library_get_memory_info, kernel::handle h, kernel::memory_info *info) {
-        TRACK_CLASS_COVERAGE();
         library_ptr lib = kern->get<kernel::library>(h);
 
         if (!lib) {
@@ -1935,17 +1789,14 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::uint32_t, library_load_prepare) {
-        TRACK_CLASS_COVERAGE();
         return epoc::error_none;
     }
 
     BRIDGE_FUNC(std::uint32_t, library_entry_call_start, const address addr) {
-        TRACK_CLASS_COVERAGE();
         return epoc::error_none;
     }
 
     BRIDGE_FUNC(void, library_filename, kernel::handle h, epoc::des8 *path_to_fill) {
-        TRACK_CLASS_COVERAGE();
         kernel::library *lib = kern->get<kernel::library>(h);
 
         if (!lib) {
@@ -1957,7 +1808,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, library_entry_point, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         kernel::library *lib = kern->get<kernel::library>(h);
 
         if (!lib) {
@@ -1968,12 +1818,10 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, user_svr_rom_header_address) {
-        TRACK_CLASS_COVERAGE();
         return kern->get_rom_info()->header.rom_base;
     }
 
     BRIDGE_FUNC(std::int32_t, user_svr_rom_root_dir_address) {
-        TRACK_CLASS_COVERAGE();
         return kern->get_rom_info()->header.rom_root_dir_list;
     }
 
@@ -2000,7 +1848,6 @@ namespace eka2l1::epoc {
         "Thread create info struct size invalid");
 
     BRIDGE_FUNC(std::int32_t, thread_create, eka2l1::ptr<desc8> thread_name_des, epoc::owner_type owner, eka2l1::ptr<thread_create_info_expand> info_ptr) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->crr_process();
         memory_system *mem = kern->get_memory_system();
 
@@ -2028,12 +1875,10 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, last_thread_handle) {
-        TRACK_CLASS_COVERAGE();
         return kern->crr_thread()->last_handle();
     }
 
     BRIDGE_FUNC(std::int32_t, thread_id, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         thread_ptr thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2044,7 +1889,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, thread_kill, kernel::handle h, kernel::entity_exit_type etype, std::int32_t reason, eka2l1::ptr<desc8> reason_des) {
-        TRACK_CLASS_COVERAGE();
         thread_ptr thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2063,7 +1907,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, thread_request_signal, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         thread_ptr thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2075,7 +1918,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, thread_rename, kernel::handle h, eka2l1::ptr<desc8> name_des) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->crr_process();
 
         thread_ptr thr = kern->get<kernel::thread>(h);
@@ -2094,7 +1936,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, thread_process, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         thread_ptr thr = kern->get<kernel::thread>(h);
 
         return kern->mirror(kern->get_by_id<kernel::process>(thr->owning_process()->unique_id()),
@@ -2102,7 +1943,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, thread_set_priority, kernel::handle h, std::int32_t thread_pri) {
-        TRACK_CLASS_COVERAGE();
         thread_ptr thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2113,7 +1953,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, thread_priority, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         thread_ptr thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2124,7 +1963,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, thread_resume, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         thread_ptr thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2146,7 +1984,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, thread_suspend, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         thread_ptr thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2167,12 +2004,10 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, thread_rendezvous, std::int32_t reason) {
-        TRACK_CLASS_COVERAGE();
         kern->crr_thread()->rendezvous(reason);
     }
 
     BRIDGE_FUNC(void, thread_logon, kernel::handle h, eka2l1::ptr<epoc::request_status> req_sts, bool rendezvous) {
-        TRACK_CLASS_COVERAGE();
         thread_ptr thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2184,7 +2019,6 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, thread_logon_cancel, kernel::handle h, eka2l1::ptr<epoc::request_status> req_sts,
         bool rendezvous) {
-        TRACK_CLASS_COVERAGE();
         thread_ptr thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2201,7 +2035,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, thread_set_flags, kernel::handle h, std::uint32_t clear_mask, std::uint32_t set_mask) {
-        TRACK_CLASS_COVERAGE();
         thread_ptr thr = kern->get<kernel::thread>(h);
 
         uint32_t org_flags = thr->get_flags();
@@ -2211,7 +2044,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, thread_open_by_id, const std::uint32_t id, const epoc::owner_type owner) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *thr = kern->get_by_id<kernel::thread>(id);
 
         if (!thr) {
@@ -2229,7 +2061,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, thread_exit_type, const kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2240,7 +2071,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, thread_exit_reason, const kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2251,7 +2081,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, thread_request_count, const kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2263,12 +2092,10 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, thread_user_exiting, const std::int32_t reason) {
-        TRACK_CLASS_COVERAGE();
         return (kern->crr_process()->get_thread_count() == 1);
     }
 
     BRIDGE_FUNC(std::int32_t, thread_get_cpu_time, const kernel::handle h, std::uint64_t *time_run_in_us) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2289,7 +2116,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, thread_stack_info, const kernel::handle h, kernel::stack_info *info) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -2306,7 +2132,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, process_open_by_id, std::uint32_t id, const epoc::owner_type owner) {
-        TRACK_CLASS_COVERAGE();
         auto pr = kern->get_by_id<kernel::process>(id);
 
         if (!pr) {
@@ -2324,15 +2149,8 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, property_find_get_int, std::int32_t cage, std::int32_t key, eka2l1::ptr<std::int32_t> value) {
-        TRACK_CLASS_COVERAGE();
         property_ptr prop = kern->get_prop(cage, key);
 
-        {
-            static std::mutex mtx;
-            std::lock_guard<std::mutex> lock(mtx);
-            std::ofstream out("used_classes_coverage.txt", std::ios::app);
-            out << "[PROPERTY DISCOVERY] Game requested INT Property -> Category (UID): 0x" << std::hex << cage << " Key: 0x" << key << "\n";
-        }
 
         if (!prop || !prop->is_defined()) {
             LOG_WARN(KERNEL, "Property not found: category = 0x{:x}, key = 0x{:x}", cage, key);
@@ -2346,7 +2164,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, property_find_get_bin, std::int32_t cage, std::int32_t key, eka2l1::ptr<std::uint8_t> data, std::int32_t datlength) {
-        TRACK_CLASS_COVERAGE();
         process_ptr crr_pr = kern->crr_process();
 
         property_ptr prop = kern->get_prop(cage, key);
@@ -2376,7 +2193,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, property_attach, std::int32_t cage, std::int32_t val, epoc::owner_type owner) {
-        TRACK_CLASS_COVERAGE();
         property_ptr prop = kern->get_prop(cage, val);
 
         LOG_TRACE(KERNEL, "Attach to property with category: 0x{:x}, key: 0x{:x}", cage, val);
@@ -2405,7 +2221,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, property_define, std::int32_t cage, std::int32_t key, eka2l1::ptr<epoc::property_info> prop_info_ptr) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->crr_process();
 
         epoc::property_info *info = prop_info_ptr.get(pr);
@@ -2450,7 +2265,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, property_delete, std::int32_t cage, std::int32_t key) {
-        TRACK_CLASS_COVERAGE();
         property_ptr prop = kern->delete_prop(cage, key);
 
         if (!prop || !prop->is_defined()) {
@@ -2461,7 +2275,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, property_subscribe, kernel::handle h, eka2l1::ptr<epoc::request_status> sts) {
-        TRACK_CLASS_COVERAGE();
         property_ref_ptr prop = kern->get<service::property_reference>(h);
 
         if (!prop) {
@@ -2473,7 +2286,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, property_cancel, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         property_ref_ptr prop = kern->get<service::property_reference>(h);
 
         if (!prop) {
@@ -2486,7 +2298,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, property_set_int, kernel::handle h, std::int32_t val) {
-        TRACK_CLASS_COVERAGE();
         property_ref_ptr prop = kern->get<service::property_reference>(h);
 
         if (!prop || !prop->get_property_object()->is_defined()) {
@@ -2503,7 +2314,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, property_set_bin, kernel::handle h, eka2l1::ptr<std::uint8_t> data_ptr, std::int32_t size) {
-        TRACK_CLASS_COVERAGE();
         property_ref_ptr prop = kern->get<service::property_reference>(h);
 
         if (!prop || !prop->get_property_object()->is_defined()) {
@@ -2520,7 +2330,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, property_get_int, kernel::handle h, eka2l1::ptr<std::int32_t> value_ptr) {
-        TRACK_CLASS_COVERAGE();
         process_ptr pr = kern->crr_process();
         property_ref_ptr prop = kern->get<service::property_reference>(h);
 
@@ -2538,7 +2347,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, property_get_bin, kernel::handle h, eka2l1::ptr<std::uint8_t> buffer_ptr_guest, std::int32_t buffer_size) {
-        TRACK_CLASS_COVERAGE();
         property_ref_ptr prop = kern->get<service::property_reference>(h);
 
         if (!prop || !prop->get_property_object()->is_defined()) {
@@ -2568,7 +2376,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, property_find_set_int, std::int32_t cage, std::int32_t key, std::int32_t value) {
-        TRACK_CLASS_COVERAGE();
         property_ptr prop = kern->get_prop(cage, key);
 
         if (!prop || !prop->is_defined()) {
@@ -2585,7 +2392,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, property_find_set_bin, std::int32_t cage, std::int32_t key, eka2l1::ptr<std::uint8_t> data_ptr, std::int32_t size) {
-        TRACK_CLASS_COVERAGE();
         property_ptr prop = kern->get_prop(cage, key);
 
         if (!prop || !prop->is_defined()) {
@@ -2602,24 +2408,20 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, clear_inactivity_time) {
-        TRACK_CLASS_COVERAGE();
         kern->reset_inactivity_time();
     }
 
     BRIDGE_FUNC(std::uint32_t, get_inactivity_time) {
-        TRACK_CLASS_COVERAGE();
         return kern->inactivity_time();
     }
 
     BRIDGE_FUNC(std::int32_t, timer_create) {
-        TRACK_CLASS_COVERAGE();
         return kern->create_and_add<kernel::timer>(kernel::owner_type::process, kern->get_ntimer(),
                        "timer" + common::to_string(eka2l1::random()))
             .first;
     }
 
     BRIDGE_FUNC(void, timer_after, kernel::handle h, eka2l1::ptr<epoc::request_status> req_sts, std::int32_t us_after) {
-        TRACK_CLASS_COVERAGE();
         timer_ptr timer = kern->get<kernel::timer>(h);
 
         if (!timer) {
@@ -2630,7 +2432,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, timer_lock, kernel::handle h, eka2l1::ptr<epoc::request_status> req_sts, std::uint32_t second_fraction_enum) {
-        TRACK_CLASS_COVERAGE();
         timer_ptr timer = kern->get<kernel::timer>(h);
 
         if (!timer) {
@@ -2647,7 +2448,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, timer_at_utc, kernel::handle h, eka2l1::ptr<epoc::request_status> req_sts, std::uint64_t *us_at) {
-        TRACK_CLASS_COVERAGE();
         timer_ptr timer = kern->get<kernel::timer>(h);
         epoc::request_status *sts_real = req_sts.get(kern->crr_process());
 
@@ -2668,7 +2468,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, timer_cancel, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         timer_ptr timer = kern->get<kernel::timer>(h);
 
         if (!timer) {
@@ -2681,7 +2480,6 @@ namespace eka2l1::epoc {
     static constexpr std::uint32_t TICK_MASK = ~0b1;
 
     BRIDGE_FUNC(std::uint32_t, fast_counter) {
-        TRACK_CLASS_COVERAGE();
         const std::uint64_t DEFAULT_FAST_COUNTER_PERIOD = (common::microsecs_per_sec / epoc::HIGH_RES_TIMER_HZ);
 
         ntimer *timing = kern->get_ntimer();
@@ -2689,7 +2487,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::uint32_t, ntick_count) {
-        TRACK_CLASS_COVERAGE();
         const std::uint64_t DEFAULT_NTICK_PERIOD = (common::microsecs_per_sec / epoc::NANOKERNEL_HZ);
 
         ntimer *timing = kern->get_ntimer();
@@ -2697,7 +2494,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::uint32_t, tick_count) {
-        TRACK_CLASS_COVERAGE();
         const std::uint64_t DEFAULT_TICK_PERIOD = (common::microsecs_per_sec / epoc::TICK_TIMER_HZ);
 
         ntimer *timing = kern->get_ntimer();
@@ -2711,12 +2507,10 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, change_notifier_create, epoc::owner_type owner) {
-        TRACK_CLASS_COVERAGE();
         return kern->create_and_add<kernel::change_notifier>(static_cast<kernel::owner_type>(owner)).first;
     }
 
     BRIDGE_FUNC(std::int32_t, change_notifier_logon, kernel::handle h, eka2l1::ptr<epoc::request_status> req_sts) {
-        TRACK_CLASS_COVERAGE();
         change_notifier_ptr cnot = kern->get<kernel::change_notifier>(h);
 
         if (!cnot) {
@@ -2733,12 +2527,10 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, change_notifier_logon_eka1, eka2l1::ptr<epoc::request_status> reqsts, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         return change_notifier_logon(kern, h, reqsts);
     }
 
     BRIDGE_FUNC(std::int32_t, change_notifier_logoff, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         change_notifier_ptr cnot = kern->get<kernel::change_notifier>(h);
 
         if (!cnot) {
@@ -2755,7 +2547,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, message_queue_notify_data_available, const kernel::handle h, eka2l1::ptr<epoc::request_status> sts) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *request_thread = kern->crr_thread();
 
         epoc::notify_info info;
@@ -2778,7 +2569,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, message_queue_notify_space_available, const kernel::handle h, eka2l1::ptr<epoc::request_status> sts) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *request_thread = kern->crr_thread();
 
         epoc::notify_info info;
@@ -2801,7 +2591,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, message_queue_cancel_notify_available, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *request_thread = kern->crr_thread();
 
         kernel::msg_queue *queue = kern->get<kernel::msg_queue>(h);
@@ -2815,7 +2604,6 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, message_queue_create, eka2l1::ptr<des8> name, const std::int32_t size,
         const std::int32_t length, epoc::owner_type owner) {
-        TRACK_CLASS_COVERAGE();
         if ((length <= 0) || (length > 256) | (size <= 0)) {
             return epoc::error_argument;
         }
@@ -2837,7 +2625,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, message_queue_send, kernel::handle h, void *data, const std::int32_t length) {
-        TRACK_CLASS_COVERAGE();
         kernel::msg_queue *queue = kern->get<kernel::msg_queue>(h);
 
         if (!queue) {
@@ -2856,7 +2643,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, message_queue_receive, kernel::handle h, void *data, const std::int32_t length) {
-        TRACK_CLASS_COVERAGE();
         kernel::msg_queue *queue = kern->get<kernel::msg_queue>(h);
 
         if (!queue) {
@@ -2878,7 +2664,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, debug_print, desc8 *tdes, std::int32_t mode) {
-        TRACK_CLASS_COVERAGE();
         if (!tdes) {
             return;
         }
@@ -2888,7 +2673,6 @@ namespace eka2l1::epoc {
 
     std::int32_t debug_command_do_read_write(kernel_system *kern, const std::uint32_t thread_id,
         const address addr, const address data_ptr, const std::int32_t len, const bool is_write) {
-        TRACK_CLASS_COVERAGE();
         if (len < 0) {
             LOG_ERROR(KERNEL, "Invalid length to write.");
             return epoc::error_argument;
@@ -2960,7 +2744,6 @@ namespace eka2l1::epoc {
     }
 
     std::int32_t debug_command_do_print(kernel_system *kern, const address arg0) {
-        TRACK_CLASS_COVERAGE();
         kernel::process *crr = kern->crr_process();
         epoc::desc16 *buf = eka2l1::ptr<epoc::desc16>(arg0).get(crr);
 
@@ -2974,7 +2757,6 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, debug_command_execute, debug_cmd_header *header, const address arg0,
         const address arg1, const address arg2) {
-        TRACK_CLASS_COVERAGE();
         if (!header) {
             return epoc::error_argument;
         }
@@ -3001,7 +2783,6 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, btrace_out, const std::uint32_t a0, const std::uint32_t a1, const std::uint32_t a2,
         const std::uint32_t a3) {
-        TRACK_CLASS_COVERAGE();
         config::state *conf = kern->get_config();
 
         if (!conf->enable_btrace) {
@@ -3012,22 +2793,18 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, plat_sec_diagnostic, kernel::plat_sec_diagnostic *diag) {
-        TRACK_CLASS_COVERAGE();
         return epoc::error_permission_denied;
     }
 
     BRIDGE_FUNC(eka2l1::ptr<void>, get_global_userdata) {
-        TRACK_CLASS_COVERAGE();
         return 0;
     }
 
     BRIDGE_FUNC(address, exception_descriptor, address in_addr) {
-        TRACK_CLASS_COVERAGE();
         return epoc::get_exception_descriptor_addr(kern, in_addr);
     }
 
     BRIDGE_FUNC(address, exception_handler, kernel::handle h) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -3038,7 +2815,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, set_exception_handler, kernel::handle h, address handler, std::uint32_t mask) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -3052,7 +2828,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, raise_exception, kernel::handle h, std::int32_t type) {
-        TRACK_CLASS_COVERAGE();
         LOG_ERROR(KERNEL, "Exception with type {} is thrown", type);
         kernel::thread *thr = kern->get<kernel::thread>(h);
 
@@ -3068,7 +2843,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, is_exception_handled, kernel::handle h, std::int32_t type, bool aSwExcInProgress) {
-        TRACK_CLASS_COVERAGE();
         kernel::thread *thr = kern->get<kernel::thread>(h);
 
         if (!thr) {
@@ -3083,7 +2857,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, safe_inc_32, eka2l1::ptr<std::int32_t> val_ptr) {
-        TRACK_CLASS_COVERAGE();
         std::int32_t *val = val_ptr.get(kern->crr_process());
         std::int32_t org_val = *val;
         *val > 0 ? val++ : 0;
@@ -3092,7 +2865,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, safe_dec_32, eka2l1::ptr<std::int32_t> val_ptr) {
-        TRACK_CLASS_COVERAGE();
         std::int32_t *val = val_ptr.get(kern->crr_process());
         std::int32_t org_val = *val;
         *val > 0 ? val-- : 0;
@@ -3101,7 +2873,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, locked_dec_32, eka2l1::ptr<std::int32_t> val_ptr) {
-        TRACK_CLASS_COVERAGE();
         std::int32_t *val = val_ptr.get(kern->crr_process());
         if (!val)
             return 0; // Prevent crash if null
@@ -3113,7 +2884,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, locked_inc_32, eka2l1::ptr<std::int32_t> val_ptr) {
-        TRACK_CLASS_COVERAGE();
         std::int32_t *val = val_ptr.get(kern->crr_process());
         if (!val)
             return 0; // Prevent crash if null
@@ -3125,18 +2895,15 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, hle_dispatch, const std::uint32_t ordinal) {
-        TRACK_CLASS_COVERAGE();
         dispatcher_do_resolve(kern->get_system(), ordinal);
     }
 
     BRIDGE_FUNC(void, hle_dispatch_2) {
-        TRACK_CLASS_COVERAGE();
         const std::uint32_t *ordinal = eka2l1::ptr<std::uint32_t>(kern->get_cpu()->get_pc() + 4).get(kern->crr_process());
         dispatcher_do_resolve(kern->get_system(), *ordinal);
     }
 
     BRIDGE_FUNC(void, virtual_reality) {
-        TRACK_CLASS_COVERAGE();
         typedef bool (*reality_func)(void *data);
 
         const std::uint32_t current = kern->get_cpu()->get_pc();
@@ -3154,12 +2921,10 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::uint32_t, math_rand) {
-        TRACK_CLASS_COVERAGE();
         return eka2l1::random();
     }
 
     BRIDGE_FUNC(void, add_event, epoc::raw_event *evt) {
-        TRACK_CLASS_COVERAGE();
         if (!evt) {
             LOG_ERROR(KERNEL, "Event to add is null, ignored");
             return;
@@ -3169,33 +2934,27 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::uint32_t, uchar_get_category, const epoc::uchar character) {
-        TRACK_CLASS_COVERAGE();
         return epoc::get_uchar_category(character, *kern->get_current_locale());
     }
 
     BRIDGE_FUNC(std::uint32_t, uchar_lowercase, const epoc::uchar character) {
-        TRACK_CLASS_COVERAGE();
         return epoc::lowercase_uchar(character, *kern->get_current_locale());
     }
 
     BRIDGE_FUNC(std::uint32_t, uchar_uppercase, const epoc::uchar character) {
-        TRACK_CLASS_COVERAGE();
         return epoc::uppercase_uchar(character, *kern->get_current_locale());
     }
 
     BRIDGE_FUNC(std::uint32_t, uchar_fold, const epoc::uchar character) {
-        TRACK_CLASS_COVERAGE();
         return epoc::fold_uchar(character, *kern->get_current_locale());
     }
 
     BRIDGE_FUNC(address, get_locale_char_set) {
-        TRACK_CLASS_COVERAGE();
         return kern->get_global_user_data_pointer().ptr_address() + offsetof(kernel_global_data, char_set_);
     }
 
     template <typename T>
     std::int32_t des_locate_fold(kernel_system *kern, epoc::desc<T> *des, const epoc::uchar character) {
-        TRACK_CLASS_COVERAGE();
         if (des->get_length() == 0) {
             return epoc::error_not_found;
         }
@@ -3217,17 +2976,14 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, des8_locate_fold, epoc::desc8 *des, const epoc::uchar character) {
-        TRACK_CLASS_COVERAGE();
         return des_locate_fold<char>(kern, des, character);
     }
 
     BRIDGE_FUNC(std::int32_t, des16_locate_fold, epoc::desc16 *des, const epoc::uchar character) {
-        TRACK_CLASS_COVERAGE();
         return des_locate_fold<char16_t>(kern, des, character);
     }
 
     BRIDGE_FUNC(std::int32_t, des8_match, epoc::desc8 *str_des, epoc::desc8 *seq_des, const std::int32_t is_fold) {
-        TRACK_CLASS_COVERAGE();
         kernel::process *crr_process = kern->crr_process();
 
         std::string source = str_des->to_std_string(crr_process);
@@ -3243,7 +2999,6 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, des16_match, epoc::desc16 *str_des, epoc::desc16 *seq_des, const std::int32_t is_fold) {
-        TRACK_CLASS_COVERAGE();
         kernel::process *crr_process = kern->crr_process();
 
         std::u16string source = str_des->to_std_string(crr_process);
@@ -3261,7 +3016,6 @@ namespace eka2l1::epoc {
 
     template <typename T, typename F>
     std::int32_t desc_find(kernel_system *kern, F cvt_func, epoc::desc<T> *des, const T *str, const std::int32_t length, const bool is_fold) {
-        TRACK_CLASS_COVERAGE();
         if (length < 0) {
             return epoc::error_argument;
         }
@@ -3292,22 +3046,18 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, desc8_find, epoc::desc8 *dd, const char *str, const std::int32_t length, const bool is_fold) {
-        TRACK_CLASS_COVERAGE();
         return desc_find(kern, rereturn_string_function, dd, str, length, is_fold);
     }
 
     BRIDGE_FUNC(std::int32_t, desc16_find, epoc::desc16 *dd, const char16_t *str, const std::int32_t length, const bool is_fold) {
-        TRACK_CLASS_COVERAGE();
         return desc_find(kern, common::ucs2_to_wstr, dd, str, length, is_fold);
     }
 
     BRIDGE_FUNC(std::uint32_t, user_language) {
-        TRACK_CLASS_COVERAGE();
         return static_cast<std::uint32_t>(kern->get_current_language());
     }
 
     BRIDGE_FUNC(void, locale_refresh, epoc::locale *loc) {
-        TRACK_CLASS_COVERAGE();
         property_ptr prop = kern->get_prop(epoc::SYS_CATEGORY, epoc::LOCALE_DATA_KEY);
         if (!prop) {
             LOG_ERROR(KERNEL, "Locale property not available (not found)!");
@@ -3324,13 +3074,11 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(std::int32_t, dll_global_data_allocated, const address handle) {
-        TRACK_CLASS_COVERAGE();
         return (kern->get_global_dll_space(handle, nullptr) != 0);
     }
 
     BRIDGE_FUNC(std::int32_t, dll_global_data_write, const address handle, const std::int32_t pos,
         epoc::desc8 *data_to_write) {
-        TRACK_CLASS_COVERAGE();
         if (pos < 0) {
             return epoc::error_argument;
         }
@@ -3358,7 +3106,6 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, dll_global_data_read, const address handle, const std::int32_t pos,
         const std::int32_t size, epoc::des8 *place_to_read_to) {
-        TRACK_CLASS_COVERAGE();
         if ((pos < 0) || (size < 0)) {
             return epoc::error_argument;
         }
@@ -3386,7 +3133,6 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, bus_dev_open_socket, const std::uint32_t unkpadding, epoc::desc16 *ldd_name,
         epoc::desc16 *pdd_name) {
-        TRACK_CLASS_COVERAGE();
         if (ldd_name) {
             kernel::process *own_pr = kern->crr_process();
 
@@ -3406,7 +3152,6 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, logical_channel_do_control, const kernel::handle h, const int func,
         eka2l1::ptr<void> arg1, eka2l1::ptr<void> arg2) {
-        TRACK_CLASS_COVERAGE();
         ldd::channel *chn = kern->get<ldd::channel>(h);
 
         if (!chn) {
@@ -3418,7 +3163,6 @@ namespace eka2l1::epoc {
 
     BRIDGE_FUNC(std::int32_t, logical_channel_do_request, const kernel::handle h, const int func,
         eka2l1::ptr<epoc::request_status> status, const std::uint32_t *args) {
-        TRACK_CLASS_COVERAGE();
         ldd::channel *chn = kern->get<ldd::channel>(h);
 
         if (!chn) {
@@ -3430,17 +3174,14 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, restore_thread_exception_state) {
-        TRACK_CLASS_COVERAGE();
         kern->crr_thread()->restore_before_exception_state();
     }
 
     BRIDGE_FUNC(std::uint32_t, superpage_config) {
-        TRACK_CLASS_COVERAGE();
         return 0;
     }
 
     BRIDGE_FUNC(std::int32_t, get_locale_dll_name) {
-        TRACK_CLASS_COVERAGE();
         return epoc::error_none;
     }
 

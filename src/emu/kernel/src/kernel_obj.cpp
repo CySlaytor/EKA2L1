@@ -14,7 +14,6 @@ namespace eka2l1 {
             , kern(kern)
             , access(access)
             , uid(kern->next_uid()) {
-            TRACK_CLASS_COVERAGE(); // <--- Maps the creation of all kernel OS primitives
 
             if (!this->obj_name.empty() && this->obj_name.back() == '\0') {
                 this->obj_name.pop_back();

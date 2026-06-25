@@ -59,27 +59,8 @@ namespace eka2l1 {
         bool is_console_enabled();
     }
 
-    namespace common {
-        class CoverageTracker {
-        public:
-            static void Record(const char *function_sig, const char *file_name) {
-                static std::unordered_set<std::string> seen;
-                static std::mutex mtx;
-                std::lock_guard<std::mutex> lock(mtx);
-
-                std::string sig = function_sig;
-                if (seen.find(sig) == seen.end()) {
-                    seen.insert(sig);
-                    std::ofstream out("used_classes_coverage.txt", std::ios::app);
-                    out << "[COVERAGE] File: " << file_name << " | Class/Method: " << sig << "\n";
-                }
-            }
-        };
-    }
 }
 
-// Disables all logging hooks for max performance
-#define TRACK_CLASS_COVERAGE()
 
 #ifdef DISABLE_LOGGING
 #define LOG_TRACE(class, fmt, ...)
