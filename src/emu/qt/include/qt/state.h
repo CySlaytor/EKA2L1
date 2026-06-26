@@ -1,37 +1,14 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team.
- * 
- * This file is part of EKA2L1 project
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #pragma once
 
 #include <atomic>
-#include <condition_variable>
-#include <functional>
 #include <memory>
 #include <mutex>
-#include <queue>
+#include <string>
 #include <thread>
 
-#include <common/queue.h>
 #include <common/sync.h>
 #include <config/app_settings.h>
 #include <config/config.h>
-#include <package/manager.h>
 #include <system/epoc.h>
 
 #include <drivers/audio/audio.h>
@@ -41,24 +18,12 @@
 #include <drivers/sensor/sensor.h>
 
 namespace eka2l1 {
-    namespace drivers {
-        class graphics_driver;
-        class audio_driver;
-    }
-
-    namespace kernel {
-        class process;
-    }
-
     class window_server;
 }
 
 class main_window;
 
 namespace eka2l1::desktop {
-    /**
-     * \brief State of the emulator on desktop.
-     */
     struct emulator {
         std::unique_ptr<system> symsys;
         std::unique_ptr<drivers::graphics_driver> graphics_driver;
@@ -76,7 +41,6 @@ namespace eka2l1::desktop {
         bool first_time;
         bool init_fullscreen;
         bool app_launch_from_command_line;
-        bool inited_graphics;
         bool stretch_to_fill_display;
 
         common::event graphics_event;

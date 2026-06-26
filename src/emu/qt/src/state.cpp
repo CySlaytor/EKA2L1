@@ -1,22 +1,3 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team.
- * 
- * This file is part of EKA2L1 project 
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/fileutils.h>
@@ -33,8 +14,8 @@
 #include <kernel/kernel.h>
 #include <kernel/libmanager.h>
 
-#include <services/window/window.h>
 #include <services/init.h>
+#include <services/window/window.h>
 
 #include <qt/state.h>
 #include <qt/utils.h>
@@ -61,18 +42,15 @@ namespace eka2l1::desktop {
     }
 
     void emulator::stage_one() {
-        // Initialize the logger
         log::setup_log(nullptr);
 
         QSettings settings;
         QVariant cmd_log_enabled_variant = settings.value(SHOW_LOG_CONSOLE_SETTING_NAME, true);
 
         if (cmd_log_enabled_variant.toBool()) {
-            // Initially false. Toggle to set to true!
             log::toggle_console();
         }
 
-        // Start to read the configs
         conf.deserialize();
         if (log::filterings) {
             log::filterings->parse_filter_string(conf.log_filter);
@@ -133,8 +111,6 @@ namespace eka2l1::desktop {
 
             LOG_INFO(FRONTEND_CMDLINE, "Device being used: {} ({})", dvc->model, dvc->firmware_code);
 
-            // Mount the drive Z after the ROM was loaded. The ROM load than a new FS will be
-            // created for ROM purpose.
             symsys->mount(drive_z, drive_media::rom,
                 eka2l1::add_path(conf.storage, "/drives/z/"), io_attrib_internal | io_attrib_write_protected);
 
@@ -149,7 +125,6 @@ namespace eka2l1::desktop {
                 break;
             }
 
-            // Create audio driver
             audio_driver = drivers::make_audio_driver(drivers::audio_driver_backend::cubeb, conf.audio_master_volume,
                 player_be);
 
@@ -160,7 +135,6 @@ namespace eka2l1::desktop {
 
             symsys->set_audio_driver(audio_driver.get());
 
-            // Create sensor driver
             sensor_driver = drivers::sensor_driver::instantiate();
             if (!sensor_driver) {
                 LOG_WARN(FRONTEND_CMDLINE, "Failed to create sensor driver");
@@ -178,7 +152,6 @@ namespace eka2l1::desktop {
                 conf.serialize(false);
             }
 
-            // Copy additional DLLs
             std::vector<std::tuple<std::u16string, std::string, epocver>> dlls_need_to_copy = {
                 { u"Z:\\sys\\bin\\goommonitor.dll", "patch\\goommonitor_general.dll", epocver::epoc94 },
                 { u"Z:\\sys\\bin\\avkonfep.dll", "patch\\avkonfep_general.dll", epocver::epoc93fp1 }
@@ -203,10 +176,7 @@ namespace eka2l1::desktop {
                 }
             }
 
-            manager::packages *pkgmngr = symsys->get_packages();
-
-            pkgmngr->load_registries();
-            pkgmngr->migrate_legacy_registries();
+            // Package registry loading logic removed
 
             stage_two_inited = true;
         }
@@ -218,7 +188,6 @@ namespace eka2l1::desktop {
         winserv = reinterpret_cast<eka2l1::window_server *>(the_sys->get_kernel_system()->get_by_name<eka2l1::service::server>(
             eka2l1::get_winserv_name_by_epocver(symsys->get_symbian_version_use())));
 
-        // Load patch libraries
         if (stage_two_inited) {
             symsys->initialize_user_parties();
         }
