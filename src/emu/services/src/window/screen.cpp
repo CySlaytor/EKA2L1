@@ -115,6 +115,33 @@ namespace eka2l1::epoc {
         }
     }
 
+    std::uint8_t *screen::screen_buffer_ptr() {
+        return screen_buffer_chunk ? reinterpret_cast<std::uint8_t *>(screen_buffer_chunk->host_base()) : nullptr;
+    }
+
+    eka2l1::vec2 screen::size() const {
+        return current_mode().size;
+    }
+
+    void screen::ref_dsa_usage() {
+        active_dsa_count_++;
+    }
+
+    const int screen::total_screen_mode() const {
+        return static_cast<int>(scr_config.modes.size());
+    }
+
+    void screen::vsync(ntimer *timing, std::uint64_t &next_vsync_us) {
+        std::uint64_t crr = timing->microseconds();
+        std::uint64_t frame_time = 1000000 / refresh_rate;
+        if (crr >= last_vsync + frame_time) {
+            last_vsync = crr;
+        } else {
+            last_vsync += frame_time;
+        }
+        next_vsync_us = last_vsync;
+    }
+
     bool screen::redraw(drivers::graphics_command_builder &builder, const bool need_bind) {
         if (need_update_visible_regions()) {
             recalculate_visible_regions();
@@ -207,6 +234,8 @@ namespace eka2l1::epoc {
             driver->set_upscale_shader(setting.filter_shader_path);
         }
     }
+
+    void screen::store_to_config(const eka2l1::config::app_setting &setting) {}
 
     epoc::window_group *screen::update_focus(window_server *serv, epoc::window_group *closing_group) {
         epoc::window_group *old_focus = focus;

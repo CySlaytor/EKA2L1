@@ -131,6 +131,12 @@ namespace eka2l1 {
         void file_read(service::ipc_context *ctx);
         void file_write(service::ipc_context *ctx);
 
+        void read_file_section(service::ipc_context *ctx);
+        void file_duplicate(service::ipc_context *ctx);
+        void file_adopt(service::ipc_context *ctx);
+        void is_valid_name(service::ipc_context *ctx);
+        void mkdir(service::ipc_context *ctx);
+
         void open_dir(service::ipc_context *ctx);
         void read_dir_packed(service::ipc_context *ctx);
         void close_dir(service::ipc_context *ctx);

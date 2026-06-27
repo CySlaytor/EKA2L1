@@ -171,6 +171,13 @@ namespace eka2l1::epoc {
         void event_ready_cancel(service::ipc_context &ctx, ws_cmd &cmd);
         void redraw_ready_cancel(service::ipc_context &ctx, ws_cmd &cmd);
 
+        void create_graphic_context(service::ipc_context &ctx, ws_cmd &cmd);
+        void create_dsa(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_color_mode_list(service::ipc_context &ctx, ws_cmd &cmd);
+        void add_raw_event(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_ready(service::ipc_context &ctx, ws_cmd &cmd);
+        void get_focus_window_group(service::ipc_context &ctx, ws_cmd &cmd);
+
     public:
         ~window_server_client();
 
@@ -340,6 +347,8 @@ namespace eka2l1 {
     public:
         explicit window_server(system *sys);
         ~window_server();
+
+        void on_unhandled_opcode(service::ipc_context &ctx) override;
 
         epoc::ws::uid next_uid() {
             return ++obj_uid;

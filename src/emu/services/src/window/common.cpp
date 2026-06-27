@@ -10,8 +10,16 @@ namespace eka2l1::epoc {
         , time(common::get_current_utc_time_in_microseconds_since_0ad()) {
     }
 
+    bool is_display_mode_color(const epoc::display_mode disp_mode) {
+        return disp_mode >= epoc::display_mode::color16;
+    }
+
     bool is_display_mode_mono(const epoc::display_mode disp_mode) {
         return disp_mode <= epoc::display_mode::gray256;
+    }
+
+    bool is_display_mode_alpha(const display_mode disp_mode) {
+        return disp_mode == display_mode::color16map || disp_mode == display_mode::color16ma;
     }
 
     int get_bpp_from_display_mode(const epoc::display_mode bpp) {
@@ -197,5 +205,20 @@ namespace eka2l1::epoc {
             break;
         }
         return 8;
+    }
+
+    graphics_orientation number_to_orientation(int rot) {
+        switch (rot) {
+        case 0:
+            return graphics_orientation::normal;
+        case 90:
+            return graphics_orientation::rotated90;
+        case 180:
+            return graphics_orientation::rotated180;
+        case 270:
+            return graphics_orientation::rotated270;
+        default:
+            return graphics_orientation::normal;
+        }
     }
 }

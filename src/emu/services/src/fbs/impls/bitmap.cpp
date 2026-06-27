@@ -686,6 +686,10 @@ namespace eka2l1 {
         return true;
     }
 
+    void fbscli::background_compress_bitmap(service::ipc_context *ctx) {
+        ctx->complete(epoc::error_none);
+    }
+
     void fbscli::create_bitmap(service::ipc_context *ctx) {
         bmp_specs_legacy specs;
         const bool use_spec_legacy = ctx->get_argument_data_size(0) >= sizeof(bmp_specs_legacy);

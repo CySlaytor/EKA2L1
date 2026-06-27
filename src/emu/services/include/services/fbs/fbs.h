@@ -187,6 +187,9 @@ namespace eka2l1 {
         void cancel_notify_dirty_bitmap(service::ipc_context *ctx);
         void get_clean_bitmap(service::ipc_context *ctx);
 
+        void background_compress_bitmap(service::ipc_context *ctx);
+        void get_twips_height(service::ipc_context *ctx);
+
         fbsbitmap *get_clean_bitmap(fbsbitmap *bmp);
         void load_bitmap_impl(service::ipc_context *ctx, file *source);
 
@@ -292,6 +295,7 @@ namespace eka2l1 {
 
         server_ptr fs_server;
         chunk_ptr shared_chunk;
+        chunk_ptr large_chunk;
 
         std::uint8_t *base_shared_chunk;
         eka2l1::ptr<void> bmp_font_vtab;

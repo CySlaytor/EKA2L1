@@ -22,10 +22,7 @@ add_library(epocservs
         include/services/bluetooth/protocols/btlink/btlink_inet.h
         include/services/bluetooth/protocols/l2cap/l2cap_inet.h
         include/services/bluetooth/protocols/rfcomm/rfcomm_inet.h
-        include/services/bluetooth/protocols/sdp/pdu_builder.h
         include/services/bluetooth/protocols/sdp/sdp_inet.h
-        include/services/bluetooth/protocols/asker_inet.h
-        include/services/bluetooth/protocols/base_inet.h
         include/services/bluetooth/protocols/btmidman_inet.h
         include/services/bluetooth/protocols/common.h
         include/services/bluetooth/protocols/overall.h
@@ -109,7 +106,6 @@ add_library(epocservs
         include/services/ui/view/view.h
         include/services/ui/eikappui.h
         include/services/unipertar/unipertar.h
-        include/services/window/classes/plugins/anim/clock/messagewin.h
         include/services/window/classes/plugins/anim/overall.h
         include/services/window/bitmap_cache.h
         include/services/window/keys.h
@@ -208,7 +204,6 @@ add_library(epocservs
         src/ui/view/view.cpp
         src/ui/eikappui.cpp
         src/unipertar/unipertar.cpp
-        src/window/classes/plugins/anim/clock/messagewin.cpp
         src/window/classes/plugins/anim/overall.cpp
         src/window/classes/plugins/animdll.cpp
         src/window/classes/bitmap.cpp

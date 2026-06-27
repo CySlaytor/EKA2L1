@@ -457,6 +457,18 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void fs_server_client::read_file_section(service::ipc_context *ctx) {
+        ctx->complete(epoc::error_not_supported);
+    }
+
+    void fs_server_client::file_duplicate(service::ipc_context *ctx) {
+        ctx->complete(epoc::error_not_supported);
+    }
+
+    void fs_server_client::file_adopt(service::ipc_context *ctx) {
+        ctx->complete(epoc::error_not_supported);
+    }
+
     void fs_server_client::new_file_subsession(service::ipc_context *ctx, const exist_check_mode existence,
         bool overwrite, bool temporary) {
         std::optional<std::u16string> name_res = ctx->get_argument_value<std::u16string>(0);

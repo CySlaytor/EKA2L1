@@ -138,6 +138,14 @@ namespace eka2l1 {
             get_clean_bitmap(ctx);
             break;
         }
+        case fbs_bitmap_bg_compress: {
+            background_compress_bitmap(ctx);
+            break;
+        }
+        case fbs_get_twips_height: {
+            get_twips_height(ctx);
+            break;
+        }
         case fbs_close: {
             if (!obj_table_.remove(*ctx->get_argument_value<std::uint32_t>(0))) {
                 ctx->complete(epoc::error_bad_handle);
@@ -158,6 +166,7 @@ namespace eka2l1 {
         : service::typical_server(sys, epoc::get_fbs_server_name_by_epocver(sys->get_symbian_version_use()))
         , persistent_font_store(sys->get_io_system())
         , shared_chunk(nullptr)
+        , large_chunk(nullptr)
         , fntstr_seg(nullptr)
         , bmp_font_vtab(0)
         , session_cache_list(nullptr) {
@@ -193,6 +202,27 @@ namespace eka2l1 {
         if (!shared_chunk) {
             LOG_CRITICAL(SERVICE_FBS, "Can't create shared chunk of FBS, exiting");
             return;
+        }
+
+        if (!kern->is_eka1()) {
+            large_chunk = kern->create_and_add<kernel::chunk>(
+                                  kernel::owner_type::kernel,
+                                  kern->get_memory_system(),
+                                  nullptr,
+                                  "FbsLargeChunk",
+                                  0,
+                                  0x100000,
+                                  0x6000000,
+                                  prot_read_write,
+                                  kernel::chunk_type::normal,
+                                  kernel::chunk_access::global,
+                                  kernel::chunk_attrib::none)
+                              .second;
+
+            if (!large_chunk) {
+                LOG_CRITICAL(SERVICE_FBS, "Can't create large chunk of FBS, exiting");
+                return;
+            }
         }
 
         base_shared_chunk = reinterpret_cast<std::uint8_t *>(shared_chunk->host_base());
@@ -269,6 +299,8 @@ namespace eka2l1 {
         }
         if (shared_chunk)
             kern->destroy(shared_chunk);
+        if (large_chunk)
+            kern->destroy(large_chunk);
     }
 
     drivers::graphics_driver *fbs_server::get_graphics_driver() {

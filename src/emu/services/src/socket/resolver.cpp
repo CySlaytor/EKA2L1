@@ -13,5 +13,6 @@ namespace eka2l1::epoc::socket {
 
     void socket_host_resolver::dispatch(service::ipc_context *ctx) {
         LOG_ERROR(SERVICE_ESOCK, "Unimplemented socket host resolver opcode: {}", ctx->msg->function);
+        ctx->complete(epoc::error_not_supported);
     }
 }

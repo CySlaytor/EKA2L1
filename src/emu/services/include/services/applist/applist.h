@@ -1,11 +1,12 @@
 #pragma once
 
 #include <BS_thread_pool.hpp>
+#include <common/uid.h>
 #include <functional>
 #include <mutex>
 #include <services/framework.h>
-#include <system/epoc.h>
 #include <utils/des.h>
+#include <utils/version.h>
 #include <vector>
 #include <vfs/vfs.h>
 

@@ -10,6 +10,10 @@
 
 namespace eka2l1 {
 
+    int parse_new_centrep_ini(common::ini_file &ini, eka2l1::central_repo &repo) {
+        return 0; // Stubbed for ekatests compilation
+    }
+
     int do_state_for_cre(common::chunkyseri &seri, eka2l1::central_repo &repo) {
         std::uint32_t uid1 = 0x10000037; // Direct file store UID
         std::uint32_t uid2 = 0;

@@ -14,4 +14,8 @@ namespace eka2l1::epoc {
             id = 0;
         }
     }
+
+    bool window_client_obj::execute_command(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
+        return false;
+    }
 }

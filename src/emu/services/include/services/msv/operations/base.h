@@ -42,13 +42,17 @@ namespace eka2l1::epoc::msv {
         }
 
     public:
-        explicit operation(const msv_id operation_id, const operation_buffer &buffer,
-            epoc::notify_info complete_info);
+        explicit operation(const msv_id operation_id, const operation_buffer &buffer, epoc::notify_info complete_info)
+            : operation_id_(operation_id)
+            , progress_()
+            , state_(operation_state_idle)
+            , buffer_(buffer)
+            , complete_info_(complete_info) {}
 
         virtual void execute(msv_server *server, const kernel::uid process_uid) = 0;
-        virtual void cancel();
+        virtual void cancel() {}
 
-        virtual std::int32_t system_progress(epoc::msv::system_progress_info &progress);
+        virtual std::int32_t system_progress(epoc::msv::system_progress_info &progress) { return 0; }
 
         const msv_id operation_id() const {
             return operation_id_;

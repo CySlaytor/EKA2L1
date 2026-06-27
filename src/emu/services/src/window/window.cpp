@@ -301,6 +301,42 @@ namespace eka2l1::epoc {
         ctx.complete(add_object(animdll));
     }
 
+    void window_server_client::create_graphic_context(service::ipc_context &ctx, ws_cmd &cmd) {
+        window_client_obj_ptr gc = std::make_unique<epoc::graphic_context>(this, nullptr);
+        ctx.complete(add_object(gc));
+    }
+
+    void window_server_client::create_dsa(service::ipc_context &ctx, ws_cmd &cmd) {
+        window_client_obj_ptr dsa_obj = std::make_unique<epoc::dsa>(this);
+        ctx.complete(add_object(dsa_obj));
+    }
+
+    void window_server_client::get_color_mode_list(service::ipc_context &ctx, ws_cmd &cmd) {
+        ctx.complete(epoc::error_none);
+    }
+
+    void window_server_client::add_raw_event(service::ipc_context &ctx, ws_cmd &cmd) {
+        ctx.complete(epoc::error_none);
+    }
+
+    void window_server_client::get_ready(service::ipc_context &ctx, ws_cmd &cmd) {
+        if (cmd.header.op == ws_cl_op_event_ready)
+            events.set_listener(epoc::notify_info(ctx.msg->request_sts, ctx.msg->own_thr));
+        else if (cmd.header.op == ws_cl_op_redraw_ready)
+            redraws.set_listener(epoc::notify_info(ctx.msg->request_sts, ctx.msg->own_thr));
+        else if (cmd.header.op == ws_cl_op_priority_key_ready)
+            priority_keys.set_listener(epoc::notify_info(ctx.msg->request_sts, ctx.msg->own_thr));
+    }
+
+    void window_server_client::get_focus_window_group(service::ipc_context &ctx, ws_cmd &cmd) {
+        epoc::window_group *focus = get_ws().get_focus();
+        if (!focus) {
+            ctx.complete(0);
+            return;
+        }
+        ctx.complete(static_cast<int>(focus->id));
+    }
+
     void window_server_client::get_window_group_list(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_window_group_list *list_req = reinterpret_cast<decltype(list_req)>(cmd.data_ptr);
         std::vector<std::uint8_t> ids;
@@ -443,6 +479,29 @@ namespace eka2l1::epoc {
         case ws_cl_op_create_anim_dll:
             create_anim_dll(ctx, cmd);
             break;
+        case ws_cl_op_create_gc:
+            create_graphic_context(ctx, cmd);
+            break;
+        case ws_cl_op_create_direct_screen_access:
+            create_dsa(ctx, cmd);
+            break;
+        case ws_cl_op_get_color_mode_list:
+            get_color_mode_list(ctx, cmd);
+            break;
+        case ws_cl_op_raw_event:
+            add_raw_event(ctx, cmd);
+            break;
+        case ws_cl_op_event_ready:
+        case ws_cl_op_redraw_ready:
+        case ws_cl_op_priority_key_ready:
+            get_ready(ctx, cmd);
+            break;
+        case ws_cl_op_get_focus_window_group:
+            get_focus_window_group(ctx, cmd);
+            break;
+        case ws_cl_op_set_pointer_cursor_mode:
+            ctx.complete(epoc::error_none);
+            break;
         case ws_cl_op_get_window_group_name_from_identifier: {
             get_window_group_name_from_id(ctx, cmd);
             break;
@@ -509,6 +568,23 @@ namespace eka2l1 {
             return "Windowserver";
         }
         return "!Windowserver";
+    }
+
+    void window_server::on_unhandled_opcode(service::ipc_context &ctx) {
+        LOG_WARN(SERVICE_WINDOW, "Unhandled window server opcode: {}", ctx.msg->function);
+        ctx.complete(epoc::error_none);
+    }
+
+    epoc::chunk_allocator *window_server::allocator() {
+        return ws_global_mem_allocator.get();
+    }
+
+    address window_server::sync_thread_code_address() {
+        return ws_code_chunk->base(nullptr).ptr_address() + sync_thread_code_offset;
+    }
+
+    epoc::config::screen *window_server::get_current_focus_screen_config() {
+        return focus_screen_ ? &focus_screen_->scr_config : nullptr;
     }
 
     void window_server::load_wsini() {
@@ -675,7 +751,6 @@ namespace eka2l1 {
 
                 if (style_node) {
                     std::vector<std::string> styles;
-                    styles.resize(1);
                     style_node->get_as<common::ini_pair>()->get(styles);
                     scr_mode.style = styles[0];
                 } else {
@@ -729,6 +804,11 @@ namespace eka2l1 {
         , config_flags(0) {
         REGISTER_IPC(window_server, send_to_command_buffer, ws_mess_command_buffer, "Ws::CommandBuffer");
         REGISTER_IPC(window_server, send_to_command_buffer, ws_mess_sync_msg_buf, "Ws::MessSyncBuf");
+        REGISTER_IPC(window_server, init, ws_mess_init, "Ws::Init");
+
+        REGISTER_IPC(window_server, send_to_command_buffer, ws_mess_async_service | ws_cl_op_event_ready, "Ws::EventReady");
+        REGISTER_IPC(window_server, send_to_command_buffer, ws_mess_async_service | ws_cl_op_redraw_ready, "Ws::RedrawReady");
+        REGISTER_IPC(window_server, send_to_command_buffer, ws_mess_async_service | ws_cl_op_priority_key_ready, "Ws::PriorityKeyReady");
 
         init_key_mappings();
         epoc::add_anim_executor_factory_to_list(anim_factory_list_);
@@ -1205,7 +1285,23 @@ namespace eka2l1 {
     }
 
     void window_server::send_to_command_buffer(service::ipc_context &ctx) {
-        clients[ctx.msg->msg_session->unique_id()]->parse_command_buffer(ctx);
+        auto ite = clients.find(ctx.msg->msg_session->unique_id());
+        if (ite == clients.end()) {
+            LOG_ERROR(SERVICE_WINDOW, "Received message from unregistered session: {}", ctx.msg->msg_session->unique_id());
+            ctx.complete(epoc::error_bad_handle);
+            return;
+        }
+
+        if (ctx.msg->function & ws_mess_async_service) {
+            ws_cmd cmd;
+            cmd.header.op = ctx.msg->function & ~ws_mess_async_service;
+            cmd.header.cmd_len = 0;
+            cmd.obj_handle = ctx.msg->msg_session->unique_id();
+            cmd.data_ptr = nullptr;
+            ite->second->execute_command(ctx, cmd);
+        } else {
+            ite->second->parse_command_buffer(ctx);
+        }
     }
 
     struct window_group_tree_moonwalker : public epoc::window_tree_walker {

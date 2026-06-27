@@ -9,4 +9,8 @@ namespace eka2l1 {
         }
         return "!ViewServer";
     }
+
+    view_server::view_server(system *sys)
+        : service::typical_server(sys, get_view_server_name_by_epocver(sys->get_symbian_version_use())) {
+    }
 }

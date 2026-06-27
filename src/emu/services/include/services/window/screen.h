@@ -132,6 +132,8 @@ namespace eka2l1::epoc {
         void restore_from_config(drivers::graphics_driver *driver, const eka2l1::config::app_setting &setting);
         void try_change_display_rescale(drivers::graphics_driver *driver, const float scale_factor);
 
+        void store_to_config(const eka2l1::config::app_setting &setting);
+
         epoc::window_group *get_group_chain();
 
         std::uint8_t *screen_buffer_ptr();

@@ -51,7 +51,8 @@ namespace eka2l1 {
             do_next_event(ctx);
             break;
         default:
-            LOG_ERROR(SERVICE_UI, "Unimplemented opcode");
+            LOG_ERROR(SERVICE_UI, "Unimplemented skin server opcode: {}", ctx->msg->function);
+            ctx->complete(epoc::error_none);
             break;
         }
     }
@@ -122,6 +123,12 @@ namespace eka2l1 {
                               0, 384 * 1024, 384 * 1024, prot_read_write, kernel::chunk_type::normal,
                               kernel::chunk_access::global, kernel::chunk_attrib::none)
                           .second;
+
+        kern->create_and_add<kernel::semaphore>(kernel::owner_type::kernel,
+            nullptr, "AknsSrvWaitSemaphore", 0, kernel::access_type::global_access);
+
+        kern->create_and_add<kernel::semaphore>(kernel::owner_type::kernel,
+            nullptr, "AknsSrvRenderSemaphore", 0, kernel::access_type::global_access);
 
         std::uint32_t flags = 0;
         if (sys->get_symbian_version_use() > epocver::epoc94) {

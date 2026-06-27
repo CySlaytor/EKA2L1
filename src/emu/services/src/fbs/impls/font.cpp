@@ -286,6 +286,11 @@ namespace eka2l1 {
         static_cast<epoc::font_spec_v1 &>(target_spec).style.set_glyph_bitmap_type(adapter->get_output_bitmap_type());
     }
 
+    void fbscli::get_twips_height(service::ipc_context *ctx) {
+        ctx->write_data_to_descriptor_argument(0, server<fbs_server>()->get_pixel_size_in_twips());
+        ctx->complete(epoc::error_none);
+    }
+
     void fbscli::num_typefaces(service::ipc_context *ctx) {
         ctx->complete(static_cast<std::int32_t>(server<fbs_server>()->persistent_font_store.number_of_typefaces()));
     }

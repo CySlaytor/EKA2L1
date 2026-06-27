@@ -223,6 +223,12 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(notify_dismount_cancel, epoc::fs_msg_notify_dismount_cancel, "Fs::NotifyDismountCancel");
             HANDLE_CLIENT_IPC(set_entry, epoc::fs_msg_set_entry, "Fs::SetEntry");
 
+            HANDLE_CLIENT_IPC(read_file_section, epoc::fs_msg_read_file_section, "Fs::ReadFileSection");
+            HANDLE_CLIENT_IPC(file_duplicate, epoc::fs_msg_file_duplicate, "Fs::FileDuplicate");
+            HANDLE_CLIENT_IPC(file_adopt, epoc::fs_msg_file_adopt, "Fs::FileAdopt");
+            HANDLE_CLIENT_IPC(is_valid_name, epoc::fs_msg_is_valid_name, "Fs::IsValidName");
+            HANDLE_CLIENT_IPC(mkdir, epoc::fs_msg_mkdir, "Fs::MkDir");
+
         case epoc::fs_msg_base_close:
             if (ctx->sys->get_symbian_version_use() < epocver::eka2) {
                 ctx->complete(epoc::error_none);
@@ -545,6 +551,17 @@ namespace eka2l1 {
     void fs_server::private_path(service::ipc_context *ctx) {
         std::u16string path = get_private_path_trim_uid(ctx->msg->own_thr->owning_process());
         ctx->write_arg(0, path);
+        ctx->complete(epoc::error_none);
+    }
+
+    void fs_server_client::is_valid_name(service::ipc_context *ctx) {
+        ctx->complete(epoc::error_none);
+    }
+
+    void fs_server_client::mkdir(service::ipc_context *ctx) {
+        auto dir = ctx->get_argument_value<std::u16string>(0);
+        if (dir)
+            ctx->sys->get_io_system()->create_directories(get_full_symbian_path(ss_path, dir.value()));
         ctx->complete(epoc::error_none);
     }
 }
