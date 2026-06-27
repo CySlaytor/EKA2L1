@@ -1,23 +1,3 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project
- * (see bentokun.github.com/EKA2L1).
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <services/fs/fs.h>
 #include <services/fs/std.h>
 
@@ -29,7 +9,6 @@
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/path.h>
-#include <kernel/kernel.h>
 #include <config/app_settings.h>
 
 #include <utils/err.h>
@@ -50,7 +29,6 @@ namespace eka2l1 {
         if (kern->is_eka1()) {
             static constexpr const char16_t *T9LDB_PATH_FULL = u"Z:\\system\\t9ldb\\";
 
-            // Check for T9 hack
             config::app_settings *settings = kern->get_app_settings();
             config::app_setting *setting = settings->get_setting(ctx->msg->own_thr->owning_process()->get_uid());
 
@@ -138,38 +116,6 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void fs_server_client::read_dir(service::ipc_context *ctx) {
-        std::optional<std::int32_t> handle = ctx->get_argument_value<std::int32_t>(3);
-
-        if (!handle) {
-            ctx->complete(epoc::error_argument);
-            return;
-        }
-
-        fs_node *dir_node = obj_table_.get<fs_node>(*handle);
-
-        if (!dir_node || dir_node->vfs_node->type != io_component_type::dir) {
-            ctx->complete(epoc::error_bad_handle);
-            return;
-        }
-
-        io_system *io = ctx->sys->get_io_system();
-        directory *dir = reinterpret_cast<directory *>(dir_node->vfs_node.get());
-
-        epoc::fs::entry entry;
-        std::optional<entry_info> info = dir->get_next_entry();
-
-        if (!info) {
-            ctx->complete(epoc::error_eof);
-            return;
-        }
-
-        epoc::fs::build_symbian_entry_from_emulator_entry(io, info.value(), entry);
-
-        ctx->write_data_to_descriptor_argument<epoc::fs::entry>(0, entry, nullptr, true);
-        ctx->complete(epoc::error_none);
-    }
-
     void fs_server_client::read_dir_packed(service::ipc_context *ctx) {
         std::optional<std::int32_t> handle = ctx->get_argument_value<std::int32_t>(3);
         std::optional<std::int32_t> entry_arr_vir_ptr = ctx->get_argument_value<std::int32_t>(0);
@@ -198,8 +144,6 @@ namespace eka2l1 {
         std::uint8_t *entry_buf_org = entry_buf;
 
         size_t queried_entries = 0;
-
-        // 4 is for info (length + descriptor type)
         size_t entry_no_name_size = epoc::fs::entry_standard_size + 4 + 8;
 
         kernel_system *kern = ctx->sys->get_kernel_system();
@@ -215,7 +159,6 @@ namespace eka2l1 {
                 entry_arr->set_length(own_pr, static_cast<std::uint32_t>(entry_buf - entry_buf_org));
                 LOG_TRACE(SERVICE_EFSRV, "Queried entries: 0x{:x}", queried_entries);
                 ctx->complete(epoc::error_eof);
-
                 return;
             }
 
@@ -233,7 +176,6 @@ namespace eka2l1 {
             entry_buf += common::align(info->name.length() * 2, 4);
 
             if (should_support_64bit_size) {
-                // Epoc10 uses two reserved bytes
                 memcpy(entry_buf, &entry.size_high, 8);
                 entry_buf += 8;
             }
@@ -243,7 +185,6 @@ namespace eka2l1 {
         }
 
         entry_arr->set_length(own_pr, static_cast<std::uint32_t>(entry_buf - entry_buf_org));
-
         LOG_TRACE(SERVICE_EFSRV, "Queried entries: 0x{:x}", queried_entries);
 
         ctx->complete(epoc::error_none);

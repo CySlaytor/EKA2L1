@@ -1,22 +1,3 @@
-/*
- * Copyright (c) 2020 EKA2L1 Team.
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #pragma once
 
 #include <cstdint>
@@ -53,7 +34,7 @@ namespace eka2l1::epoc {
         mmf_sample_rate_64000hz = 1 << 11
     };
 
-    inline mmf_sample_rate operator | (mmf_sample_rate a, mmf_sample_rate b) {
+    inline mmf_sample_rate operator|(mmf_sample_rate a, mmf_sample_rate b) {
         return static_cast<mmf_sample_rate>(static_cast<int>(a) | static_cast<int>(b));
     }
 
@@ -87,8 +68,6 @@ namespace eka2l1::epoc {
         std::uint32_t tone_on_length_;
         std::uint32_t tone_off_length_;
         std::uint32_t pause_length_;
-        //std::uint32_t nof_event_uid_;
-        //std::uint32_t interface_;
     };
 
     struct mmf_priority_settings {
@@ -111,7 +90,6 @@ namespace eka2l1::epoc {
         mmf_dev_set_gain = 12,
         mmf_dev_play_balance = 13,
         mmf_dev_set_play_balance = 14,
-        // Two of this are guessed from RE and from error I get stubbing
         mmf_dev_get_buffer = 19,
         mmf_dev_cancel_get_buffer = 20,
         mmf_dev_complete_notify = 21,
@@ -121,9 +99,6 @@ namespace eka2l1::epoc {
         mmf_dev_play_data = 27,
         mmf_dev_record_data = 28,
         mmf_dev_stop = 29,
-        /*
-        mmf_dev_play_dtmf_string_length = 34,
-        */
         mmf_dev_set_volume_ramp = 37,
         mmf_dev_get_supported_input_data_types = 38,
         mmf_dev_copy_fourcc_array = 40,
@@ -131,10 +106,6 @@ namespace eka2l1::epoc {
         mmf_dev_set_priority_settings = 44
     };
 
-    // Should/near the same as the one on Symbian OSS
-    // The S^3 version does not call server to register callback (request like BufferToBeFilled or Emptied),
-    // but rather run a message queue and respond accordingly to reported back event
-    // For example if a event named new BTBF is received from message queue, they will call GetBufferToBeFilled
     enum mmf_dev_server_newarch_opcode {
         mmf_dev_newarch_post_open = 0,
         mmf_dev_newarch_init0 = 1,
@@ -154,7 +125,6 @@ namespace eka2l1::epoc {
         mmf_dev_newarch_set_play_balance = 15,
         mmf_dev_newarch_record_balance = 16,
         mmf_dev_newarch_set_record_balance = 17,
-        // The list here are event codes
         mmf_dev_newarch_init_complete_evt = 18,
         mmf_dev_newarch_btbf_evt = 19,
         mmf_dev_newarch_btbe_evt = 20,
@@ -162,7 +132,6 @@ namespace eka2l1::epoc {
         mmf_dev_newarch_record_error_evt = 22,
         mmf_dev_newarch_tone_done_evt = 23,
         mmf_dev_newarch_send_evt_to_cli_complete_evt = 24,
-        // End event code
         mmf_dev_newarch_play_init = 25,
         mmf_dev_newarch_record_init = 26,
         mmf_dev_newarch_play_data = 27,
@@ -213,24 +182,22 @@ namespace eka2l1::epoc {
     };
 
     struct mmf_dev_hw_buf_v1 {
-        std::int32_t request_size_; ///< The size of audio server needs.
-        std::int32_t last_buffer_; ///< Mark to the server this is the last buffer gonna be sent.
-        std::int32_t buffer_size_; ///< Total size the audio chunk offered.
+        std::int32_t request_size_;
+        std::int32_t last_buffer_;
+        std::int32_t buffer_size_;
 
-        mmf_dev_chunk_op chunk_op_; ///< Request that the client side should reopen the chunk handle.
-            ///< May occur due to chunk recreating
+        mmf_dev_chunk_op chunk_op_;
     };
 
     static_assert(sizeof(mmf_dev_hw_buf_v1) == 16);
 
     struct mmf_dev_hw_buf_v2 {
-        std::uint32_t buffer_type_; ///< UID of the buffer.
-        std::int32_t request_size_; ///< The size of audio server needs.
-        std::int32_t last_buffer_; ///< Mark to the server this is the last buffer gonna be sent.
-        std::int32_t buffer_size_; ///< Total size the audio chunk offered.
+        std::uint32_t buffer_type_;
+        std::int32_t request_size_;
+        std::int32_t last_buffer_;
+        std::int32_t buffer_size_;
 
-        mmf_dev_chunk_op chunk_op_; ///< Request that the client side should reopen the chunk handle.
-            ///< May occur due to chunk recreating
+        mmf_dev_chunk_op chunk_op_;
     };
 
     struct mmf_event {

@@ -1,23 +1,3 @@
-/*
- * Copyright (c) 2018 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project
- * (see bentokun.github.com/EKA2L1).
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <common/platform.h>
 
 #include <services/accessory/accessory.h>
@@ -27,12 +7,9 @@
 #include <services/audio/keysound/keysound.h>
 #include <services/audio/mmf/audio.h>
 #include <services/audio/mmf/dev.h>
-#include <services/backup/backup.h>
 #include <services/bluetooth/bt.h>
 #include <services/bluetooth/btman.h>
 #include <services/centralrepo/centralrepo.h>
-#include <services/comm/comm.h>
-#include <services/drm/helper.h>
 #include <services/drm/notifier/notifier.h>
 #include <services/drm/rights/rights.h>
 #include <services/etel/etel.h>
@@ -40,31 +17,25 @@
 #include <services/featmgr/featmgr.h>
 #include <services/fs/fs.h>
 #include <services/goommonitor/goommonitor.h>
+#include <services/host_launch.h>
 #include <services/hwrm/hwrm.h>
 #include <services/internet/connmonitor.h>
 #include <services/internet/nifman.h>
 #include <services/loader/loader.h>
 #include <services/msv/msv.h>
 #include <services/notifier/notifier.h>
-#include <services/redir/redir.h>
 #include <services/remcon/remcon.h>
 #include <services/sensor/sensor.h>
-#include <services/shutdown/shutdown.h>
 #include <services/sisregistry/sisregistry.h>
 #include <services/sms/settings.h>
-#include <services/sms/sa/sa.h>
-#include <services/sms/sendas/sendas.h>
 #include <services/socket/server.h>
 #include <services/sysagt/sysagt.h>
 #include <services/ui/cap/oom_app.h>
 #include <services/ui/eikappui.h>
-#include <services/ui/icon/icon.h>
 #include <services/ui/skin/server.h>
 #include <services/ui/view/view.h>
-#include <services/uiss/uiss.h>
 #include <services/unipertar/unipertar.h>
 #include <services/window/window.h>
-#include <services/host_launch.h>
 
 #include <services/init.h>
 #include <system/epoc.h>
@@ -118,13 +89,10 @@ namespace eka2l1::epoc {
     epoc::locale get_locale_info() {
         epoc::locale locale;
 
-        // TODO: Move to common
 #if EKA2L1_PLATFORM(WIN32)
         locale.country_code_ = static_cast<int>(GetProfileInt("intl", "iCountry", 0));
 #endif
 
-        // TODO: These are stubbed!
-        // See in relation: CLocale::MonetaryLoadLocaleL in ossrv, openenvcore's libc in file localeinfo.cpp
         locale.clock_format_ = epoc::clock_digital;
         locale.start_of_week_ = epoc::monday;
         locale.date_format_ = epoc::date_format_america;
@@ -176,14 +144,11 @@ namespace eka2l1::epoc {
         locale_settings.currency_symbols[0] = '$';
         locale_settings.currency_symbols[1] = '\0';
 
-        // Unknown key, testing show that this prop return 65535 most of times
-        // The prop belongs to HAL server, but the key usuage is unknown. (TODO)
         DEFINE_INT_PROP_D(sys, epoc::SYS_CATEGORY, epoc::UNK_KEY1, 65535);
         DEFINE_INT_PROP(sys, epoc::SYS_CATEGORY, epoc::PHONE_POWER_KEY, system_agent_state_on);
         DEFINE_INT_PROP(sys, epoc::SYS_CATEGORY, epoc::SOFTWARE_INSTALL_KEY, 0);
         DEFINE_INT_PROP(sys, epoc::SYS_CATEGORY, epoc::SOFTWARE_LASTEST_UID_INSTALLATION, 0);
 
-        // From Domain Server request
         DEFINE_INT_PROP(sys, 0x1020e406, 0x250, 0);
 
         DEFINE_BIN_PROP(sys, epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY, sizeof(epoc::locale_language), lang);
@@ -194,11 +159,9 @@ namespace eka2l1::epoc {
 
 namespace eka2l1 {
     namespace service {
-        // Mostly replace startup process of a normal EPOC startup
         void init_services(system *sys) {
             CREATE_SERVER_D(sys, fs_server);
             CREATE_SERVER(sys, loader_server);
-            CREATE_SERVER(sys, shutdown_server);
 
             config::state *cfg = sys->get_config();
 
@@ -210,13 +173,6 @@ namespace eka2l1 {
             if (cfg->enable_srv_rights)
                 CREATE_SERVER(sys, rights_server);
 
-            if (cfg->enable_srv_sa)
-                CREATE_SERVER(sys, sa_server);
-
-            if (cfg->enable_srv_drm)
-                CREATE_SERVER(sys, drm_helper_server);
-
-            // These needed to be HLEd
             CREATE_SERVER(sys, applist_server);
             CREATE_SERVER(sys, oom_ui_app_server);
             CREATE_SERVER(sys, hwrm_server);
@@ -234,29 +190,22 @@ namespace eka2l1 {
             CREATE_SERVER(sys, alarm_server);
             CREATE_SERVER(sys, socket_server);
 
-            CREATE_SERVER(sys, comm_server);
             CREATE_SERVER(sys, bt_server);
             CREATE_SERVER(sys, btman_server);
             CREATE_SERVER(sys, accessory_server);
 
-            // Not really sure about this one
             CREATE_SERVER(sys, keysound_server);
 
             CREATE_SERVER(sys, eikappui_server);
-            //CREATE_SERVER(sys, akn_icon_server);
             CREATE_SERVER(sys, akn_skin_server);
 
             CREATE_SERVER(sys, system_agent_server);
             CREATE_SERVER(sys, unipertar_server);
 
-            if (sys->get_symbian_version_use() <= epocver::eka2) {
-                CREATE_SERVER(sys, redir_server);
-                CREATE_SERVER(sys, backup_old_server);
-            } else {
+            if (sys->get_symbian_version_use() > epocver::eka2) {
                 CREATE_SERVER(sys, goom_monitor_server);
                 CREATE_SERVER(sys, alf_streamer_server);
 
-                // MMF server family
                 {
                     std::unique_ptr<service::server> dev_serv = std::make_unique<mmf_dev_server>(sys);
                     std::unique_ptr<service::server> aud_serv = std::make_unique<mmf_audio_server>(sys,
@@ -271,7 +220,7 @@ namespace eka2l1 {
             epoc::initialize_system_properties(sys, cfg);
             init_symbian_app_launch_to_host_launch(sys);
         }
-        
+
         void init_services_post_bootup(system *sys) {
             epoc::sms::supply_sim_settings(sys);
         }

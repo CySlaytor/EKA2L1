@@ -1,27 +1,7 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project
- * (see bentokun.github.com/EKA2L1).
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <services/window/classes/plugins/animdll.h>
 #include <services/window/classes/winuser.h>
-#include <services/window/window.h>
 #include <services/window/op.h>
+#include <services/window/window.h>
 #include <utils/err.h>
 
 namespace eka2l1::epoc {
@@ -43,7 +23,7 @@ namespace eka2l1::epoc {
             }
 
             anim_create_instance_args *anim_args = reinterpret_cast<anim_create_instance_args *>(cmd.data_ptr);
-            canvas_base *canvas = reinterpret_cast<canvas_base*>(client->get_object(anim_args->win_handle_));
+            canvas_base *canvas = reinterpret_cast<canvas_base *>(client->get_object(anim_args->win_handle_));
 
             if (canvas == nullptr) {
                 ctx.complete(epoc::error_bad_handle);
@@ -54,7 +34,6 @@ namespace eka2l1::epoc {
             if (executor == nullptr) {
                 LOG_TRACE(SERVICE_WINDOW, "Can't create animation from animation factory \"{}\"!", factory_->name());
                 ctx.complete(epoc::error_general);
-
                 break;
             }
 
@@ -78,14 +57,12 @@ namespace eka2l1::epoc {
 
             void *data_ptr = ctx.get_descriptor_argument_ptr(1);
             ctx.complete((*executor)->handle_request(req_info->opcode_, data_ptr));
-
             break;
         }
 
         case ws_anim_dll_op_free: {
             ctx.complete(epoc::error_none);
             client->delete_object(cmd.obj_handle);
-
             quit = true;
             break;
         }
@@ -106,7 +83,6 @@ namespace eka2l1::epoc {
             break;
         }
         }
-
         return quit;
     }
 }

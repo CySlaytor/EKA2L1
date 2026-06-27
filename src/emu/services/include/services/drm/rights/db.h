@@ -1,30 +1,32 @@
-/*
- * Copyright (c) 2021 EKA2L1 Team.
- * 
- * This file is part of EKA2L1 project
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #pragma once
 
-#include <services/drm/rights/object.h>
-
+#include <cstdint>
 #include <sqlite3.h>
 #include <string>
+#include <vector>
 
 namespace eka2l1::epoc::drm {
+    enum rights_export_mode {
+        rights_export_mode_none,
+        rights_export_mode_forward,
+        rights_export_mode_copy,
+        rights_export_mode_move
+    };
+
+    struct rights_permission {
+        std::uint32_t unique_id_;
+        std::uint64_t insert_time_;
+        std::uint16_t version_rights_main_;
+        std::uint16_t version_rights_sub_;
+        rights_export_mode export_mode_;
+        std::uint32_t info_bits_;
+        std::string parent_rights_id_;
+        std::string rights_obj_id;
+        std::string domain_id_;
+        std::string right_issuer_identifier_;
+        std::string on_expired_url_;
+    };
+
     struct rights_database {
     private:
         sqlite3 *database_;
@@ -41,8 +43,6 @@ namespace eka2l1::epoc::drm {
 
         std::u16string db_path_;
 
-        int add_constraint(const rights_constraint &constraint, const int perm_id);
-        bool get_constraint(const int constraint_id, rights_constraint &result);
         bool get_permission_list(const int right_id, std::vector<rights_permission> &permissions);
         void reset();
 
@@ -50,13 +50,8 @@ namespace eka2l1::epoc::drm {
         explicit rights_database(const std::u16string &database);
         ~rights_database();
 
-        bool add_or_update_record(rights_object &obj);
         int get_entry_id(const std::string &content_id);
-
-        bool get_record(const std::string &content_id, rights_object &result);
-        bool get_encryption_key(const std::string &content_id, std::string &output_key);
         bool get_permission_list(const std::string &content_id, std::vector<rights_permission> &permissions);
-
         void flush();
     };
 }

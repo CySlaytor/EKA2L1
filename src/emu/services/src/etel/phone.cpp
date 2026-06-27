@@ -1,22 +1,3 @@
-/*
- * Copyright (c) 2020 EKA2L1 Team.
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <services/context.h>
 #include <services/etel/phone.h>
 #include <services/etel/subsess.h>
@@ -44,7 +25,6 @@ namespace eka2l1 {
             ctx->complete(epoc::error_general);
             return;
         }
-
         ctx->complete(epoc::error_none);
     }
 
@@ -148,7 +128,6 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    static const std::u16string EXAMPLE_VALID_IMI_CODE = u"540806859904945";
     static const std::u16string EXAMPLE_VALID_REVISION = u"1.0.0";
 
     void etel_phone_subsession::get_phone_id(eka2l1::service::ipc_context *ctx) {
@@ -158,7 +137,6 @@ namespace eka2l1 {
         device *dcrr = dmngr->get_current();
         config::state *conf_state = ctx->sys->get_config();
 
-        // TODO: What lmao
         phoneid.manu_.assign(nullptr, common::utf8_to_ucs2(dcrr->manufacturer));
         phoneid.model_id_.assign(nullptr, common::utf8_to_ucs2(dcrr->model));
 
@@ -197,7 +175,6 @@ namespace eka2l1 {
     void etel_phone_subsession::get_current_network(eka2l1::service::ipc_context *ctx) {
         LOG_TRACE(SERVICE_ETEL, "Get current network hardcoded");
         std::optional<epoc::etel_phone_network_info> network_info = ctx->get_argument_data_from_descriptor<epoc::etel_phone_network_info>(0);
-        epoc::etel_phone_location_area *phone_location_area = reinterpret_cast<epoc::etel_phone_location_area *>(ctx->get_descriptor_argument_ptr(2));
 
         network_info->mode_ = phone_->network_info_.mode_;
         network_info->status_ = phone_->network_info_.status_;
@@ -248,14 +225,10 @@ namespace eka2l1 {
     }
 
     void etel_phone_subsession::get_current_network_cancel(eka2l1::service::ipc_context *ctx) {
-        LOG_TRACE(SERVICE_ETEL, "Get current network cancel stubbed");
-
         ctx->complete(epoc::error_none);
     }
 
     void etel_phone_subsession::get_network_registration_status_cancel(eka2l1::service::ipc_context *ctx) {
-        LOG_TRACE(SERVICE_ETEL, "Get network registration status cancel stubbed");
-
         ctx->complete(epoc::error_none);
     }
 
@@ -275,7 +248,7 @@ namespace eka2l1 {
     void etel_phone_subsession::notify_battery_info(eka2l1::service::ipc_context *ctx) {
         battery_info_change_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
     }
-    
+
     void etel_phone_subsession::notify_battery_info_cancel(eka2l1::service::ipc_context *ctx) {
         battery_info_change_nof_.complete(epoc::error_cancel);
         ctx->complete(epoc::error_none);
@@ -287,27 +260,21 @@ namespace eka2l1 {
             case epoc::etel_old_phone_get_status:
                 get_status(ctx);
                 break;
-
             case epoc::etel_old_phone_enumerate_lines:
                 enumerate_lines(ctx);
                 break;
-
             case epoc::etel_old_phone_get_line_info:
                 get_line_info(ctx);
                 break;
-
             case epoc::etel_old_gsm_phone_get_phone_id:
                 get_phone_id(ctx);
                 break;
-
             case epoc::etel_old_gsm_phone_get_current_network_info:
                 get_current_network_info_old(ctx);
                 break;
-
             case epoc::etel_old_gsm_adv_phone_get_subscriber_id:
                 get_subscriber_id(ctx);
                 break;
-
             default:
                 LOG_ERROR(SERVICE_ETEL, "Unimplemented etel phone opcode {}", ctx->msg->function);
                 break;
@@ -317,31 +284,24 @@ namespace eka2l1 {
             case epoc::etel_old_phone_init:
                 init(ctx);
                 break;
-
             case epoc::etel_old_phone_get_status:
                 get_status(ctx);
                 break;
-
             case epoc::etel_old_phone_enumerate_lines:
                 enumerate_lines(ctx);
                 break;
-
             case epoc::etel_old_phone_get_line_info:
                 get_line_info(ctx);
                 break;
-
             case epoc::etel_mobile_phone_transition_get_phone_id:
                 get_phone_id(ctx);
                 break;
-
             case epoc::etel_mobile_phone_transition_get_subscriber_id:
                 get_subscriber_id(ctx);
                 break;
-
             case epoc::etel_mobile_phone_transition_get_identity_caps:
                 get_identity_caps(ctx);
                 break;
-
             default:
                 LOG_ERROR(SERVICE_ETEL, "Unimplemented etel phone opcode {}", ctx->msg->function);
                 break;
@@ -351,99 +311,75 @@ namespace eka2l1 {
             case epoc::etel_phone_init:
                 init(ctx);
                 break;
-
             case epoc::etel_phone_get_status:
                 get_status(ctx);
                 break;
-
             case epoc::etel_phone_enumerate_lines:
                 enumerate_lines(ctx);
                 break;
-
             case epoc::etel_phone_get_line_info:
                 get_line_info(ctx);
                 break;
-
             case epoc::etel_mobile_phone_get_identity_caps:
                 get_identity_caps(ctx);
                 break;
-
             case epoc::etel_mobile_phone_get_indicator_caps:
                 get_indicator_caps(ctx);
                 break;
-
             case epoc::etel_mobile_phone_get_indicator:
                 get_indicator(ctx);
                 break;
-
             case epoc::etel_mobile_phone_get_network_caps:
                 get_network_caps(ctx);
                 break;
-
             case epoc::etel_mobile_phone_get_network_registration_status:
                 get_network_registration_status(ctx);
                 break;
-
             case epoc::etel_mobile_phone_get_signal_strength:
                 get_signal_strength(ctx);
                 break;
-
             case epoc::etel_mobile_phone_notify_network_registration_status_change:
                 notify_network_registration_status_change(ctx);
                 break;
-
             case epoc::etel_mobile_phone_notify_signal_strength_change:
                 notify_signal_strength_change(ctx);
                 break;
-
             case epoc::etel_mobile_phone_get_network_registration_status_cancel:
                 get_network_registration_status_cancel(ctx);
                 break;
-
             case epoc::etel_mobile_phone_get_home_network:
                 get_home_network(ctx);
                 break;
-
             case epoc::etel_mobile_phone_get_subscriber_id:
                 get_subscriber_id(ctx);
                 break;
-
             case epoc::etel_mobile_phone_get_phone_id:
                 get_phone_id(ctx);
                 break;
-
             case epoc::etel_mobile_phone_get_current_network:
                 get_current_network(ctx);
                 break;
-
             case epoc::etel_mobile_phone_notify_current_network_change:
                 notify_current_network_change(ctx);
                 break;
-
             case epoc::etel_mobile_phone_get_current_network_cancel:
                 get_current_network_cancel(ctx);
                 break;
-
             case epoc::etel_mobile_phone_notify_indicator_changes:
                 notify_indicator_change(ctx);
                 break;
-
             case epoc::etel_mobile_phone_notify_indicator_changes_cancel:
                 cancel_indicator_change(ctx);
                 break;
-
             case epoc::etel_mobile_phone_get_battery_info:
                 get_battery_info(ctx);
                 break;
-
             case epoc::etel_mobile_phone_notify_battery_info_change:
                 notify_battery_info(ctx);
                 break;
-
             case epoc::etel_mobile_phone_notify_battery_info_change_cancel:
                 notify_battery_info_cancel(ctx);
                 break;
-
             default:
                 LOG_ERROR(SERVICE_ETEL, "Unimplemented etel phone opcode {}", ctx->msg->function);
                 break;
@@ -453,7 +389,6 @@ namespace eka2l1 {
 
     etel_phone::etel_phone(const epoc::etel_phone_info &info)
         : info_(info) {
-        // Initialize default mode
         status_.detect_ = epoc::etel_modem_detect_not_present;
         status_.mode_ = epoc::etel_phone_mode_idle;
     }

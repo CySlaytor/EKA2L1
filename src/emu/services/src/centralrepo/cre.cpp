@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project
- * (see bentokun.github.com/EKA2L1).
- * 
- * Initial contributor: pent0
- * Contributors:
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
 #include <common/log.h>
@@ -32,17 +9,7 @@
 #include <system/devices.h>
 
 namespace eka2l1 {
-    /* 
-     * The header of a CRE file is following:
-     *
-     * |    Offset           |     Size      |      Description         |     Note
-     * |      0              |       1       |      Version             |    
-     * |      1              |       4       |    CRE repo UID          |
-     * |      5(a)           |       1(a)    |    Keyspace type         |   This extra byte exist if version >= 3
-     * |      5              |       4       |    Owner UID             |
-     * |      9              |       4       |    Entry count           |
-     * 
-    */
+
     int do_state_for_cre(common::chunkyseri &seri, eka2l1::central_repo &repo) {
         std::uint32_t uid1 = 0x10000037; // Direct file store UID
         std::uint32_t uid2 = 0;
@@ -56,7 +23,6 @@ namespace eka2l1 {
             return -1;
         }
 
-        // TODO: Figure out usage
         std::uint32_t unk1 = 0xCC776985;
         std::uint32_t unk2 = 0x14;
 
@@ -133,7 +99,6 @@ namespace eka2l1 {
 
         seri.absorb(repo.time_stamp);
 
-        // Start to read entries
         std::uint32_t num_entries = static_cast<std::uint32_t>(repo.entries.size());
         seri.absorb(num_entries);
 
@@ -236,8 +201,6 @@ namespace eka2l1 {
                 seri.absorb(deleted_setting);
             }
         }
-
-        // TODO: Supply policy for entry
 
         return 0;
     }

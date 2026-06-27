@@ -1,29 +1,8 @@
-/*
- * Copyright (c) 2020 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
-#include <services/ui/cap/coestorage.h>
-#include <services/ui/cap/consts.h>
-
-#include <services/centralrepo/centralrepo.h>
-
 #include <common/cvt.h>
 #include <common/log.h>
+#include <services/centralrepo/centralrepo.h>
+#include <services/ui/cap/coestorage.h>
+#include <services/ui/cap/consts.h>
 
 namespace eka2l1::epoc {
     coe_data_storage::coe_data_storage(eka2l1::central_repo_server *serv, io_system *io, device_manager *mngr)
@@ -37,21 +16,16 @@ namespace eka2l1::epoc {
         if (!fep_repo_) {
             fep_repo_ = serv_->load_repo_with_lookup(io_, dmngr_, FEP_FRAMEWORK_REPO_UID);
         }
-
         return fep_repo_;
     }
 
     static eka2l1::central_repo_entry *get_ccr_entry(eka2l1::central_repo *rep, const std::uint32_t key,
         const eka2l1::central_repo_entry_type target) {
-        if (!rep) {
+        if (!rep)
             return nullptr;
-        }
-
         eka2l1::central_repo_entry *ent = rep->find_entry(key);
-        if (!ent || (ent->data.etype != target)) {
+        if (!ent || (ent->data.etype != target))
             return nullptr;
-        }
-
         return ent;
     }
 
@@ -59,11 +33,8 @@ namespace eka2l1::epoc {
         eka2l1::central_repo *rep = fep_repo();
         eka2l1::central_repo_entry *ccre = get_ccr_entry(rep, fep_framework_repo_key_default_fepid,
             eka2l1::central_repo_entry_type::string);
-
-        if (!ccre) {
+        if (!ccre)
             return std::nullopt;
-        }
-
         return std::u16string(reinterpret_cast<char16_t *>(ccre->data.strd.data()), ccre->data.strd.size() / 2);
     }
 
@@ -76,7 +47,6 @@ namespace eka2l1::epoc {
             eka2l1::central_repo_entry_variant var;
             var.etype = central_repo_entry_type::string;
             var.strd.resize(the_fep.length() * 2);
-
             std::memcpy(var.strd.data(), the_fep.data(), var.strd.size());
 
             if (!rep->add_new_entry(fep_framework_repo_key_default_fepid, var)) {
@@ -90,7 +60,6 @@ namespace eka2l1::epoc {
 
     void coe_data_storage::serialize() {
         eka2l1::central_repo *rep = fep_repo();
-
         if (rep) {
             rep->write_changes(io_, dmngr_);
         }

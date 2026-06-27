@@ -1,22 +1,3 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <services/centralrepo/centralrepo.h>
 #include <services/centralrepo/repo.h>
 #include <services/context.h>
@@ -34,7 +15,6 @@ namespace eka2l1 {
     std::uint32_t central_repo::get_default_meta_for_new_key(const std::uint32_t key) {
         for (std::size_t i = 0; i < meta_range.size(); i++) {
             if (meta_range[i].high_key) {
-                // Normal range
                 if (meta_range[i].low_key <= key
                     && key <= meta_range[i].high_key) {
                     return meta_range[i].default_meta_data;
@@ -55,7 +35,6 @@ namespace eka2l1 {
             return false;
         }
 
-        // Find default meta
         central_repo_entry entry;
         entry.metadata_val = get_default_meta_for_new_key(key);
         entry.key = key;
@@ -72,7 +51,6 @@ namespace eka2l1 {
             return false;
         }
 
-        // Find default meta
         central_repo_entry entry;
         entry.metadata_val = meta;
         entry.key = key;
@@ -113,18 +91,14 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::modification_success(const std::uint32_t key) {
-        // Iters through all
         for (std::size_t i = 0; i < notifies.size(); i++) {
             cenrep_notify_info &notify = notifies[i];
 
             if ((key & (notify.match & notify.mask))) {
-                // Notify and delete this request from the list
                 notify.sts.complete(0);
                 notifies.erase(notifies.begin() + i);
             }
         }
-
-        // Done all requests
     }
 
     int central_repo_client_subsession::add_notify_request(epoc::notify_info &info,
@@ -137,7 +111,6 @@ namespace eka2l1 {
             return -1;
         } else {
             if (info.empty()) {
-                // Likely a test, pass
                 return 0;
             }
         }
@@ -165,16 +138,12 @@ namespace eka2l1 {
     }
 
     central_repo_entry *central_repo_client_subsession::get_entry(const std::uint32_t key, int mode) {
-        // Repo is in transaction
         bool active = is_active();
 
-        // Resolve
-        // If get entry for write but the transaction mode is read only, we can't allow that
         if ((mode == 1) && (get_transaction_mode() == central_repo_transaction_mode::read_only)) {
             return nullptr;
         }
 
-        // Check transactor, only if its in transaction
         if (active) {
             auto entry_ite = transactor.changes.find(key);
             if (entry_ite != transactor.changes.end()) {
@@ -182,8 +151,6 @@ namespace eka2l1 {
             }
         }
 
-        // If not in transaction, or if we are in transaction but read-mode
-        // Directly get the repo data
         if (!active || mode == 0) {
             auto result = std::find_if(attach_repo->entries.begin(), attach_repo->entries.end(),
                 [&](const central_repo_entry &entry) { return entry.key == key; });
@@ -199,97 +166,9 @@ namespace eka2l1 {
         return &(transactor.changes[key]);
     }
 
-    bool central_repos_cacher::free_oldest() {
-        std::uint32_t repo_key = 0xFFFFFFFF;
-        std::uint64_t oldest_access = 0xFFFFFFFFFFFFFFFF;
-
-        for (auto &[key, entry] : entries) {
-            if (entry.last_access < oldest_access && entry.repo.access_count == 0) {
-                oldest_access = entry.last_access;
-                repo_key = key;
-            }
-        }
-
-        if (repo_key != 0xFFFFFFFF) {
-            entries.erase(repo_key);
-            return true;
-        }
-
-        return false;
-    }
-
-    eka2l1::central_repo *central_repos_cacher::add_repo(const std::uint32_t key, eka2l1::central_repo &repo) {
-        if (entries.size() == MAX_REPO_CACHE_ENTRIES) {
-            // Free the oldest
-            if (!free_oldest()) {
-                return nullptr;
-            }
-        }
-
-        cache_entry entry;
-        entry.last_access = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
-                                .count();
-
-        entry.repo = std::move(repo);
-        entry.repo.access_count = 1;
-
-        auto res = entries.emplace(key, std::move(entry));
-
-        if (res.second) {
-            return &res.first->second.repo;
-        }
-
-        return nullptr;
-    }
-
-    bool central_repos_cacher::remove_repo(const std::uint32_t key) {
-        if (entries.erase(key)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    eka2l1::central_repo *central_repos_cacher::get_cached_repo(const std::uint32_t key) {
-        auto ite = entries.find(key);
-
-        if (ite == entries.end()) {
-            return nullptr;
-        }
-
-        ite->second.last_access = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
-                                      .count();
-        ite->second.repo.access_count++;
-
-        return &(ite->second.repo);
-    }
-
     void central_repo_client_subsession::reset(service::ipc_context *ctx) {
-        io_system *io = ctx->sys->get_io_system();
-        device_manager *mngr = ctx->sys->get_device_manager();
-
-        eka2l1::central_repo *init_repo = server->get_initial_repo(io, mngr, attach_repo->uid);
-
-        // Reset the keys
-        const std::uint32_t key = *ctx->get_argument_value<std::uint32_t>(0);
-        int err = reset_key(init_repo, key);
-
-        // In transaction
-        if (err == -1) {
-            ctx->complete(epoc::error_not_supported);
-            return;
-        }
-
-        if (err == -2) {
-            ctx->complete(epoc::error_not_found);
-            return;
-        }
-
-        // Write committed changes to disk
-        write_changes(io, mngr);
-        modification_success(key);
-
-        ctx->complete(epoc::error_none);
+        // Only basic logic
+        ctx->complete(epoc::error_not_supported);
     }
 
     void central_repo_client_subsession::create_value(service::ipc_context *ctx) {
@@ -359,20 +238,13 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::set_value(service::ipc_context *ctx) {
-        // We get the entry.
-        // Use mode 1 (write) to get the entry, since we are modifying data.
         central_repo_entry *entry = get_entry(*ctx->get_argument_value<std::uint32_t>(0), 1);
 
-        // If it does not exist, or it is in different type, discard.
-        // Depends on the invalid type, we set error code
         if (!entry) {
             ctx->complete(epoc::error_not_found);
             return;
         }
 
-        // TODO: Capability supply (+Policy)
-        // This is really bad... We are not really care about accuracy right now
-        // Assuming programs did right things, and accept the rules
         switch (ctx->msg->function) {
         case cen_rep_set_int: {
             if (entry->data.etype != central_repo_entry_type::integer) {
@@ -411,13 +283,11 @@ namespace eka2l1 {
         }
 
         default: {
-            // Unreachable
             assert(false);
             break;
         }
         }
 
-        // Success in modifying
         modification_success(entry->key);
         ctx->complete(epoc::error_none);
     }
@@ -426,8 +296,6 @@ namespace eka2l1 {
 #pragma optimize("", off)
 #endif
     void central_repo_client_subsession::get_value(service::ipc_context *ctx) {
-        // We get the entry.
-        // Use mode 0 (write) to get the entry, since we are modifying data.
         std::optional<std::uint32_t> the_key = ctx->get_argument_value<std::uint32_t>(0);
 
         if (!the_key.has_value()) {
@@ -505,12 +373,9 @@ namespace eka2l1 {
 #endif
 
     void central_repo_client_subsession::append_new_key_to_found_eq_list(std::uint32_t *array, const std::uint32_t key, const std::uint32_t max_uids_buf) {
-        // We have to push it to the temporary array, since this array can be retrieve anytime before another FindEq call
-        // Even if the provided array is not full
         array[0]++;
 
         if (array[0] <= max_uids_buf) {
-            // Increase the length, than add the keey
             array[array[0]] = key;
         } else {
             key_found_result.push_back(key);
@@ -518,11 +383,8 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::find(service::ipc_context *ctx) {
-        // Clear found result
-        // TODO: Should we?
         key_found_result.clear();
 
-        // Get the filter
         std::optional<central_repo_key_filter> filter = ctx->get_argument_data_from_descriptor<central_repo_key_filter>(0);
         std::uint32_t *found_uid_result_array = reinterpret_cast<std::uint32_t *>(ctx->get_descriptor_argument_ptr(2));
         const std::size_t found_uid_max_uids = (ctx->get_argument_max_data_size(2) / sizeof(std::uint32_t)) - 1;
@@ -533,14 +395,11 @@ namespace eka2l1 {
             return;
         }
 
-        // Set found count to 0
         found_uid_result_array[0] = 0;
         std::string cache_arg;
 
         for (auto &entry : attach_repo->entries) {
-            // Try to match the key first
             if ((entry.key & filter->id_mask) != (filter->partial_key & filter->id_mask)) {
-                // Mask doesn't match, abandon this entry
                 continue;
             }
 
@@ -558,17 +417,13 @@ namespace eka2l1 {
                 break;
             }
 
-            // Depends on the opcode, we try to match the value
             switch (ctx->msg->function) {
             case cen_rep_find_eq_int:
             case cen_rep_find_neq_int: {
                 if (entry.data.etype != central_repo_entry_type::integer) {
-                    // It must be integer type
                     break;
                 }
 
-                // Index 1 argument contains the value we should look for
-                // TODO: Signed/unsigned is dangerous
                 if (static_cast<std::int32_t>(entry.data.intd) == *ctx->get_argument_value<std::int32_t>(1)) {
                     if (!find_not_eq) {
                         key_found = entry.key;
@@ -598,7 +453,6 @@ namespace eka2l1 {
                 }
 
                 if (entry.data.etype == central_repo_entry_type::string) {
-                    // It must be string type
                     is_ok = (entry.data.strd == cache_arg);
                 } else {
                     break;
@@ -626,14 +480,12 @@ namespace eka2l1 {
             }
             }
 
-            // If we found the key, append it
             if (key_found != 0) {
                 append_new_key_to_found_eq_list(found_uid_result_array, key_found, static_cast<std::uint32_t>(found_uid_max_uids));
             }
         }
 
         if (found_uid_result_array[0] == 0) {
-            // NOTHING! NOTHING! omg no
             ctx->complete(epoc::error_not_found);
             return;
         }
@@ -654,7 +506,6 @@ namespace eka2l1 {
         epoc::notify_info holder;
         holder.sts = 0;
 
-        // Pass a test notify info. Add notify request will not add this, but will check for request existence.
         if (add_notify_request(holder, 0xFFFFFFFF, *ctx->get_argument_value<std::int32_t>(0)) == 0) {
             ctx->complete(epoc::error_none);
             return;
@@ -712,30 +563,6 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    int central_repo_client_subsession::reset_key(eka2l1::central_repo *init_repo, const std::uint32_t key) {
-        // In transacton, fail
-        if (is_active()) {
-            return -1;
-        }
-
-        central_repo_entry *e = attach_repo->find_entry(key);
-
-        if (!e) {
-            return -2;
-        }
-
-        central_repo_entry *source_e = init_repo->find_entry(key);
-
-        if (!source_e) {
-            return -2;
-        }
-
-        e->data = source_e->data;
-        e->metadata_val = source_e->metadata_val;
-
-        return 0;
-    }
-
     void central_repo_client_subsession::start_transaction(service::ipc_context *ctx) {
         LOG_TRACE(SERVICE_CENREP, "TransactionStart stubbed");
         ctx->complete(epoc::error_none);
@@ -744,5 +571,78 @@ namespace eka2l1 {
     void central_repo_client_subsession::cancel_transaction(service::ipc_context *ctx) {
         LOG_TRACE(SERVICE_CENREP, "TransactionCancel stubbed");
         ctx->complete(epoc::error_none);
+    }
+
+    void central_repo_client_subsession::handle_message(service::ipc_context *ctx) {
+        switch (ctx->msg->function) {
+        case cen_rep_create_int:
+        case cen_rep_create_real:
+        case cen_rep_create_string:
+            create_value(ctx);
+            break;
+
+        case cen_rep_notify_req_check:
+            notify_nof_check(ctx);
+            break;
+
+        case cen_rep_group_nof_cancel:
+        case cen_rep_notify_cancel:
+            notify_cancel(ctx);
+            break;
+
+        case cen_rep_notify_cancel_all:
+            cancel_all_notify_requests();
+            ctx->complete(epoc::error_none);
+            break;
+
+        case cen_rep_group_nof_req:
+        case cen_rep_notify_req:
+            notify(ctx);
+            break;
+
+        case cen_rep_get_int:
+        case cen_rep_get_real:
+        case cen_rep_get_string:
+            get_value(ctx);
+            break;
+
+        case cen_rep_set_int:
+        case cen_rep_set_string:
+        case cen_rep_set_real:
+            set_value(ctx);
+            break;
+
+        case cen_rep_reset:
+            reset(ctx);
+            break;
+
+        case cen_rep_find_eq_int:
+        case cen_rep_find_eq_real:
+        case cen_rep_find_eq_string:
+        case cen_rep_find_neq_int:
+        case cen_rep_find_neq_real:
+        case cen_rep_find_neq_string:
+        case cen_rep_find: {
+            find(ctx);
+            break;
+        }
+
+        case cen_rep_transaction_start:
+            start_transaction(ctx);
+            break;
+
+        case cen_rep_transaction_cancel:
+            cancel_transaction(ctx);
+            break;
+
+        case cen_rep_get_find_res:
+            get_find_result(ctx);
+            break;
+
+        default: {
+            LOG_ERROR(SERVICE_CENREP, "Unhandled message opcode for cenrep 0x{:X}", ctx->msg->function);
+            break;
+        }
+        }
     }
 }

@@ -1,23 +1,3 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project
- * (see bentokun.github.com/EKA2L1).
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #pragma once
 
 #include <drivers/graphics/common.h>
@@ -87,61 +67,16 @@ namespace eka2l1::epoc {
             pen
         };
 
-        void reset_context();
         bool no_building() const;
-
-        void do_command_draw_text(service::ipc_context &ctx, eka2l1::vec2 top_left,
-            eka2l1::vec2 bottom_right, const std::u16string &text, epoc::text_alignment align,
-            const int baseline_offset, const int margin, const bool fill_surrounding);
-
-        void do_command_draw_bitmap(service::ipc_context &ctx, void *bitmap, eka2l1::rect source_rect, eka2l1::rect dest_rect, const std::uint8_t flags);
-        bool get_brush_color(eka2l1::vec4 &color_brush);
-        bool get_pen_color_and_style(eka2l1::vec4 &pen_color, drivers::pen_style &style);
-
         void do_submit_clipping();
-
-        void draw_mask_impl(void *source_bitmap, void *mask_bitmap, eka2l1::rect dest_rect, eka2l1::rect source_rect, const std::uint8_t flags);
 
         void active(service::ipc_context &context, ws_cmd cmd);
         void deactive(service::ipc_context &context, ws_cmd &cmd);
-        void draw_bitmap(service::ipc_context &context, ws_cmd &cmd);
-        void draw_bitmap_2(service::ipc_context &context, ws_cmd &cmd);
-        void draw_bitmap_3(service::ipc_context &context, ws_cmd &cmd);
-        void ws_draw_bitmap_masked(service::ipc_context &context, ws_cmd &cmd);
         void set_brush_color(service::ipc_context &context, ws_cmd &cmd);
         void set_brush_style(service::ipc_context &context, ws_cmd &cmd);
-        void set_pen_color(service::ipc_context &context, ws_cmd &cmd);
         void set_pen_style(service::ipc_context &context, ws_cmd &cmd);
-        void set_pen_size(service::ipc_context &context, ws_cmd &cmd);
-        void draw_line(service::ipc_context &context, ws_cmd &cmd);
-        void draw_rect(service::ipc_context &context, ws_cmd &cmd);
-        void clear(service::ipc_context &context, ws_cmd &cmd);
         void clear_rect(service::ipc_context &context, ws_cmd &cmd);
-        void draw_text(service::ipc_context &context, ws_cmd &cmd);
-        void draw_box_text_optimised1(service::ipc_context &context, ws_cmd &cmd);
-        void draw_box_text_optimised2(service::ipc_context &context, ws_cmd &cmd);
-        void plot(service::ipc_context &context, ws_cmd &cmd);
-        void set_underline_style(service::ipc_context &context, ws_cmd &cmd);
-        void set_strikethrough_style(service::ipc_context &context, ws_cmd &cmd);
-        void set_draw_mode(service::ipc_context &context, ws_cmd &cmd);
-
-        void gdi_blt_impl(service::ipc_context &context, ws_cmd &cmd, const int ver, const bool ws);
-        void gdi_blt_masked(service::ipc_context &context, ws_cmd &cmd);
-        void gdi_blt2(service::ipc_context &context, ws_cmd &cmd);
-        void gdi_blt3(service::ipc_context &context, ws_cmd &cmd);
-        void gdi_ws_blt2(service::ipc_context &context, ws_cmd &cmd);
-        void gdi_ws_blt3(service::ipc_context &context, ws_cmd &cmd);
-        void gdi_ws_blt_masked(service::ipc_context &context, ws_cmd &cmd);
-
-        void use_font(service::ipc_context &context, ws_cmd &cmd);
-        void discard_font(service::ipc_context &context, ws_cmd &cmd);
-        void reset(service::ipc_context &context, ws_cmd &cmd);
         void destroy(service::ipc_context &context, ws_cmd &cmd);
-        void set_clipping_rect(service::ipc_context &context, ws_cmd &cmd);
-        void set_clipping_region(service::ipc_context &context, ws_cmd &cmd);
-        void cancel_clipping_rect(service::ipc_context &context, ws_cmd &cmd);
-        void cancel_clipping_region(service::ipc_context &context, ws_cmd &cmd);
-        void set_opaque(service::ipc_context &context, ws_cmd &cmd);
 
         bool execute_command(service::ipc_context &context, ws_cmd &cmd) override;
 

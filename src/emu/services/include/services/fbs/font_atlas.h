@@ -1,20 +1,3 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #pragma once
 
 #include <common/vecx.h>
@@ -36,12 +19,6 @@ namespace eka2l1::drivers {
 namespace eka2l1::epoc {
 #define ESTIMATE_MAX_CHAR_IN_ATLAS_WIDTH 50
 
-    /**
-     * \brief Font atlas is a texture contains glyph bitmaps.
-     * 
-     * The atlas dimension is a square, and height is equals to font_size *
-     * estimate_max_char_in_atlas.
-     */
     struct font_atlas {
         std::map<char16_t, adapter::character_info> characters_;
         drivers::handle atlas_handle_;
@@ -67,19 +44,5 @@ namespace eka2l1::epoc {
             const char16_t initial_char_count, const int font_size, const std::uint32_t metric_identifier_);
 
         void destroy(drivers::graphics_driver *driver);
-
-        int get_atlas_width() const;
-
-        bool draw_text(const std::u16string &text, const eka2l1::rect &box, const epoc::text_alignment alignment, drivers::graphics_driver *driver,
-            drivers::graphics_command_builder &builder, const float scale_factor = 1.0f) {
-            return draw_text(text, box, alignment, driver, builder, { scale_factor, scale_factor });
-        }
-
-        bool draw_text(const std::u16string &text, const eka2l1::rect &box, const epoc::text_alignment alignment, drivers::graphics_driver *driver,
-            drivers::graphics_command_builder &builder, const eka2l1::vec2f scale_vector);
-
-        int get_char_size() const {
-            return size_;
-        }
     };
 }

@@ -1,28 +1,8 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <common/log.h>
 #include <config/config.h>
-#include <system/epoc.h>
-
 #include <services/framework.h>
 #include <services/utils.h>
+#include <system/epoc.h>
 
 namespace eka2l1::service {
     normal_object_container::~normal_object_container() {
@@ -36,7 +16,6 @@ namespace eka2l1::service {
 
     bool normal_object_container::remove(epoc::ref_count_object *obj) {
         const std::lock_guard<std::recursive_mutex> guard(obj_lock);
-
         auto res = std::lower_bound(objs.begin(), objs.end(), obj,
             [](const ref_count_object_heap_ptr &lhs, const epoc::ref_count_object *rhs) {
                 return lhs->id < rhs->id;
@@ -46,10 +25,7 @@ namespace eka2l1::service {
             return false;
         }
 
-        // For sure, reset. Move first, let remove happens the we remove ours
-        // For recursive purpose
         ref_count_object_heap_ptr moved = std::move(*res);
-
         objs.erase(res);
         moved.reset();
 
@@ -68,7 +44,6 @@ namespace eka2l1::service {
         if (!ss) {
             return;
         }
-
         sessions.erase(ss->unique_id());
     }
 
@@ -96,18 +71,15 @@ namespace eka2l1::service {
         context.msg = process_msg;
 
         auto func = ipc_funcs.find(process_msg->function);
-
         if (func != ipc_funcs.end()) {
             func->second.wrapper(context);
             return;
         }
 
         auto ss_ite = sessions.find(process_msg->msg_session->unique_id());
-
         if (ss_ite == sessions.end()) {
             LOG_TRACE(SERVICE_TRACK, "Can't find responsible server-side session to client session with ID {}",
                 process_msg->msg_session->unique_id());
-
             return;
         }
 

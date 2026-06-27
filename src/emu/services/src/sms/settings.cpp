@@ -1,28 +1,9 @@
-/*
- * Copyright (c) 2021 EKA2L1 Team.
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
-#include <services/sms/settings.h>
 #include <common/chunkyseri.h>
+#include <services/sms/settings.h>
 #include <utils/des.h>
 
-#include <system/epoc.h>
 #include <kernel/kernel.h>
+#include <system/epoc.h>
 #include <vfs/vfs.h>
 
 #include <common/log.h>
@@ -54,7 +35,7 @@ namespace eka2l1::epoc::sms {
         if (version <= 1) {
             if (seri.get_seri_mode() == common::SERI_MODE_READ) {
                 delivery_status_ = sms_no_acknowledge;
-            } 
+            }
         } else {
             std::uint8_t val = static_cast<std::uint8_t>(delivery_status_);
             seri.absorb(val);
@@ -64,7 +45,7 @@ namespace eka2l1::epoc::sms {
             }
         }
     }
-    
+
     sms_message_settings::sms_message_settings()
         : msg_flags_(0)
         , message_conversion_(sms_pid_conversion_none)
@@ -106,12 +87,9 @@ namespace eka2l1::epoc::sms {
         if (version <= 4) {
             external_save_count_ = 0;
         } else {
-            // This save count vs MTM save count, it will choose the one higher.
-            // This with the dat file on s60v2
             if (seri.get_seri_mode() == common::SERI_MODE_WRITE) {
                 external_save_count_++;
             }
-
             seri.absorb(external_save_count_);
         }
 
@@ -149,24 +127,21 @@ namespace eka2l1::epoc::sms {
         if (version > 3) {
             seri.absorb(desc_length_);
         } else {
-            desc_length_ = 32;          // Maximum
+            desc_length_ = 32;
         }
     }
-    
+
     void supply_sim_settings(eka2l1::system *sys, sms_settings *furnished) {
         io_system *io = sys->get_io_system();
 
-        // 1st. Supply data to SMS settings dat file, and modify the MSV store file that contains
         static const char16_t *SMS_SETTING_DIR = u"C:\\System\\Data\\";
         static const char16_t *SMS_SETTING_PATH = u"C:\\System\\Data\\sms_settings.dat";
         symfile setting_read_file = io->open_file(SMS_SETTING_PATH, READ_MODE | BIN_MODE);
-        
+
         sms_settings settings;
 
-        // File should not be too big
         if (setting_read_file && setting_read_file->valid() && setting_read_file->size() <= common::KB(10)) {
             const std::size_t fsize = setting_read_file->size();
-
             std::vector<std::uint8_t> buffer;
             buffer.resize(fsize);
 
@@ -176,7 +151,6 @@ namespace eka2l1::epoc::sms {
             }
         }
 
-        // Check if no service center is available
         if (settings.sc_numbers_.empty()) {
             sms_number new_service_center;
             new_service_center.name_ = u"EKA2L1 Russia";
@@ -186,7 +160,6 @@ namespace eka2l1::epoc::sms {
             settings.default_sc_index_ = 0;
         }
 
-        // Serialize and write the buffer back
         std::vector<std::uint8_t> buffer;
         common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
 
@@ -213,7 +186,5 @@ namespace eka2l1::epoc::sms {
         if (furnished) {
             *furnished = settings;
         }
-
-        // TODO: Supply data to cenrep too. It was the main source
     }
 }

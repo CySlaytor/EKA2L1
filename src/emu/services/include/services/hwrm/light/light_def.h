@@ -1,33 +1,8 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #pragma once
 
 #include <cstdint>
 
 namespace eka2l1::epoc::hwrm::light {
-    /**
-     * \brief The light target.
-     * 
-     * Each light is belong to a specific device, which we call target. With the target specified,
-     * you can control the light of the device as you wish.
-     */
     enum target {
         none = 0,
         primary_display = (1 << 0),
@@ -63,17 +38,13 @@ namespace eka2l1::epoc::hwrm::light {
         custom_target_27 = (1 << 30)
     };
 
-    /**
-     * \brief The status of a light.
-     */
     enum status {
-        light_status_unk = 0, ///< Unknown status.
-        light_status_on = 1, ///< The light is on.
-        light_status_off = 2, ///< The light is off
-        light_status_blink = 3 ///< The light is blinking.
+        light_status_unk = 0,
+        light_status_on = 1,
+        light_status_off = 2,
+        light_status_blink = 3
     };
 
-    // The phone is not a power supply you can't just have a festival on it.
-    static constexpr std::uint32_t MAXIMUM_LIGHT = 31; ///< Maximum light a device can have.
-    static constexpr std::uint32_t LIGHT_STATUS_PROP_KEY = 0x2001; ///< Property key of the light status.
+    static constexpr std::uint32_t MAXIMUM_LIGHT = 31;
+    static constexpr std::uint32_t LIGHT_STATUS_PROP_KEY = 0x2001;
 }

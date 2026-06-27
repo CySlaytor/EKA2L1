@@ -1,28 +1,9 @@
-/*
- * Copyright (c) 2020 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #pragma once
 
 #include <common/bitfield.h>
 #include <common/uid.h>
+#include <vector>
 
-// Forward declare
 namespace eka2l1 {
     class kernel_system;
 
@@ -46,12 +27,11 @@ namespace eka2l1::epoc::cap {
     static constexpr std::uint32_t UIK_CURRENT_HARDWARE_LAYOUT_STATE = 8;
     static constexpr std::uint32_t UIK_PREFERRED_ORIENTATION_KEY = 9;
 
-    //  System Graphics Coordination
     class sgc_server {
     public:
         struct wg_state {
             using wg_state_flags = common::ba_t<32>;
-            std::uint32_t id_; ///< Id of this window group.
+            std::uint32_t id_;
 
             wg_state_flags flags_;
             std::int32_t sp_layout_;
@@ -87,12 +67,10 @@ namespace eka2l1::epoc::cap {
         std::vector<wg_state> states_;
         std::vector<std::size_t> focus_callback_handles_;
 
-        // Properties
         service::property *orientation_prop_;
         service::property *hardware_layout_prop_;
 
         drivers::graphics_driver *graphics_driver_;
-
         window_server *winserv_;
 
     public:
@@ -101,9 +79,7 @@ namespace eka2l1::epoc::cap {
         bool init(kernel_system *kern, drivers::graphics_driver *driver);
         void change_wg_param(const std::uint32_t id, wg_state::wg_state_flags &flags, const std::int32_t sp_layout,
             const std::int32_t sp_flags, const std::int32_t app_screen_mode);
-
         void update_screen_state_from_wg(epoc::window_group *group);
-
         wg_state *get_wg_state(const std::uint32_t wg_id, const bool new_one_if_not_exist);
     };
 }

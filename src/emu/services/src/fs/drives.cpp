@@ -1,23 +1,3 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project
- * (see bentokun.github.com/EKA2L1).
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <services/fs/fs.h>
 #include <services/fs/std.h>
 
@@ -133,7 +113,6 @@ namespace eka2l1 {
         }
     }
 
-    /* Simple for now only, in the future this should be more advance. */
     void fs_server_client::drive(service::ipc_context *ctx) {
         drive_number drv = static_cast<drive_number>(*ctx->get_argument_value<std::int32_t>(1));
 
@@ -164,7 +143,6 @@ namespace eka2l1 {
         std::vector<io_attrib> exclude_attribs;
         std::vector<io_attrib> include_attribs;
 
-        // Fetch flags
         if (!kern->is_eka1()) {
             if (*flags & epoc::fs::drive_att_hidden) {
                 if (*flags & epoc::fs::drive_att_exclude) {
@@ -259,65 +237,6 @@ namespace eka2l1 {
             VOLUME_INFO_GETTERS(info_old);
 
             ctx->write_data_to_descriptor_argument<epoc::fs::volume_info_v1>(0, info_old, nullptr, true);
-        }
-
-        ctx->complete(epoc::error_none);
-    }
-
-    void fs_server_client::query_drive_info_ext(service::ipc_context *ctx) {
-        drive_number drv = static_cast<drive_number>(*ctx->get_argument_value<std::int32_t>(0));
-        std::optional<eka2l1::drive> io_drive = ctx->sys->get_io_system()->get_drive_entry(drv);
-
-        // If the drive hasn't been mounted yet, return epoc::error_not_found
-        if (!io_drive) {
-            ctx->complete(epoc::error_not_found);
-            return;
-        }
-
-        epoc::fs::extended_fs_query_command query_cmd = static_cast<decltype(query_cmd)>(*ctx->get_argument_value<std::int32_t>(1));
-
-        switch (query_cmd) {
-        case epoc::fs::extended_fs_query_command::file_system_sub_type: {
-            // Query file system type. Using FAT32 as default.
-            ctx->write_arg(2, u"FAT32");
-            break;
-        }
-
-        case epoc::fs::extended_fs_query_command::is_drive_sync: {
-            // Check if drive is sync. Yes in this case.
-            bool result = true;
-
-            ctx->write_data_to_descriptor_argument(2, result);
-            break;
-        }
-
-        case epoc::fs::extended_fs_query_command::is_drive_finalised: {
-            bool result = true;
-
-            // Check if drive is safe to remove. Yes ?
-            LOG_WARN(SERVICE_EFSRV, "Checking if drive is finalised, stubbed");
-            ctx->write_data_to_descriptor_argument(2, result);
-            break;
-        }
-
-        case epoc::fs::extended_fs_query_command::io_param_info: {
-            epoc::fs::io_drive_param_info param;
-            param.block_size = 512;
-            param.cluster_size = 4096;
-            param.max_supported_file_size = 0xFFFFFFFF;
-            param.rec_read_buf_size = 8192;
-            param.rec_write_buf_size = 16384;
-
-            LOG_INFO(SERVICE_EFSRV, "IOParamInfo stubbed");
-            ctx->write_data_to_descriptor_argument(2, param);
-
-            break;
-        }
-
-        default: {
-            LOG_ERROR(SERVICE_EFSRV, "Unimplemented extended query drive opcode: 0x{:x}", static_cast<int>(query_cmd));
-            break;
-        }
         }
 
         ctx->complete(epoc::error_none);

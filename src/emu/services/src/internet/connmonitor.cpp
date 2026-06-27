@@ -1,26 +1,5 @@
-/*
- * Copyright (c) 2020 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project
- * (see bentokun.github.com/EKA2L1).
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <services/internet/connmonitor.h>
 #include <system/epoc.h>
-
 #include <utils/err.h>
 
 namespace eka2l1 {
@@ -65,11 +44,6 @@ namespace eka2l1 {
             break;
         }
 
-        case connmonitor_cancel_async_request: {
-            cancel_async_request(ctx);
-            break;
-        }
-
         case connmonitor_cancel_receive_event: {
             cancel_receive_event(ctx);
             break;
@@ -84,7 +58,6 @@ namespace eka2l1 {
 
     void connmonitor_client_session::get_connection_count(eka2l1::service::ipc_context *ctx) {
         std::uint32_t connection_count = 1;
-
         ctx->write_data_to_descriptor_argument(0, connection_count);
         ctx->complete(epoc::error_none);
     }
@@ -105,27 +78,14 @@ namespace eka2l1 {
     }
 
     void connmonitor_client_session::get_int_attribute(eka2l1::service::ipc_context *ctx) {
-        std::uint32_t connection_id = *(ctx->get_argument_value<std::uint32_t>(0));
-        std::uint32_t subconnection_id = *(ctx->get_argument_value<std::uint32_t>(1));
-        std::uint32_t attribute = *(ctx->get_argument_value<std::uint32_t>(2));
         std::int32_t *value_ptr = reinterpret_cast<std::int32_t *>(ctx->get_descriptor_argument_ptr(3));
-
         *value_ptr = 0;
         ctx->complete(epoc::error_none);
     }
 
     void connmonitor_client_session::get_uint_attribute(eka2l1::service::ipc_context *ctx) {
-        std::uint32_t connection_id = *(ctx->get_argument_value<std::uint32_t>(0));
-        std::uint32_t subconnection_id = *(ctx->get_argument_value<std::uint32_t>(1));
-        std::uint32_t attribute = *(ctx->get_argument_value<std::uint32_t>(2));
         std::uint32_t *value_ptr = reinterpret_cast<std::uint32_t *>(ctx->get_descriptor_argument_ptr(3));
-
         *value_ptr = 0;
-        ctx->complete(epoc::error_none);
-    }
-
-    void connmonitor_client_session::cancel_async_request(eka2l1::service::ipc_context *ctx) {
-        // Stubbed
         ctx->complete(epoc::error_none);
     }
 

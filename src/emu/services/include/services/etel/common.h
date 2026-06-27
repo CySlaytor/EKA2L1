@@ -1,22 +1,3 @@
-/*
- * Copyright (c) 2020 EKA2L1 Team.
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #pragma once
 
 #include <utils/des.h>
@@ -52,40 +33,19 @@ namespace eka2l1::epoc {
         etel_old_open_from_subsession = 1,
         etel_old_close = 4,
         etel_old_load_phone_module = 7,
-        etel_old_unload_phone_module = 8,
         etel_old_enumerate_phones = 9,
         etel_old_get_phone_info = 10,
-        etel_old_set_priority_client = 11,
-        etel_old_is_supported_by_module = 12,
         etel_old_get_tsy_name = 13,
-        etel_old_phone_get_info = 19,
-        etel_old_set_extend_error_granularity = 14,
         etel_old_phone_init = 15,
-        etel_old_phone_get_caps = 22,
         etel_old_phone_get_status = 23,
         etel_old_phone_enumerate_lines = 24,
         etel_old_phone_get_line_info = 25,
-        etel_old_line_get_info = 26,
         etel_old_line_notify_incoming_call = 27,
         etel_old_line_notify_incoming_call_cancel = 28,
-        etel_old_line_notify_hook_change = 29,
-        etel_old_line_notify_hook_change_cancel = 30,
         etel_old_line_notify_status_change = 31,
         etel_old_line_notify_status_change_cancel = 32,
-        etel_old_line_notify_call_added = 33,
-        etel_old_line_notify_call_added_cancel = 34,
-        etel_old_line_notify_cap_changes = 35,
-        etel_old_line_notify_cap_changes_cancel = 36,
-        etel_old_line_get_caps = 37,
         etel_old_line_get_status = 38,
-        etel_old_line_get_hook_status = 39,
         etel_old_line_enumerate_call = 40,
-        etel_old_line_get_call_info = 41,
-        etel_old_call_connect = 49,
-        etel_old_call_answer_incoming_call = 50,
-        etel_old_call_hang_up = 51,
-        etel_old_call_set_fax_setting = 72,
-        etel_old_get_tsy_version_number = 77,
         etel_old_gsm_phone_get_phone_id = 1000,
         etel_old_gsm_phone_get_current_network_info = 1027,
         etel_old_gsm_adv_phone_get_subscriber_id = 0x877
@@ -96,13 +56,11 @@ namespace eka2l1::epoc {
         etel_open_from_subsession = 1,
         etel_close = 4,
         etel_line_enumerate_call = 34,
-        etel_line_get_call_info = 35,
         etel_line_get_status = 39,
         etel_phone_enumerate_lines = 46,
         etel_phone_get_line_info = 49,
-        etel_enumerate_phones = 54,
         etel_phone_get_status = 50,
-        etel_close_phone_module = 53,
+        etel_enumerate_phones = 54,
         etel_get_tsy_name = 55,
         etel_load_phone_module = 57,
         etel_phone_info_by_index = 59,
@@ -126,7 +84,6 @@ namespace eka2l1::epoc {
         etel_mobile_phone_notify_indicator_changes = 20084,
         etel_mobile_phone_notify_network_registration_status_change = 20092,
         etel_mobile_phone_notify_signal_strength_change = 20097,
-        // cancel = original + 500
         etel_mobile_line_cancel_notify_status_change = 20524,
         etel_mobile_phone_get_network_registration_status_cancel = 20554,
         etel_mobile_phone_notify_battery_info_change_cancel = 20567,
@@ -323,12 +280,6 @@ namespace eka2l1::epoc {
         epoc::buf_static<char16_t, 30> long_name_;
     };
 
-    struct etel_old_current_phone_network_info {
-        etel_old_phone_network_info network_info_;
-        std::uint32_t location_area_code_;
-        std::uint32_t cell_id_;
-    };
-
     struct etel_phone_network_info : etel_multimode_type {
         etel_mobile_phone_network_mode mode_;
         etel_mobile_phone_network_status status_;
@@ -343,12 +294,6 @@ namespace eka2l1::epoc {
         etel_phone_network_access_ access_;
         bool hsdpa_available_indicator;
         bool egprs_available_indicator;
-    };
-
-    struct etel_phone_location_area : etel_multimode_type {
-        bool area_known_;
-        std::uint32_t location_area_code_;
-        std::uint32_t cell_id_;
     };
 
     struct etel_line_info_from_phone {
@@ -406,7 +351,6 @@ namespace eka2l1::epoc {
     static constexpr std::uint32_t ETEL_PHONE_BATTERY_BARS_UID = 0x100052D3;
     static constexpr std::uint32_t ETEL_PHONE_NETWORK_BARS_UID = 0x100052D4;
 
-    // Check cellularsvr/telephonyserverplugins/common_tsy/commontsy/exportinc/serviceapi/ctsydomainpskeys.h
     static constexpr std::uint32_t ETEL_CALL_INFO_PROP_UID = 0x102029AC;
     static constexpr std::uint32_t ETEL_ADV_SIMC_STATUS_PROP_UID = 0x100052E9;
 

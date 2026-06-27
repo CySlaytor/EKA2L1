@@ -1,22 +1,3 @@
-/*
- * Copyright (c) 2020 EKA2L1 Team.
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <services/etel/line.h>
 #include <services/etel/modmngr.h>
 #include <services/etel/phone.h>
@@ -40,19 +21,15 @@ namespace eka2l1::epoc::etel {
         });
 
         if (find_result != loaded_.end()) {
-            // The module already loaded.
             if (!std::binary_search(find_result->used_sessions_.begin(), find_result->used_sessions_.end(), borrowed_session)) {
                 find_result->used_sessions_.push_back(borrowed_session);
                 std::sort(find_result->used_sessions_.begin(), find_result->used_sessions_.end());
             }
-
             return true;
         }
 
         LOG_TRACE(SERVICE_ETEL, "Loading TSY temporary stubbed with module name {}", module_name);
 
-        // TODO: We need to give it a proper info
-        // Give a line first, add it to phone later
         etel_module_entry line_entry;
         line_entry.tsy_name_ = module_lowercased;
 
@@ -93,7 +70,6 @@ namespace eka2l1::epoc::etel {
         info.name_ = module_lowercased;
         info.used_sessions_.push_back(borrowed_session);
 
-        // Find a free slot actually
         find_result = std::find_if(loaded_.begin(), loaded_.end(), [module_lowercased](const tsy_module_info &info) {
             return info.used_sessions_.empty();
         });
@@ -124,7 +100,6 @@ namespace eka2l1::epoc::etel {
             return false;
         }
 
-        // The order should stay the same when we remove one integer
         name_res->used_sessions_.erase(borrow_res);
 
         if (name_res->used_sessions_.empty()) {
@@ -178,7 +153,6 @@ namespace eka2l1::epoc::etel {
                 etel_phone &phone = static_cast<etel_phone &>(*search_entry.entity_);
                 return common::ucs2_to_utf8(phone.info_.phone_name_.to_std_string(nullptr)) == name;
             }
-
             return false;
         });
 

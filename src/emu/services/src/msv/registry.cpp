@@ -1,22 +1,3 @@
-/*
- * Copyright (c) 2020 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <loader/rsc.h>
 #include <services/msv/common.h>
 #include <services/msv/registry.h>
@@ -43,7 +24,6 @@ namespace eka2l1::epoc::msv {
             while (next_comp) {
                 mtm_component *current = next_comp;
                 next_comp = next_comp->next_;
-
                 delete current;
             }
         }
@@ -59,7 +39,7 @@ namespace eka2l1::epoc::msv {
         eka2l1::ro_file_stream rsc_file_stream(rsc_file.get());
         loader::rsc_file rsc_file_loader(reinterpret_cast<common::ro_stream *>(&rsc_file_stream));
 
-        std::vector<std::uint8_t> info = rsc_file_loader.read(1); // Info
+        std::vector<std::uint8_t> info = rsc_file_loader.read(1);
         common::chunkyseri info_reader(info.data(), info.size(), common::SERI_MODE_READ);
 
         mtm_group new_group;
@@ -95,11 +75,9 @@ namespace eka2l1::epoc::msv {
             }
 
             const std::uint32_t comp_uid = comp.comp_uid_;
-
             comps_[comp_uid].push_back(&comp);
         }
 
-        // Check out capability
         info = rsc_file_loader.read(2);
 
         if (!info.empty()) {
@@ -117,7 +95,6 @@ namespace eka2l1::epoc::msv {
     bool mtm_registry::install_group(const std::u16string &path) {
         const std::u16string path_lower = common::lowercase_ucs2_string(path);
 
-        // Try to find if this group is already loaded
         if (std::find(mtm_files_.begin(), mtm_files_.end(), path_lower) != mtm_files_.end()) {
             return false;
         }
@@ -126,7 +103,6 @@ namespace eka2l1::epoc::msv {
 
         if ((ext.length() >= 2) && ((ext[1] == u'r') || (ext[1] == u'R'))) {
             if (install_group_from_rsc(path)) {
-                // Install this path
                 add_entry_to_mtm_list(path_lower);
                 return true;
             } else {
@@ -137,42 +113,6 @@ namespace eka2l1::epoc::msv {
 
         LOG_ERROR(SERVICE_MSV, "Unable to install MTM group due to unrecognised file {}", common::ucs2_to_utf8(path));
         return false;
-    }
-
-    mtm_group *mtm_registry::query_mtm_group(const epoc::uid the_uid) {
-        for (std::size_t i = 0; i < groups_.size(); i++) {
-            if (groups_[i].mtm_uid_ == the_uid) {
-                return &groups_[i];
-            }
-        }
-
-        return nullptr;
-    }
-
-    mtm_component *mtm_registry::query_mtm_component(const epoc::uid_type &type) {
-        if (type.uid1 != 0x10000079) {
-            LOG_ERROR(SERVICE_MSV, "UID1 is not DLL magic (real value: 0x{:X})", type.uid1);
-            return nullptr;
-        }
-
-        auto ite1 = comps_.find(type.uid2);
-        if (ite1 == comps_.end()) {
-            return nullptr;
-        }
-
-        auto final_find = std::find_if(ite1->second.begin(), ite1->second.end(), [type](mtm_component *comp) {
-            return comp->specific_uid_ == type.uid3;
-        });
-
-        if (final_find == ite1->second.end()) {
-            return nullptr;
-        }
-
-        return *final_find;
-    }
-
-    std::vector<mtm_component *> &mtm_registry::get_components(const epoc::uid the_uid) {
-        return comps_[the_uid];
     }
 
     void mtm_registry::load_mtm_list() {
@@ -188,7 +128,6 @@ namespace eka2l1::epoc::msv {
         while (list_file_stream.valid()) {
             std::string mtm_path;
             mtm_path = list_file_stream.read_string<char>();
-
             install_group(common::utf8_to_ucs2(mtm_path));
         }
     }

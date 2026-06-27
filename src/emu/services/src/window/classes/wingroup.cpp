@@ -1,23 +1,3 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project
- * (see bentokun.github.com/EKA2L1).
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include <services/window/classes/scrdvc.h>
 #include <services/window/classes/wingroup.h>
 #include <services/window/classes/winuser.h>
@@ -92,7 +72,6 @@ namespace eka2l1::epoc {
         , screen_change_event_handle(0) {
         set_initial_state();
 
-        // Create window group as child
         top = std::make_unique<top_canvas>(client, scr, this);
         child = top.get();
 
@@ -112,7 +91,7 @@ namespace eka2l1::epoc {
         if (uid_owner_change_process) {
             uid_owner_change_process->unregister_uid_type_change_callback(uid_owner_change_callback_handle);
         }
-        
+
         remove_from_sibling_list();
 
         if (this == scr->focus) {
@@ -123,49 +102,6 @@ namespace eka2l1::epoc {
         if (scr) {
             scr->need_update_visible_regions(true);
         }
-    }
-
-    void window_group::queue_message_data(const std::uint8_t *data, const std::size_t data_size) {
-        message_data data_vec;
-        data_vec.resize(data_size);
-
-        std::copy(data, data + data_size, data_vec.begin());
-        msg_datas.push(std::move(data_vec));
-    }
-
-    void window_group::get_message_data(std::uint8_t *data, std::size_t &dest_size) {
-        if (msg_datas.empty()) {
-            dest_size = 0;
-            return;
-        }
-
-        message_data data_vec = std::move(msg_datas.front());
-        msg_datas.pop();
-
-        dest_size = common::min<std::size_t>(data_vec.size(), dest_size);
-        std::copy(data_vec.begin(), data_vec.begin() + dest_size, data);
-    }
-
-    void window_group::set_text_cursor(service::ipc_context &context, ws_cmd &cmd) {
-        // Warn myself in the future!
-        LOG_WARN(SERVICE_WINDOW, "Set cursor text is mostly a stubbed now");
-
-        ws_cmd_set_text_cursor *cmd_set = reinterpret_cast<decltype(cmd_set)>(cmd.data_ptr);
-        auto canvas_base_to_set = reinterpret_cast<canvas_base *>(client->get_object(cmd_set->win));
-
-        if (!canvas_base_to_set || (canvas_base_to_set->type != window_kind::client)) {
-            LOG_ERROR(SERVICE_WINDOW, "Window not found or not client kind to set text cursor");
-            context.complete(epoc::error_not_found);
-            return;
-        }
-
-        canvas_base_to_set->cursor_pos = cmd_set->pos + canvas_base_to_set->pos;
-        context.complete(epoc::error_none);
-    }
-
-    void window_group::add_priority_key(service::ipc_context &context, ws_cmd &cmd) {
-        LOG_TRACE(SERVICE_WINDOW, "Add priortiy key stubbed");
-        context.complete(epoc::error_none);
     }
 
     void window_group::set_name(const std::u16string &new_name) {
@@ -203,16 +139,13 @@ namespace eka2l1::epoc {
     }
 
     void window_group::destroy(service::ipc_context &context, ws_cmd &cmd) {
-        // Try to redraw the screen
         on_command_batch_done(context);
 
         context.complete(epoc::error_none);
         client->delete_object(cmd.obj_handle);
     }
 
-    bool window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {        
-        // LOG_TRACE(SERVICE_WINDOW, "Window group op: {}", cmd.header.op);
-
+    bool window_group::execute_command(service::ipc_context &ctx, ws_cmd &cmd) {
         bool result = execute_command_for_general_node(ctx, cmd);
         bool need_free = false;
 
@@ -275,29 +208,8 @@ namespace eka2l1::epoc {
             break;
         }
 
-        case EWsWinOpEnableGroupListChangeEvents:
-        case EWsWinOpDisableScreenChangeEvents:
-        case EWsWinOpDisableModifierChangedEvents:
-        case EWsWinOpDisableErrorMessages:
-        case EWsWinOpDisableOnEvents:
-        case EWsWinOpDisableGroupChangeEvents:
-        case EWsWinOpDisableKeyClick:
-        case EWsWinOpDisableFocusChangeEvents:
-        case EWsWinOpDisableGroupListChangeEvents:
-        case EWsWinOpEnableOnEvents: {
-            LOG_TRACE(SERVICE_WINDOW, "Currently not support lock/unlock event for window server");
-            ctx.complete(epoc::error_none);
-
-            break;
-        }
-
         case EWsWinOpReceiveFocus: {
             receive_focus(ctx, cmd);
-            break;
-        }
-
-        case EWsWinOpSetTextCursor: {
-            set_text_cursor(ctx, cmd);
             break;
         }
 
@@ -310,10 +222,6 @@ namespace eka2l1::epoc {
             ctx.complete(priority);
             break;
         }
-
-        case EWsWinOpAddPriorityKey:
-            add_priority_key(ctx, cmd);
-            break;
 
         default: {
             LOG_ERROR(SERVICE_WINDOW, "Unimplemented window group opcode 0x{:X}!", cmd.header.op);

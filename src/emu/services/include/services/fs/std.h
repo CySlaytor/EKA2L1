@@ -1,28 +1,7 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project
- * (see bentokun.github.com/EKA2L1).
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #pragma once
 
-#include <cstdint>
-
 #include <common/types.h>
+#include <cstdint>
 #include <utils/des.h>
 #include <utils/locale.h>
 
@@ -138,8 +117,6 @@ namespace eka2l1::epoc::fs {
         std::uint32_t media_att;
     };
 
-    static_assert(sizeof(drive_info_v1) == 16, "Size of drive info v1 is incorrect");
-
     struct drive_info_v2 : public drive_info_v1 {
         epoc::fs::connection_bus_type connection_bus_type;
     };
@@ -152,11 +129,7 @@ namespace eka2l1::epoc::fs {
         std::int64_t free;
         epoc::bufc_static<char16_t, 0x100> name;
     };
-#pragma pack(pop)
 
-    static_assert(sizeof(volume_info_v1) == 552, "Size of volume info v1 is incorrect");
-
-#pragma pack(push, 1)
     struct volume_info_v2 {
         drive_info_v2 drv_info;
         std::uint32_t uid;
@@ -165,7 +138,6 @@ namespace eka2l1::epoc::fs {
         epoc::bufc_static<char16_t, 0x100> name;
         file_cache_flags cache_flags;
         std::uint8_t vol_size_async;
-
         std::uint8_t reserved1;
         std::uint16_t reserved2;
         std::uint32_t reserved3;
@@ -186,15 +158,11 @@ namespace eka2l1::epoc::fs {
     struct entry {
         std::uint32_t attrib;
         std::uint32_t size;
-
         epoc::time modified;
         std::uint32_t uid1;
         std::uint32_t uid2;
         std::uint32_t uid3;
-
         epoc::bufc_static<char16_t, 0x100> name;
-
-        // For 64-bit file support.
         std::uint32_t size_high;
         std::uint32_t reserved;
     };

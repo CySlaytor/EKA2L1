@@ -1,22 +1,3 @@
-/*
- * Copyright (c) 2021 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #pragma once
 
 namespace eka2l1::epoc::sms {
@@ -41,5 +22,55 @@ namespace eka2l1::epoc::sms {
         SMS_IOCTL_SUPPORT_OOD_CLASS0_SMS = 0x311,
         SMS_IOCTL_SELECT_MODEM_PRESENT = 0x400,
         SMS_IOCTL_SELECT_MODEM_NOT_PRESENT = 0x401,
+    };
+
+    enum sms_pid_conversion {
+        sms_pid_conversion_none = 0
+    };
+
+    enum sms_encoding_alphabet {
+        sms_encoding_alphabet_ucs2 = 0x8
+    };
+
+    enum sms_time_validity_period_format {
+        sms_vpf_integer = 0
+    };
+
+    enum sms_delivery {
+        sms_delivery_immediately = 0
+    };
+
+    enum sms_report_handling {
+        sms_report_to_inbox_visible_and_match = 0
+    };
+
+    enum sms_commdb_action {
+        sms_commdb_no_action = 0
+    };
+
+    enum mobile_sms_bearer {
+        mobile_sms_bearer_packet_preferred = 0
+    };
+
+    enum sms_recipient_status {
+        recipient_status_not_yet_sent = 0
+    };
+
+    enum sms_acknowledge_status {
+        sms_no_acknowledge = 0
+    };
+
+    struct sms_number {
+        std::u16string name_;
+        std::u16string number_;
+        sms_recipient_status recp_status_;
+        std::int32_t error_;
+        std::int32_t retries_;
+        std::int64_t time_;
+        std::int32_t log_id_;
+        sms_acknowledge_status delivery_status_;
+
+        explicit sms_number();
+        void absorb(common::chunkyseri &seri);
     };
 }

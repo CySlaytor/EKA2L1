@@ -1,22 +1,3 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #pragma once
 
 #include <common/uid.h>
@@ -26,17 +7,12 @@
 
 namespace eka2l1 {
     class fbs_server;
-
-    namespace common {
-        class ro_stream;
-        class wo_stream;
-    }
 }
 
 namespace eka2l1::epoc {
     static constexpr epoc::uid bitwise_bitmap_uid = 0x10000040;
     static constexpr std::uint32_t LEGACY_BMP_COMPRESS_IN_MEMORY_TYPE_BASE = 50;
-    
+
     static constexpr std::uint32_t NORMAL_BITMAP_UID_REV2 = 0x9A2C;
     static constexpr std::uint32_t NVG_BITMAP_UID_REV2 = 0x39B9273E;
 
@@ -74,9 +50,6 @@ namespace eka2l1::epoc {
         uid uid_;
 
         struct settings {
-            // The first 8 bits are reserved for initial display mode
-            // The next 8 bits are reserved for current display mode
-            // 16 bits left are for flags, on transition mode this is width for some reason lmao
             std::uint32_t flags_{ 0 };
 
             display_mode initial_display_mode() const;
@@ -94,7 +67,6 @@ namespace eka2l1::epoc {
             bool violate_bitmap() const;
             void violate_bitmap(const bool is_it);
 
-            // LEGACY!
             void set_width(const std::uint16_t bpp);
             std::uint16_t get_width() const;
         } settings_;
@@ -119,10 +91,4 @@ namespace eka2l1::epoc {
         std::uint8_t *data_pointer(fbs_server *serv);
         std::uint32_t data_size() const;
     };
-
-    bool save_bwbmp_to_file(const std::string &destination, bitwise_bitmap *bitmap, const char *base);
-
-    bool convert_to_rgba8888(fbs_server *serv, common::ro_stream &source, common::wo_stream &dest, loader::sbm_header &header, std::int32_t byte_width, const bitmap_file_compression comp, const bool make_standard_mask = false);
-    bool convert_to_rgba8888(fbs_server *serv, bitwise_bitmap *bmp, common::wo_stream &dest, const bool make_standard_mask = false);
-    bool convert_to_rgba8888(fbs_server *serv, loader::mbm_file &file, const std::size_t index, common::wo_stream &dest, const bool make_standard_mask = false);
 }

@@ -2,7 +2,6 @@
 add_library(epocservs
         include/services/allocator.h
         include/services/context.h
-        include/services/faker.h
         include/services/framework.h
         include/services/host_launch.h
         include/services/init.h
@@ -11,7 +10,6 @@ add_library(epocservs
         include/services/accessory/common.h
         include/services/alarm/alarm.h
         include/services/applist/applist.h
-        include/services/applist/common.h
         include/services/applist/op.h
         include/services/audio/alf/alf.h
         include/services/audio/keysound/context.h
@@ -21,7 +19,6 @@ add_library(epocservs
         include/services/audio/keysound/ringtab.h
         include/services/audio/mmf/audio.h
         include/services/audio/mmf/dev.h
-        include/services/backup/backup.h
         include/services/bluetooth/protocols/btlink/btlink_inet.h
         include/services/bluetooth/protocols/l2cap/l2cap_inet.h
         include/services/bluetooth/protocols/rfcomm/rfcomm_inet.h
@@ -42,16 +39,11 @@ add_library(epocservs
         include/services/internet/protocols/common.h
         include/services/internet/protocols/inet.h
         include/services/internet/protocols/overall.h
-        include/services/internet/browser.h
         include/services/internet/connmonitor.h
         include/services/internet/nifman.h
-        include/services/drm/notifier/events.h
         include/services/drm/notifier/notifier.h
-        include/services/drm/rights/object.h
         include/services/drm/rights/db.h
-        include/services/drm/rights/import.h
         include/services/drm/rights/rights.h
-        include/services/drm/helper.h
         include/services/etel/common.h
         include/services/etel/etel.h
         include/services/etel/line.h
@@ -60,10 +52,7 @@ add_library(epocservs
         include/services/etel/subsess.h
         include/services/fbs/adapter/font_adapter.h
         include/services/fbs/adapter/freetype_font_adapter.h
-        include/services/fbs/adapter/gdr_font_adapter.h
-        include/services/fbs/adapter/stb_font_adapter.h
         include/services/fbs/bitmap.h
-        include/services/fbs/compress_queue.h
         include/services/fbs/fbs.h
         include/services/fbs/font.h
         include/services/fbs/font_atlas.h
@@ -86,9 +75,6 @@ add_library(epocservs
         include/services/loader/loader.h
         include/services/loader/op.h
         include/services/msv/operations/base.h
-        include/services/msv/operations/change.h
-        include/services/msv/operations/create.h
-        include/services/msv/operations/move.h
         include/services/msv/cache.h
         include/services/msv/common.h
         include/services/msv/entry.h
@@ -96,21 +82,13 @@ add_library(epocservs
         include/services/msv/store.h
         include/services/notifier/notifier.h
         include/services/notifier/queries.h
-        include/services/redir/redir.h
-        include/services/remcon/common.h
-        include/services/remcon/controller.h
         include/services/remcon/remcon.h
-        include/services/remcon/target.h
         include/services/sensor/sensor.h
         include/services/shutdown/shutdown.h
         include/services/sisregistry/common.h
         include/services/sisregistry/sisregistry.h
         include/services/sms/protocols/common.h
-        include/services/sms/protocols/datagram.h
         include/services/sms/protocols/overall.h
-        include/services/sms/sa/sa.h
-        include/services/sms/sendas/sendas.h
-        include/services/socket/agent/genconn.h
         include/services/socket/common.h
         include/services/socket/connection.h
         include/services/socket/server.h
@@ -121,26 +99,16 @@ add_library(epocservs
         include/services/ui/cap/eiksrv.h
         include/services/ui/cap/oom_app.h
         include/services/ui/cap/sgc.h
-        include/services/ui/icon/icon.h
-        include/services/ui/plugins/keylocknof.h
-        include/services/ui/plugins/notenof.h
         include/services/ui/skin/chunk_maintainer.h
         include/services/ui/skin/icon_cfg.h
-        include/services/ui/skin/ops.h
         include/services/ui/skin/server.h
         include/services/ui/skin/settings.h
         include/services/ui/skin/skn.h
-        include/services/ui/skin/bitmap_store.h
         include/services/ui/skin/utils.h
         include/services/ui/view/common.h
-        include/services/ui/view/queue.h
         include/services/ui/view/view.h
-        include/services/ui/appserver.h
         include/services/ui/eikappui.h
-        include/services/uiss/uiss.h
         include/services/unipertar/unipertar.h
-        include/services/window/classes/plugins/anim/clock/clock.h
-        include/services/window/classes/plugins/anim/clock/factory.h
         include/services/window/classes/plugins/anim/clock/messagewin.h
         include/services/window/classes/plugins/anim/overall.h
         include/services/window/bitmap_cache.h
@@ -151,7 +119,6 @@ add_library(epocservs
         include/services/window/window.h
         src/allocator.cpp
         src/context.cpp
-        src/faker.cpp
         src/framework.cpp
         src/host_launch.cpp
         src/init.cpp
@@ -160,25 +127,13 @@ add_library(epocservs
         src/accessory/common.cpp
         src/alarm/alarm.cpp
         src/applist/applist.cpp
-        src/applist/common.cpp
         src/applist/registeration.cpp
         src/audio/alf/alf.cpp
         src/audio/keysound/context.cpp
         src/audio/keysound/keysound.cpp
         src/audio/mmf/audio.cpp
         src/audio/mmf/dev.cpp
-        src/backup/backup.cpp
-        src/bluetooth/protocols/btlink/resolver_inet.cpp
-        src/bluetooth/protocols/l2cap/socket_inet.cpp
-        src/bluetooth/protocols/rfcomm/rfcomm_inet.cpp
-        src/bluetooth/protocols/sdp/pdu_builder.cpp
-        src/bluetooth/protocols/sdp/sdp_inet.cpp
-        src/bluetooth/protocols/asker_inet.cpp
-        src/bluetooth/protocols/base_inet.cpp
-        src/bluetooth/protocols/btmidman_lan_matching.cpp
-        src/bluetooth/protocols/btmidman_proxserv_matching.cpp
         src/bluetooth/protocols/btmidman_inet.cpp
-        src/bluetooth/protocols/common.cpp
         src/bluetooth/protocols/overall.cpp
         src/bluetooth/bt.cpp
         src/bluetooth/btman.cpp
@@ -190,17 +145,12 @@ add_library(epocservs
         src/internet/protocols/overall.cpp
         src/internet/protocols/resolver.cpp
         src/internet/protocols/socket.cpp
-        src/internet/browser.cpp
         src/internet/connmonitor.cpp
         src/internet/nifman.cpp
-        src/drm/notifier/events.cpp
         src/drm/notifier/exchange.cpp
         src/drm/notifier/notifier.cpp
         src/drm/rights/db.cpp
-        src/drm/rights/import.cpp
-        src/drm/rights/object.cpp
         src/drm/rights/rights.cpp
-        src/drm/helper.cpp
         src/etel/etel.cpp
         src/etel/line.cpp
         src/etel/modmngr.cpp
@@ -208,9 +158,6 @@ add_library(epocservs
         src/etel/subsess.cpp
         src/fbs/adapter/font_adapter.cpp
         src/fbs/adapter/freetype_font_adapter.cpp
-        src/fbs/adapter/gdr_font_adapter.cpp
-        src/fbs/adapter/stb_font_adapter.cpp
-        src/fbs/compress_queue.cpp
         src/fbs/fbs.cpp
         src/fbs/font_atlas.cpp
         src/fbs/impls/bitmap.cpp
@@ -221,20 +168,14 @@ add_library(epocservs
         src/fs/drives.cpp
         src/fs/files.cpp
         src/fs/fs.cpp
-        src/fs/parser.cpp
         src/fs/std.cpp
         src/goommonitor/goommonitor.cpp
         src/hwrm/hwrm.cpp
         src/hwrm/light/light_data.cpp
-        src/hwrm/light/light.cpp
         src/hwrm/power/power_data.cpp
         src/hwrm/vibration/vibration_data.cpp
         src/hwrm/vibration/vibration.cpp
         src/loader/loader.cpp
-        src/msv/operations/base.cpp
-        src/msv/operations/change.cpp
-        src/msv/operations/create.cpp
-        src/msv/operations/move.cpp
         src/msv/cache.cpp
         src/msv/entry.cpp
         src/msv/msv.cpp
@@ -242,25 +183,13 @@ add_library(epocservs
         src/msv/store.cpp
         src/notifier/notifier.cpp
         src/notifier/queries.cpp
-        src/redir/redir.cpp
-        src/remcon/common.cpp
-        src/remcon/controller.cpp
         src/remcon/remcon.cpp
-        src/remcon/target.cpp
         src/sensor/sensor.cpp
         src/shutdown/shutdown.cpp
         src/sisregistry/sisregistry.cpp
-        src/sms/mtm/factory.cpp
-        src/sms/mtm/send.cpp
-        src/sms/protocols/datagram.cpp
         src/sms/protocols/overall.cpp
-        src/sms/sa/sa.cpp
-        src/sms/sendas/sendas.cpp
-        src/sms/common.cpp
         src/sms/settings.cpp
-        src/socket/agent/genconn.cpp
         src/socket/connection.cpp
-        src/socket/netdb.cpp
         src/socket/protocol.cpp
         src/socket/resolver.cpp
         src/socket/socket.cpp
@@ -270,32 +199,18 @@ add_library(epocservs
         src/ui/cap/eiksrv.cpp
         src/ui/cap/oom_app.cpp
         src/ui/cap/sgc.cpp
-        src/ui/icon/icon.cpp
-        src/ui/icon/init.cpp
-        src/ui/plugins/keylocknof.cpp
-        src/ui/plugins/notenof.cpp
         src/ui/skin/chunk_maintainer.cpp
         src/ui/skin/icon_cfg.cpp
-        src/ui/skin/ops.cpp
         src/ui/skin/server.cpp
         src/ui/skin/settings.cpp
         src/ui/skin/skn.cpp
-        src/ui/skin/bitmap_store.cpp
         src/ui/skin/utils.cpp
-        src/ui/view/queue.cpp
         src/ui/view/view.cpp
-        src/ui/appserver.cpp
         src/ui/eikappui.cpp
-        src/uiss/uiss.cpp
         src/unipertar/unipertar.cpp
-        src/window/classes/plugins/anim/clock/clock.cpp
-        src/window/classes/plugins/anim/clock/factory.cpp
         src/window/classes/plugins/anim/clock/messagewin.cpp
         src/window/classes/plugins/anim/overall.cpp
         src/window/classes/plugins/animdll.cpp
-        src/window/classes/plugins/clickdll.cpp
-        src/window/classes/plugins/graphics.cpp
-        src/window/classes/plugins/sprite.cpp
         src/window/classes/bitmap.cpp
         src/window/classes/dsa.cpp
         src/window/classes/gctx.cpp

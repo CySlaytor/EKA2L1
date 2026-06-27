@@ -1,22 +1,3 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #pragma once
 
 #include <kernel/kernel.h>
@@ -46,19 +27,19 @@ namespace eka2l1::service {
         ~normal_object_container() override;
         void clear() override;
 
+        auto begin() { return objs.begin(); }
+        auto end() { return objs.end(); }
+
         template <typename T>
         T *get(const service::uid id) {
             const std::lock_guard<std::recursive_mutex> guard(obj_lock);
-
             auto result = std::lower_bound(objs.begin(), objs.end(), id,
                 [](const ref_count_object_heap_ptr &lhs, const service::uid &rhs) {
                     return lhs->id < rhs;
                 });
-
             if (result == objs.end()) {
                 return nullptr;
             }
-
             return reinterpret_cast<T *>((*result).get());
         }
 
@@ -70,16 +51,7 @@ namespace eka2l1::service {
 
             const std::lock_guard<std::recursive_mutex> guard(obj_lock);
             objs.push_back(std::move(obj));
-
             return reinterpret_cast<T *>(objs.back().get());
-        }
-
-        decltype(objs)::iterator begin() {
-            return objs.begin();
-        }
-
-        decltype(objs)::iterator end() {
-            return objs.end();
         }
 
         bool remove(epoc::ref_count_object *obj) override;
@@ -100,10 +72,6 @@ namespace eka2l1::service {
     public:
         ~typical_server() override;
 
-        void clear_all_sessions() {
-            sessions.clear();
-        }
-
         template <typename T>
         T *get(const service::uid handle) {
             return obj_con.get<T>(handle);
@@ -114,14 +82,12 @@ namespace eka2l1::service {
             if (sessions.find(session_uid) == sessions.end()) {
                 return nullptr;
             }
-
             return reinterpret_cast<T *>(&*sessions[session_uid]);
         }
 
         template <typename T, typename... Args>
         T *create_session_impl(const kernel::uid suid, const epoc::version client_version, Args... arguments) {
             sessions.emplace(suid, std::make_unique<T>(reinterpret_cast<typical_server *>(this), suid, client_version, arguments...));
-
             auto &target_session = sessions[suid];
             return reinterpret_cast<T *>(target_session.get());
         }
@@ -134,17 +100,14 @@ namespace eka2l1::service {
             if (!client_version) {
                 return nullptr;
             }
-
             return create_session_impl<T>(suid, client_version.value(), arguments...);
         }
 
         bool remove_session(const kernel::uid sid) {
             const auto ite = sessions.find(sid);
-
             if (ite == sessions.end()) {
                 return false;
             }
-
             sessions.erase(ite);
             return true;
         }
@@ -164,11 +127,6 @@ namespace eka2l1::service {
 
         void disconnect(service::ipc_context &ctx) override;
         void disconnect_impl(service::session *ss);
-
-        int destroy() override {
-            clear_all_sessions();
-            return server::destroy();
-        }
     };
 
     class typical_session {

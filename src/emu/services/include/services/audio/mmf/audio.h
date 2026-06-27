@@ -1,22 +1,3 @@
-/*
- * Copyright (c) 2020 EKA2L1 Team.
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #pragma once
 
 #include <cstdint>
@@ -44,8 +25,6 @@ namespace eka2l1 {
         ~mmf_audio_server_session() override;
 
         void fetch(service::ipc_context *ctx) override;
-
-        void set_devsound_info(service::ipc_context *ctx);
         void get_dev_session(service::ipc_context *ctx);
     };
 
@@ -63,17 +42,10 @@ namespace eka2l1 {
 
     public:
         explicit mmf_audio_server(eka2l1::system *sys, mmf_dev_server *dev);
-
         void connect(service::ipc_context &context) override;
 
-        mmf_dev_server *get_mmf_dev_server() {
-            return dev_;
-        }
-
-        const bool is_devsound_info_available() const {
-            return flags_ & FLAG_DEVSOUND_INFO_AVAILABLE;
-        }
-
+        mmf_dev_server *get_mmf_dev_server() { return dev_; }
+        const bool is_devsound_info_available() const { return flags_ & FLAG_DEVSOUND_INFO_AVAILABLE; }
         kernel_system *get_kernel_system();
     };
 }

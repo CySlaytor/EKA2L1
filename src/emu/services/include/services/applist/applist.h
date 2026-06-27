@@ -1,36 +1,18 @@
-/*
- * Copyright (c) 2018 EKA2L1 Team
- * 
- * This file is part of EKA2L1 project
- * (see bentokun.github.com/EKA2L1).
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #pragma once
 
-#include <services/applist/common.h>
-#include <services/framework.h>
-
-#include <utils/des.h>
-#include <vfs/vfs.h>
-
+#include <BS_thread_pool.hpp>
 #include <functional>
 #include <mutex>
+#include <services/framework.h>
+#include <system/epoc.h>
+#include <utils/des.h>
 #include <vector>
+#include <vfs/vfs.h>
 
-#include <BS_thread_pool.hpp>
+#define MAPPED_EXECUTABLE_HEAD_STRING u"!HostApp"
+#define MAPPED_EXECUTABLE_HEAD_STRING_LENGTH 8
+#define UNIQUE_MAPPED_EXTENSION_STRING u".exe"
+#define UNIQUE_MAPPED_EXTENSION_STRING_LENGTH 4
 
 namespace eka2l1 {
     class io_system;
@@ -55,12 +37,50 @@ namespace eka2l1 {
         struct command_line;
     }
 
-    struct apa_app_info {
-        std::uint32_t uid; ///< The UID of the application.
-        epoc::filename app_path; ///< The path to the application DLL (EKA1) / EXE (EKA2)
-        epoc::apa_app_caption short_caption; ///< Short version of the caption
-        epoc::apa_app_caption long_caption; ///< Long caption of the app
+    struct data_type {
+        int priority_;
+        std::u16string type_;
+    };
 
+    struct view_data {
+        std::uint32_t uid_;
+        std::uint32_t screen_mode_;
+        std::uint16_t icon_count_;
+        std::u16string caption_;
+        std::u16string icon_path_;
+    };
+
+    struct apa_capability {
+        enum embeddability {
+            not_embeddable = 0,
+            embeddable = 1,
+            embeddable_only = 2
+        };
+
+        enum {
+            built_as_dll = 0x10000000,
+            non_native = 0x20000000
+        };
+
+        std::uint32_t flags = 0;
+        bool is_hidden = false;
+        embeddability ability = not_embeddable;
+        bool support_being_asked_to_create_new_file = false;
+        bool launch_in_background = false;
+        std::u16string group_name;
+
+        bool internalize(common::ro_stream &stream) {
+            return true;
+        }
+    };
+
+    using file_ownership_list = std::vector<std::u16string>;
+
+    struct apa_app_info {
+        std::uint32_t uid;
+        epoc::filename app_path;
+        epoc::apa_app_caption short_caption;
+        epoc::apa_app_caption long_caption;
         explicit apa_app_info() {}
     };
 
@@ -100,77 +120,12 @@ namespace eka2l1 {
 
         drive_number land_drive;
 
-        /**
-         * @brief Get parameters to launch this app registry.
-         * 
-         * @param native_executable_path        Path to the host executable that runs this app.
-         * @param args                          Command line arguments. You can prefill variables that you want,
-         *                                      this function will fill parameters that you don't yet know.
-         */
         void get_launch_parameter(std::u16string &native_executable_path, epoc::apa::command_line &args);
-
         bool supports_screen_mode(const int mode_num);
     };
 
-    /**
-     * \brief Read registeration info from a stream.
-     * 
-     * The function does not know the app UID. To know the UID yourself, check out UID3 field of
-     * the app binary. App binary path is guranteed to be filled in the struct on success.
-     * 
-     * \param stream            A read-only stream contains registeration info.
-     * \param reg               APA registry struct. This will be filled with info on success.
-     * \param land_drive        The drive contains this registeration.
-     * \param app_path_oldarch  If true, native applications will have its app path pointed to system/programs instead of shorten path with drive only.
-     * 
-     * \returns True on success.
-     */
     bool read_registeration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive, const bool app_path_oldarch);
-
-    /**
-     * \brief Read registeration info from AIF file.
-     * 
-     * \param stream      A read-only stream contains registeration info.
-     * \param reg         APA registry struct. This will be filled with info on success.
-     * \param land_drive  The drive contains this registeration.
-     * \param lang        The language of the system.
-     * 
-     * \returns True on success.
-     */
-    bool read_registeration_info_aif(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive,
-        const language lang);
-
-    /**
-     * \brief   Read icon data from AIF file.
-     * 
-     * \param   stream      A read-only stream contains registeration info.
-     * \param   serv        Pointer to font bitmap server, used to create bitmap.
-     * \param   icon_list   List of icon to be filled.
-     * \param   rom_addr    The address of the registeration file in ROM. 0 for unavailable.
-     * 
-     * \returns True on success.
-     */
-    bool read_icon_data_aif(common::ro_stream *stream, fbs_server *serv, std::vector<apa_app_icon> &icon_list, const address rom_addr = 0);
-
-    /**
-     * \brief   Read caption data from localised RSC file
-     * 
-     * \param   stream      A read-only stream contains caption data.
-     * \param   reg         Registeration info to fill captions in.
-     * 
-     * \returns True on success.
-     */
-    bool read_caption_data_oldarch(common::ro_stream *stream, apa_app_registry &reg);
-
-    /**
-     * \brief Read localised registeration info from a stream.
-     * 
-     * \param stream    Read-only stream contains localised registeration info.
-     * \param reg         APA registry struct. This will be filled with info on success.
-     * \param land_drive  The drive contains this registeration.
-     * 
-     * \returns True on success.
-     */
+    bool read_registeration_info_aif(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive, language lang);
     bool read_localised_registration_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive);
 
     const std::string get_app_list_server_name_by_epocver(const epocver ver);
@@ -193,18 +148,8 @@ namespace eka2l1 {
     public:
         explicit applist_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver);
         void fetch(service::ipc_context *ctx);
-
-        void get_filtered_apps_by_flags(service::ipc_context &ctx);
-        void get_next_app(service::ipc_context &ctx);
     };
 
-    /*! \brief Applist services
-     *
-     * Provide external information about application management,
-     * and HAL information regards to each app.
-	 *
-	 * Disable for LLE testings.
-     */
     class applist_server : public service::typical_server {
         friend class applist_session;
 
@@ -229,128 +174,29 @@ namespace eka2l1 {
         void sort_registry_list();
         void init();
 
-        bool delete_registry(const std::u16string &rsc_path);
+        bool load_registry(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive, const language ideal_lang = language::en);
 
-        bool load_registry(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
-            const language ideal_lang = language::en);
-
-        bool load_registry_oldarch(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
-            const language ideal_lang = language::en);
-
-        void on_drive_change(void *userdata, drive_number drv, drive_action act);
-
-        void remove_registries_on_drive(const drive_number drv);
-
-        void rescan_registries_on_drive_oldarch(eka2l1::io_system *io, const drive_number num, std::vector<std::u16string> &results);
         void rescan_registries_on_drive_newarch(eka2l1::io_system *io, const drive_number num, std::vector<std::u16string> &results);
         void rescan_registries_on_drive_newarch_with_path(eka2l1::io_system *io, const drive_number num, const std::u16string &path,
             std::vector<std::u16string> &results);
 
-        /*! \brief Get the number of screen shared for an app. 
-         * 
-         * \param arg0: application UID.
-         * \param request_sts: KErrNotFound if app doesn't exist.
-        */
-        void default_screen_number(service::ipc_context &ctx);
-
-        /*! \brief Get the application language.
-         *
-         * \param arg0: App's uid3.
-         * \param arg1: App language.
-         *
-         * Expected request status: KErrNone. 
-        */
-        void app_language(service::ipc_context &ctx);
-
-        /*! \brief Request the server to run app.
-         *
-         * Iter through every AppList plugins, set status to true
-         * if application is allowed to run
-         * 
-         * \param arg0: App's uid3
-        */
-        void is_accepted_to_run(service::ipc_context &ctx);
-
-        /*! \brief Get the info of the specified application
-         *
-         * \param arg0: App's uid3
-         * \param arg1: Descriptor contains apa_app_info
-        */
         void get_app_info(service::ipc_context &ctx);
-
-        /*! \brief Get the capability of an app.
-         *
-         * \param arg0: Descriptor contains the capability
-         * \param arg1: The application's UID
-        */
-        void get_capability(service::ipc_context &ctx);
-
-        /**
-         * \brief Get the path to an app's icon.
-         * 
-         * The first argument contains the app UID. The second argument contains the
-         * filename package.
-         */
         void get_app_icon_file_name(service::ipc_context &ctx);
-
-        /**
-         * \brief Get app icon bitmap handles.
-         */
-        void get_app_icon(service::ipc_context &ctx);
-
-        void get_app_icon_sizes(service::ipc_context &ctx);
-        void get_native_executable_name_if_non_native(service::ipc_context &ctx);
-        void app_info_provided_by_reg_file(service::ipc_context &ctx);
-        std::string recognize_data_impl(common::ro_stream &stream);
-
-        void launch_app(service::ipc_context &ctx);
-        void is_program(service::ipc_context &ctx);
         void get_preferred_buf_size(service::ipc_context &ctx);
         void get_app_for_document(service::ipc_context &ctx);
-        void get_app_for_document_by_file_handle(service::ipc_context &ctx);
         void get_app_for_document_impl(service::ipc_context &ctx, const std::u16string &path);
-        void get_app_executable_name_given_app_uid(service::ipc_context &ctx);
-        void recognize_data_by_file_handle(service::ipc_context &ctx);
-        void get_supported_data_types_phase1(service::ipc_context &ctx);
-        void get_supported_data_types_phase2(service::ipc_context &ctx);
 
         void connect(service::ipc_context &ctx) override;
-
-    protected:
-        bool launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id,
-            kernel::process *requester = nullptr, const epoc::uid known_uid = 0,
-            std::function<void(kernel::process*)> app_exit_callback = nullptr);
 
     public:
         explicit applist_server(system *sys);
         ~applist_server() override;
 
-        /**
-         * @brief       Get the legacy level of the server.
-         */
         int legacy_level();
 
-        bool launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter, kernel::uid *thread_id,
-                        std::function<void(kernel::process*)> app_exit_callback = nullptr);
-
-        std::optional<apa_app_masked_icon_bitmap> get_icon(apa_app_registry &registry, const std::int8_t index);
-
         std::mutex list_access_mut_;
-
         bool rescan_registries(eka2l1::io_system *io);
-
-        /**
-         * \brief Get an app registeration
-         * 
-         * \param uid The UID of the app.
-         * \returns Nullptr if the registeration does not exist. Else the pointer to it.
-         */
         apa_app_registry *get_registration(const std::uint32_t uid);
-
-        /**
-         * \brief Get all app registerations.
-         */
-        std::vector<apa_app_registry> &get_registerations();
 
         void add_app_uid_to_host_launch_name(const epoc::uid app_uid, const std::u16string &host_launch_name);
     };

@@ -1,27 +1,8 @@
-/*
- * Copyright (c) 2019 EKA2L1 Team.
- * 
- * This file is part of EKA2L1 project.
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #pragma once
 
-#include <mem/ptr.h>
-
+#include <common/uid.h>
 #include <cstdint>
+#include <mem/ptr.h>
 #include <tuple>
 
 namespace eka2l1::epoc {
@@ -46,25 +27,17 @@ namespace eka2l1::epoc {
         ICON_CAPTION_UID = 0x1028583D,
         AKN_SKIN_MAJOR_UID = 0x10005a26,
         AKN_WALLPAPER_FILENAME_ID = 0xC0DEF00D,
-    
-        // Specifics
         AKN_SKIN_MINOR_WALLPAPER_UID = 0x1180
     };
 
     using pid = std::pair<std::int32_t, std::int32_t>;
 
-    /**
-     * \brief Multi-purpose pointer type for AKN server.
-     */
     enum akns_mtptr_type {
-        akns_mtptr_type_absolute_ram = 2, /** Pointer is absolute on RAM. */
-        akns_mtptr_type_relative_ram = 3, /** Pointer is offset on a base. */
-        akns_mtptr_type_absolute_rom = 4 /** Pointer is on ROM. */
+        akns_mtptr_type_absolute_ram = 2,
+        akns_mtptr_type_relative_ram = 3,
+        akns_mtptr_type_absolute_rom = 4
     };
 
-    /**
-     * \brief Multi-purpose pointer for AKN server.
-     */
     struct akns_mtptr {
         akns_mtptr_type type_;
         std::uint32_t address_or_offset_;
@@ -74,7 +47,6 @@ namespace eka2l1::epoc {
             if (type_ == akns_mtptr_type_relative_ram) {
                 return base + address_or_offset_;
             }
-
             return eka2l1::ptr<T>(address_or_offset_);
         }
 
@@ -83,7 +55,6 @@ namespace eka2l1::epoc {
             if (type_ != akns_mtptr_type_relative_ram) {
                 return nullptr;
             }
-
             return reinterpret_cast<T *>(reinterpret_cast<std::uint8_t *>(base) + address_or_offset_);
         }
     };
@@ -110,8 +81,6 @@ namespace eka2l1::epoc {
     struct akns_item_def_v2 : public akns_item_def_v1 {
         std::int32_t next_hash_;
     };
-
-    static_assert(sizeof(akns_item_def_v2) == 24);
 
     using akns_item_def = akns_item_def_v2;
 }
